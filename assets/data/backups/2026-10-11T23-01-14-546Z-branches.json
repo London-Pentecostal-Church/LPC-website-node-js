@@ -1,0 +1,64 @@
+{
+  "branches": {
+    "chadwell-heath": {
+      "name": "Chadwell Heath",
+      "churchName": "London Pentecostal Church",
+      "subtitle": "Mother Church",
+      "logo": "./assets/images/brand/normalized/lpc-logo.png",
+      "image": "./assets/images/derived/branch-chadwell-hero.jpg",
+      "color": "#8F0F14",
+      "summary": "327 High Road, Chadwell Heath, Romford, Essex RM6 6PP",
+      "address": "327 High Road, Chadwell Heath, Romford, Essex RM6 6PP",
+      "services": "",
+      "contact": ""
+    },
+    "chelmsford": {
+      "name": "Chelmsford",
+      "churchName": "Chelmsford Pentecostal Church",
+      "subtitle": "Pentecostal Church",
+      "logo": "./assets/images/brand/normalized/chelmsford-logo.png",
+      "image": "./assets/images/derived/branch-chelmsford-hero.jpg",
+      "color": "#1f59cb",
+      "summary": "A growing branch family serving Essex with worship and discipleship.",
+      "address": "",
+      "services": "",
+      "contact": ""
+    },
+    "harlow": {
+      "name": "Harlow",
+      "churchName": "Harlow Pentecostal Church",
+      "subtitle": "Pentecostal Church",
+      "logo": "./assets/images/brand/normalized/harlow-logo.png",
+      "image": "./assets/images/derived/welcome-crowd.jpg",
+      "color": "#9a7c08",
+      "summary": "A welcoming branch community focused on prayer, family, and outreach.",
+      "address": "",
+      "services": "",
+      "contact": ""
+    },
+    "basildon": {
+      "name": "Basildon",
+      "churchName": "Basildon Pentecostal Church",
+      "subtitle": "Pentecostal Church",
+      "logo": "./assets/images/brand/normalized/basildon-logo.png",
+      "image": "./assets/images/derived/branch-basildon-hero.jpg",
+      "color": "#98133b",
+      "summary": "A branch family for worship, connection, and gospel-centered growth.",
+      "address": "",
+      "services": "",
+      "contact": ""
+    },
+    "south-london": {
+      "name": "South London",
+      "churchName": "South London Pentecostal Church",
+      "subtitle": "Pentecostal Church",
+      "logo": "./assets/images/brand/normalized/south-london-logo.png",
+      "image": "./assets/images/derived/branch-south-london-hero.jpg",
+      "color": "#6e1ba7",
+      "summary": "A vibrant South London congregation connected to the LPC family.",
+      "address": "",
+      "services": "",
+      "contact": ""
+    }
+  }
+}

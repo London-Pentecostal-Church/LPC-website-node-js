@@ -1,0 +1,86 @@
+{
+  "plan-your-visit": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/plan-visit-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center"
+  },
+  "ministries": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/branches-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center"
+  },
+  "youth": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/youth-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center"
+  },
+  "branches": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/branches-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center"
+  },
+  "about": {
+    "video": "",
+    "desktopImage": "./assets/images/LPC-google-images/Pastor and Betty sis.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center 13%",
+    "mobileFocal": "center 13%"
+  },
+  "pastors": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/pastors-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center"
+  },
+  "watch": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/watch-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center"
+  },
+  "contact": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/contact-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center"
+  },
+  "chelmsford": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/branch-chelmsford-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center"
+  },
+  "harlow": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/branch-harlow-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center"
+  },
+  "basildon": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/branch-basildon-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center"
+  },
+  "south-london": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/branch-south-london-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center"
+  }
+}

@@ -1,0 +1,522 @@
+[
+  {
+    "path": "assets/css/modern.css",
+    "size": 38023,
+    "sha256": "12e12fdf9199393470a6f5a0621cb206a7898271aaaaee160a43835a3234d6f7"
+  },
+  {
+    "path": "assets/css/styles.css",
+    "size": 72928,
+    "sha256": "dc094fbccfd9aa67dffbb9a6caf8b8867756fec09b96f0be3588f01e30e0f634"
+  },
+  {
+    "path": "assets/data/backups/2026-06-13T00-39-38-236Z-hero-images.json",
+    "size": 2325,
+    "sha256": "e9f8402be51a9feebc27a0289a61639d19b8ab58ea4c997b3440f38c5ad643db"
+  },
+  {
+    "path": "assets/data/backups/2026-06-13T00-40-37-789Z-hero-images.json",
+    "size": 2325,
+    "sha256": "e9f8402be51a9feebc27a0289a61639d19b8ab58ea4c997b3440f38c5ad643db"
+  },
+  {
+    "path": "assets/data/backups/2026-06-13T00-56-44-233Z-hero-images.json",
+    "size": 2325,
+    "sha256": "e9f8402be51a9feebc27a0289a61639d19b8ab58ea4c997b3440f38c5ad643db"
+  },
+  {
+    "path": "assets/data/backups/2026-06-13T01-09-42-480Z-hero-images.json",
+    "size": 2350,
+    "sha256": "8f62365df166bff67b392e95b629a4fae1da1cdfae314d88f6cf41258e2947c5"
+  },
+  {
+    "path": "assets/data/backups/2026-06-13T01-17-02-607Z-hero-images.json",
+    "size": 2359,
+    "sha256": "ecc43c079465a4ec4d580c1ca86c9f98ef992ddfa846861b1b15c2827f1a1e92"
+  },
+  {
+    "path": "assets/data/backups/2026-06-13T01-22-28-179Z-hero-images.json",
+    "size": 2359,
+    "sha256": "ecc43c079465a4ec4d580c1ca86c9f98ef992ddfa846861b1b15c2827f1a1e92"
+  },
+  {
+    "path": "assets/data/backups/2026-06-13T01-28-43-100Z-hero-images.json",
+    "size": 2359,
+    "sha256": "ecc43c079465a4ec4d580c1ca86c9f98ef992ddfa846861b1b15c2827f1a1e92"
+  },
+  {
+    "path": "assets/data/backups/2026-07-23T22-46-10-853Z-hero-images.json",
+    "size": 3638,
+    "sha256": "7a28682aba3f84197bda598c2a974e2f6f0e763e7b68c4a00833192dbd4c6ed2"
+  },
+  {
+    "path": "assets/data/backups/2026-07-23T22-46-53-503Z-hero-images.json",
+    "size": 3636,
+    "sha256": "316c3272288b871c9f18f2eca05a1cc493d24f6b3e7cc225523e5502425e2777"
+  },
+  {
+    "path": "assets/data/backups/2026-10-11T23-01-14-546Z-branches.json",
+    "size": 2348,
+    "sha256": "b8c3e1c195ec4a9e27827b9fd5d903fd0b8945f38554de2d2363d0fb6f9941c1"
+  },
+  {
+    "path": "assets/data/backups/2026-10-11T23-01-21-156Z-branches.json",
+    "size": 3465,
+    "sha256": "1771b7112bf91d4f3da1f4870031d0ab73815242a4e71986120ba9f630899e55"
+  },
+  {
+    "path": "assets/data/backups/2026-10-11T23-01-45-619Z-branches.json",
+    "size": 3465,
+    "sha256": "1771b7112bf91d4f3da1f4870031d0ab73815242a4e71986120ba9f630899e55"
+  },
+  {
+    "path": "assets/data/backups/2026-10-11T23-02-05-699Z-branches.json",
+    "size": 3454,
+    "sha256": "1ee6381de169a2a771a232df7e3e9f3092ddc1b40d376accb623c211ff92f883"
+  },
+  {
+    "path": "assets/data/backups/2026-10-11T23-03-58-038Z-branches.json",
+    "size": 3454,
+    "sha256": "1ee6381de169a2a771a232df7e3e9f3092ddc1b40d376accb623c211ff92f883"
+  },
+  {
+    "path": "assets/data/backups/2026-10-12T21-16-37-568Z-hero-images.json",
+    "size": 3648,
+    "sha256": "b5e666ea62012a69dcf89797fda9b6c6eea22b7140d3cff6b15631cfb813ad09"
+  },
+  {
+    "path": "assets/data/backups/2026-10-12T21-27-08-272Z-hero-images.json",
+    "size": 3516,
+    "sha256": "7ad59550264b0e0a47ccf666ab3b59b7f48ab815d86593628f0cfcc0158c9336"
+  },
+  {
+    "path": "assets/data/backups/2026-10-12T23-12-40-443Z-image-framing.json",
+    "size": 3,
+    "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356"
+  },
+  {
+    "path": "assets/data/backups/2026-10-12T23-15-54-436Z-pastors.json",
+    "size": 695,
+    "sha256": "018d0a19915b7cc58ef81057076569bbf5c492a971309106d577f673d8141664"
+  },
+  {
+    "path": "assets/data/backups/2026-10-12T23-16-54-926Z-hero-images.json",
+    "size": 3543,
+    "sha256": "22a20d7373e99093e24c9af537dd6291de3d65091be21366838316f39dfee07a"
+  },
+  {
+    "path": "assets/data/backups/2026-10-12T23-28-19-822Z-hero-images.json",
+    "size": 3556,
+    "sha256": "4fe4deb87ed15adb08260a4451e00cba6ce3bdb2ed5c4788131320ed4895230d"
+  },
+  {
+    "path": "assets/data/backups/2026-10-13T00-09-11-766Z-hero-images.json",
+    "size": 3587,
+    "sha256": "984f77a596ef7846d54a46aa0f110d76ba24496bd5437ea2a39db8880612122b"
+  },
+  {
+    "path": "assets/data/backups/2026-10-13T00-09-29-939Z-hero-images.json",
+    "size": 3597,
+    "sha256": "258255c066e022ea6016a623c88cef0b0e11b19acec49341aeafd3231e7b1237"
+  },
+  {
+    "path": "assets/data/backups/2026-10-13T00-09-43-787Z-hero-images.json",
+    "size": 3607,
+    "sha256": "438322a2cf55b5f58687819e09c5e7784c3f9e365321fae5b63271788ff7e69d"
+  },
+  {
+    "path": "assets/data/backups/2026-10-13T00-10-00-546Z-hero-images.json",
+    "size": 3617,
+    "sha256": "1361c93c2be75798386aa396bcc9f2f854711bb661417e7326e7e27435b8c5d8"
+  },
+  {
+    "path": "assets/data/backups/2026-10-13T00-20-42-665Z-hero-images.json",
+    "size": 3627,
+    "sha256": "5217f737ae3224d81a6bc4967c0e75ffea35fe6f56dc9558e9a3168f5918ffd9"
+  },
+  {
+    "path": "assets/data/backups/2026-10-13T00-20-57-126Z-hero-images.json",
+    "size": 3972,
+    "sha256": "daaeca0896a7eb28f2e9419704dec9aeb25cff09199b11d1745215ef17a92bdb"
+  },
+  {
+    "path": "assets/data/backups/2026-10-13T00-25-40-575Z-hero-images.json",
+    "size": 4287,
+    "sha256": "fc659c684af4eb80b2ec97fc4bb680f333531da9f7681b0d56f449f4d2d95279"
+  },
+  {
+    "path": "assets/data/backups/2026-10-13T00-42-11-479Z-hero-images.json",
+    "size": 4303,
+    "sha256": "3f1e0929f85711a24c1b2491faae239988c646b14408c8f63457a777936c3e36"
+  },
+  {
+    "path": "assets/data/branches.json",
+    "size": 4169,
+    "sha256": "e2d6c0a6ad509c3148d0170122ef9955083d2c5fcc9cb6a357889282897fc25d"
+  },
+  {
+    "path": "assets/data/hero-images.json",
+    "size": 4319,
+    "sha256": "03b36c4841dbe78b3461d330bcdcb56dd371f0e990d959acc6dd54d19f4f0bff"
+  },
+  {
+    "path": "assets/data/home-hero.json",
+    "size": 264,
+    "sha256": "4a306b677b138978ebae03a38ae446cf8401969c544a20e56b1fecc2fb8df1fb"
+  },
+  {
+    "path": "assets/data/image-framing.json",
+    "size": 124,
+    "sha256": "ef177cbd7cea0e59cf51be3775c0e3adb704bf3b9b6cb103a51337dc96554554"
+  },
+  {
+    "path": "assets/data/page-images.json",
+    "size": 4,
+    "sha256": "e3566b3a06430868d71e9287dfd6c6c520a3da027aabea01951d407ee131dc2f"
+  },
+  {
+    "path": "assets/data/pastor-thought.json",
+    "size": 791,
+    "sha256": "db928daf540371094e5ce60fa15e5ee867d7392598a30d3f529f7d316747b465"
+  },
+  {
+    "path": "assets/data/pastors.json",
+    "size": 695,
+    "sha256": "018d0a19915b7cc58ef81057076569bbf5c492a971309106d577f673d8141664"
+  },
+  {
+    "path": "assets/data/site-settings.json",
+    "size": 70,
+    "sha256": "c70496c6feb7832e2a91ea12b936bbb65d589611798e8b8faa3cc9e2b5e72ca2"
+  },
+  {
+    "path": "assets/data/uploads/images/all-pastors-mv5r3bqw.jpg",
+    "size": 480901,
+    "sha256": "44e2ebd6d3c573909fd243e2a8bc4e164dc09bfcd2e9eaaed0a832d0565a622f"
+  },
+  {
+    "path": "assets/data/uploads/images/branches-hero-mqboo0nu.jpg",
+    "size": 67163,
+    "sha256": "3ea40f695211ee9e859eff44b8ce9d01381487752306ab4717e19c70c881998c"
+  },
+  {
+    "path": "assets/data/uploads/images/contact-branch-network-map-mv5vtpbg.png",
+    "size": 2062777,
+    "sha256": "c673bc14617d140904510e94f37d36de45bc1f5c159e120568c29a4e8aa4eff2"
+  },
+  {
+    "path": "assets/data/uploads/images/london-pentecostal-church-branches-banner-mv5r7eiv.png",
+    "size": 1885342,
+    "sha256": "569de9d7bc6a5f4dad677f96dba24789de0c48ed62baf87d0fe3c6a03b176f07"
+  },
+  {
+    "path": "assets/data/uploads/images/ministries-mv5seizm.png",
+    "size": 2471172,
+    "sha256": "ccec05ac6516e3b9c4dcb315a3189c44d6fdcd649698248f2154a62bd7b5501c"
+  },
+  {
+    "path": "assets/data/uploads/images/plan-visit-hero-mv5yhngf.jpg",
+    "size": 2179138,
+    "sha256": "7aa55cf6f9c69c72edbed0f04be9f3bb6be528d8d953a3b696f4a39fcbe78673"
+  },
+  {
+    "path": "assets/data/uploads/images/southend-on-sea-mv4fjb1n.png",
+    "size": 584905,
+    "sha256": "18f86fe070dd23772cb3397dca842df472545473bb6bb3bff5bf718c53a1daff"
+  },
+  {
+    "path": "assets/data/uploads/images/watch-hero-mv5xw9fg.jpg",
+    "size": 1513968,
+    "sha256": "6f607306c1e50db266b54c7783a83edc2d332c1343f72eb29ccd40a995c6c56f"
+  },
+  {
+    "path": "assets/images/branch-banners/basildon.png",
+    "size": 2088250,
+    "sha256": "49bc12ef9c63f0c350942b6ee44e633bc2322d3ba1a270c685f622650be903ed"
+  },
+  {
+    "path": "assets/images/branch-banners/chadwell-heath.png",
+    "size": 1974969,
+    "sha256": "cf6aa0bdda8f7e137973776924ad74b924552248750a9aa64967c35fad094fb2"
+  },
+  {
+    "path": "assets/images/branch-banners/chelmsford.png",
+    "size": 2041275,
+    "sha256": "2d4219abb415b9154312381a2edde1272b16981881d76fa98d1168658d81eed9"
+  },
+  {
+    "path": "assets/images/branch-banners/harlow.png",
+    "size": 2075442,
+    "sha256": "a6b868d1849a501b5d9d09e660e2165bc2750e72a75934e34b149468c3ec34d1"
+  },
+  {
+    "path": "assets/images/branch-banners/south-london.png",
+    "size": 2004930,
+    "sha256": "01af3c2dfa7c4318a38515ba1342884852428357a05ee5a9d84ad885abd9f92c"
+  },
+  {
+    "path": "assets/images/branch-banners/southend-on-sea.png",
+    "size": 2013227,
+    "sha256": "4d36f820ab593bf9ff5cab06df3b13be48a308d043f690b377da4e736490a5cd"
+  },
+  {
+    "path": "assets/images/brand/chelmsford-logo.png",
+    "size": 2773081,
+    "sha256": "cdaff87f0f1b4a3ca2356c970a6111aa8c4d6b8dba6b15d094d9ed6c3d204b91"
+  },
+  {
+    "path": "assets/images/brand/harlow-logo.png",
+    "size": 3582468,
+    "sha256": "1a14fa657be09e98469c015fbcebcbb5524d966d92f96a9ab0e8251ec1303f4b"
+  },
+  {
+    "path": "assets/images/brand/lpc-logo.png",
+    "size": 67946,
+    "sha256": "94a9c2896ed8a9693b8461da136a89b8cafe963d66b6056aad3a6af7deee860f"
+  },
+  {
+    "path": "assets/images/brand/normalized/basildon-logo.png",
+    "size": 178898,
+    "sha256": "f26130d6d5dfa6070a386b19956abb9f98a0968b02d272e69d3d68ea0aace1b2"
+  },
+  {
+    "path": "assets/images/brand/normalized/lpc-logo.png",
+    "size": 222601,
+    "sha256": "ee989056afb2efb6a4aa2873987a7aa84d5025290156ec8148501448021232a2"
+  },
+  {
+    "path": "assets/images/brand/normalized/south-london-logo.png",
+    "size": 100636,
+    "sha256": "d9245fbb722470efce050dad41146ba97b3b42aa6d165027b072f84a99803e6b"
+  },
+  {
+    "path": "assets/images/derived/branch-basildon-hero.jpg",
+    "size": 86366,
+    "sha256": "43894708b3f66b7cf6e72bde461ba85db29503b14d9e2d3886b89398da2a9569"
+  },
+  {
+    "path": "assets/images/derived/branch-chadwell-hero.jpg",
+    "size": 114586,
+    "sha256": "a1056940db7853a4db90fffd3c0cf41674f8f350ed1f276081dddbe5d6604ef1"
+  },
+  {
+    "path": "assets/images/derived/branch-chelmsford-hero.jpg",
+    "size": 97281,
+    "sha256": "9dce2d613fc098e2e0d42895711bacfbe694f00de41330b8faf0675cf7c1be90"
+  },
+  {
+    "path": "assets/images/derived/branch-harlow-hero.jpg",
+    "size": 100029,
+    "sha256": "9e7ff0e9384507da9d0c8c55f37cd9903261d8bbcce41a5547e127a486ec8944"
+  },
+  {
+    "path": "assets/images/derived/branch-south-london-hero.jpg",
+    "size": 98261,
+    "sha256": "5136fe105998c1f5c1666cbdc2730b7ac4038137561464a3137b500fcce217d4"
+  },
+  {
+    "path": "assets/images/derived/branches-hero.jpg",
+    "size": 487767,
+    "sha256": "0f78b1ec5a9c9a609ffe2457c3395e5c372d3fbd9407392ee01d0deea243d45d"
+  },
+  {
+    "path": "assets/images/derived/contact-hero.jpg",
+    "size": 92318,
+    "sha256": "c1a782bc37a95d5f3bfcc9b3e4d96d55c77eb502a217448c6139070c1af8bb32"
+  },
+  {
+    "path": "assets/images/derived/hero-church.jpg",
+    "size": 558759,
+    "sha256": "b2bbec406b2e1eaaeabbdab445781114ee9407c48408a1b75d0644889c0e97cc"
+  },
+  {
+    "path": "assets/images/derived/hero-crowd-plain.jpg",
+    "size": 113660,
+    "sha256": "87efa094ca8cdaae35386cbe16c689d04948f6dbae1fe17ff7367bb2f2634f31"
+  },
+  {
+    "path": "assets/images/derived/hero-crowd.jpg",
+    "size": 175150,
+    "sha256": "f94b3981dc15943ed42f87a14d22c0618a085d8def97d3015889436671d24b07"
+  },
+  {
+    "path": "assets/images/derived/pastors-hero.jpg",
+    "size": 72250,
+    "sha256": "e3264f1b64cf6f264ad596ab44044a3e9cd6207eb4d89392693c1103b9a9e7bd"
+  },
+  {
+    "path": "assets/images/derived/plan-visit-hero.jpg",
+    "size": 80645,
+    "sha256": "462fe5f2129d2d205aad5533e81536417e58a26d15388e6f3033c5f296f2fb15"
+  },
+  {
+    "path": "assets/images/derived/sermon-thumb.jpg",
+    "size": 34397,
+    "sha256": "d7622ecc5711d93d3aa96ff7d65eb1ae08093d8640d3f936d3f5c7341b1525da"
+  },
+  {
+    "path": "assets/images/derived/watch-hero.jpg",
+    "size": 580211,
+    "sha256": "cfafe4d188dcb8692a7863ff5241669fed4f6bf5679b8dbf62fb25c594c78ecd"
+  },
+  {
+    "path": "assets/images/derived/welcome-crowd.jpg",
+    "size": 24596,
+    "sha256": "f90f12cf15428785d3185c8ddfbcd90c91a546a2c565cb19ab03d194f1afe91c"
+  },
+  {
+    "path": "assets/images/derived/youth-hero.jpg",
+    "size": 116152,
+    "sha256": "42d017ca23b0ac72f471d5c8171295cb86e089ebabd843ce27c8bfd22013f5c6"
+  },
+  {
+    "path": "assets/images/LPC-google-images/LPC photo 01.jpg",
+    "size": 272170,
+    "sha256": "a88a31af4897d0179dff938695c3cfec2d4bb205e37f737ac9018faed6090e25"
+  },
+  {
+    "path": "assets/images/LPC-google-images/LPC photo 02.jpg",
+    "size": 932247,
+    "sha256": "5dfbf77ace76b267eaef24c280e23beeac16c198adfe7c925b7d2741118df198"
+  },
+  {
+    "path": "assets/images/LPC-google-images/LPC photo 03.jpg",
+    "size": 427735,
+    "sha256": "1913c00b19d772abd44c9f76010eb34e2fac5a9c33b1013375c05986e12d9a24"
+  },
+  {
+    "path": "assets/images/LPC-google-images/LPC photo 04.jpg",
+    "size": 540604,
+    "sha256": "341d6e6ecde238f2fd4064ecac764aa9e6263a3e6d4ac1ef707355331add66a9"
+  },
+  {
+    "path": "assets/images/LPC-google-images/LPC photo 05.jpg",
+    "size": 924229,
+    "sha256": "f597e5077d89dddd3b78bcf7fe6e0ced20d89cec91eee895eb045cb5b0e4cfb9"
+  },
+  {
+    "path": "assets/images/LPC-google-images/LPC photo 06.jpg",
+    "size": 815548,
+    "sha256": "2855df421308da05468b97a4f84ca7f3751c99bc6893fbc16da05cc7cfc8af82"
+  },
+  {
+    "path": "assets/images/LPC-google-images/LPC photo 07.jpg",
+    "size": 335482,
+    "sha256": "40df77280df00e9dd782c07343de0f87b205a500424215a3ada1c7c76513f26e"
+  },
+  {
+    "path": "assets/images/LPC-google-images/LPC photo 08.jpg",
+    "size": 472486,
+    "sha256": "9ad09b84c57b1d3c5135c30be37a867b43cece6f88d2a265def8a2b1d1e44275"
+  },
+  {
+    "path": "assets/images/LPC-google-images/LPC photo 09.jpg",
+    "size": 481088,
+    "sha256": "0b304e5e984429cecd280b0684a5343f333dcca6cc607903f54683af49ae8ec7"
+  },
+  {
+    "path": "assets/images/LPC-google-images/LPC photo 10.jpg",
+    "size": 777204,
+    "sha256": "564e15c6203f02d567b66897545725f15ee3b146556c51fb74a4461d2e1d800a"
+  },
+  {
+    "path": "assets/images/LPC-google-images/LPC photo 11.jpg",
+    "size": 686365,
+    "sha256": "a4425210ce3ac01c2733e465c83ca5c437067aa1081ce6d25ea6aab4231267ac"
+  },
+  {
+    "path": "assets/images/LPC-google-images/LPC photo 13.jpg",
+    "size": 149889,
+    "sha256": "a0f5ec7cd6b84c710fcde0d2f9c103476968f2d24a55223b216bb42b888b76b3"
+  },
+  {
+    "path": "assets/images/LPC-google-images/LPC photo 14.jpg",
+    "size": 260937,
+    "sha256": "e7efdfc8c15bf25604293ea7903698dff3c6a8bcd23691d90fd87bf9fbdc26ab"
+  },
+  {
+    "path": "assets/images/LPC-google-images/Pastor and Betty sis.jpg",
+    "size": 275522,
+    "sha256": "d6d26f4553a52c0cf8d39aafc32aadd6433a441100b4c761d8c4ee8940b6d9d6"
+  },
+  {
+    "path": "assets/images/team/All pastors.jpg",
+    "size": 578242,
+    "sha256": "0d3603a3e1dd39595f082b1d0c88a4ff63d6bf4a39788c00fc6801545beac966"
+  },
+  {
+    "path": "assets/images/team/binoy-jose.jpg",
+    "size": 218287,
+    "sha256": "b5efb0023a93ddc45945121e6a31c130b33cce56f23c7174720f39fbc837ef3a"
+  },
+  {
+    "path": "assets/images/team/eugene-skaria.jpg",
+    "size": 41894,
+    "sha256": "e7d2f2fcae670b21dc8bd7a64d0fed9ef7512c9d0719e4857673b5e3688c5fc2"
+  },
+  {
+    "path": "assets/images/team/joji-babu-george.jpg",
+    "size": 253207,
+    "sha256": "5ef6c2e307216eb5801a882b261653751815d5738e730f0fe5fff96cbb176aa4"
+  },
+  {
+    "path": "assets/images/team/joseph-varghese.jpg",
+    "size": 340333,
+    "sha256": "21d90b74c3e2e0bad2b50c45d8a2455588324a7ed2875d101f652f07383f7ecc"
+  },
+  {
+    "path": "assets/images/team/sam-john-hero.jpg",
+    "size": 227264,
+    "sha256": "33648b1e19e89e0c9bead3a6830b847ec1213b729b5dd3d99b712a7c19efb0af"
+  },
+  {
+    "path": "assets/images/team/sam-john.png",
+    "size": 1826551,
+    "sha256": "8ca149153047b89ad99d980602f504788df134ab1e561b460d47999c49acef60"
+  },
+  {
+    "path": "assets/images/team/tiju-thomas.jpg",
+    "size": 263142,
+    "sha256": "7547a08393645092a7e3734509bb2d02b5cdc4048ca5899aef7db866d131376f"
+  },
+  {
+    "path": "assets/js/site.js",
+    "size": 146134,
+    "sha256": "0d5bf4ff3a60c313fb7955ae015aa9f6c95148845ae7c046f2b1222c17867736"
+  },
+  {
+    "path": "assets/videos/LPC_30s.mp4",
+    "size": 5206813,
+    "sha256": "a605f4f77c7fae00a7016504b7144a0ae61dbf1f12ca9fd0c536c8c78c6146cb"
+  },
+  {
+    "path": "assets/videos/README.txt",
+    "size": 270,
+    "sha256": "d463e88d6554eeb9443f5665228a0dfc71420d625fc8cb198cc2ff5a8e65a3be"
+  },
+  {
+    "path": "worker/calendar.mjs",
+    "size": 3821,
+    "sha256": "e0d8ed5ad90d02dd6a1dac24f3e4873cfe7505b0feb19a19a0100576bd377328"
+  },
+  {
+    "path": "worker/contact-mail.mjs",
+    "size": 3000,
+    "sha256": "e8b9bfe040478ea1db67c88e61cd5cc25c94e1c43e3e89ec0b0abfa66993f07c"
+  },
+  {
+    "path": "worker/ICAL-LICENSE.txt",
+    "size": 16725,
+    "sha256": "1f256ecad192880510e84ad60474eab7589218784b9a50bc7ceee34c2b91f1d5"
+  },
+  {
+    "path": "worker/ical.js",
+    "size": 267656,
+    "sha256": "396c1349c899974b1048460e3c7495ec394ff1a86941ab5bf6291b272b8d53c2"
+  },
+  {
+    "path": "worker/index.js",
+    "size": 23105,
+    "sha256": "a3f40b3480f98ed454ba7045c9b4a5574177bdefa46431f6dadff71fbb590650"
+  }
+]

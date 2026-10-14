@@ -1,0 +1,18 @@
+{
+  "name": "lpc-website4",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node preview-server.mjs",
+    "start": "node preview-server.mjs",
+    "build": "node scripts/build.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "ical.js": "^2.2.1",
+    "nodemailer": "^10.1.0"
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "plan-your-visit": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/plan-visit-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center",
+    "desktopScale": "1",
+    "mobileScale": "1",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  },
+  "ministries": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/branches-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center",
+    "desktopScale": "1",
+    "mobileScale": "1",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  },
+  "youth": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/youth-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center",
+    "desktopScale": "1",
+    "mobileScale": "1",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  },
+  "branches": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/branches-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center 50%",
+    "mobileFocal": "center 25%",
+    "desktopScale": "0.8",
+    "mobileScale": "1.025",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  },
+  "about": {
+    "video": "",
+    "desktopImage": "./assets/images/LPC-google-images/Pastor and Betty sis.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center 13%",
+    "mobileFocal": "center 13%",
+    "desktopScale": "1",
+    "mobileScale": "1",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  },
+  "pastors": {
+    "video": "",
+    "desktopImage": "/uploads/images/all-pastors-mv5r3bqw.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center 0%",
+    "mobileFocal": "center 13%",
+    "desktopScale": "1.025",
+    "mobileScale": "0.969",
+    "desktopFit": "fill",
+    "mobileFit": "cover"
+  },
+  "watch": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/watch-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center",
+    "desktopScale": "1",
+    "mobileScale": "1",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  },
+  "contact": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/contact-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center",
+    "desktopScale": "1",
+    "mobileScale": "1",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  },
+  "chelmsford": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/branch-chelmsford-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center",
+    "desktopScale": "1",
+    "mobileScale": "1",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  },
+  "harlow": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/branch-harlow-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center",
+    "desktopScale": "1",
+    "mobileScale": "1",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  },
+  "basildon": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/branch-basildon-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center",
+    "desktopScale": "1",
+    "mobileScale": "1",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  },
+  "south-london": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/branch-south-london-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center",
+    "desktopScale": "1",
+    "mobileScale": "1",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "video": "./assets/videos/LPC_30s.mp4",
+  "poster": "./assets/images/derived/hero-crowd-plain.jpg",
+  "focal": "center 42%",
+  "mobileFocal": "center 38%",
+  "label": "Regular church events",
+  "title": "LPC worship, baptism, prayer, and fellowship"
+}

@@ -1,0 +1,156 @@
+{
+  "plan-your-visit": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/plan-visit-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center",
+    "desktopScale": "1",
+    "mobileScale": "1",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  },
+  "ministries": {
+    "video": "",
+    "desktopImage": "/uploads/images/ministries-mv5seizm.png",
+    "mobileImage": "",
+    "desktopFocal": "center 50%",
+    "mobileFocal": "center 50%",
+    "desktopScale": "1.025",
+    "mobileScale": "1.025",
+    "desktopFit": "fill",
+    "mobileFit": "cover"
+  },
+  "youth": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/youth-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center",
+    "desktopScale": "1",
+    "mobileScale": "1",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  },
+  "branches": {
+    "video": "",
+    "desktopImage": "/uploads/images/london-pentecostal-church-branches-banner-mv5r7eiv.png",
+    "mobileImage": "",
+    "desktopFocal": "center 0%",
+    "mobileFocal": "center 0%",
+    "desktopScale": "1.025",
+    "mobileScale": "0.8",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  },
+  "about": {
+    "video": "",
+    "desktopImage": "./assets/images/LPC-google-images/Pastor and Betty sis.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center 13%",
+    "mobileFocal": "center 13%",
+    "desktopScale": "1",
+    "mobileScale": "1",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  },
+  "pastors": {
+    "video": "",
+    "desktopImage": "/uploads/images/all-pastors-mv5r3bqw.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center 0%",
+    "mobileFocal": "center 13%",
+    "desktopScale": "1.025",
+    "mobileScale": "0.969",
+    "desktopFit": "fill",
+    "mobileFit": "cover"
+  },
+  "watch": {
+    "video": "",
+    "desktopImage": "./assets/images/derived/watch-hero.jpg",
+    "mobileImage": "",
+    "desktopFocal": "center",
+    "mobileFocal": "center",
+    "desktopScale": "1",
+    "mobileScale": "1",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  },
+  "contact": {
+    "video": "",
+    "desktopImage": "/uploads/images/contact-branch-network-map-mv5vtpbg.png",
+    "mobileImage": "",
+    "desktopFocal": "center 13%",
+    "mobileFocal": "center 88%",
+    "desktopScale": "1.194",
+    "mobileScale": "1.194",
+    "desktopFit": "cover",
+    "mobileFit": "cover"
+  },
+  "chelmsford": {
+    "video": "",
+    "desktopImage": "./assets/images/branch-banners/chelmsford.png",
+    "mobileImage": "",
+    "desktopFocal": "center 50%",
+    "mobileFocal": "center 50%",
+    "desktopScale": "1.025",
+    "mobileScale": "1.025",
+    "desktopFit": "fill",
+    "mobileFit": "cover"
+  },
+  "harlow": {
+    "video": "",
+    "desktopImage": "./assets/images/branch-banners/harlow.png",
+    "mobileImage": "",
+    "desktopFocal": "center 50%",
+    "mobileFocal": "center 50%",
+    "desktopScale": "1.025",
+    "mobileScale": "1.025",
+    "desktopFit": "fill",
+    "mobileFit": "cover"
+  },
+  "basildon": {
+    "video": "",
+    "desktopImage": "./assets/images/branch-banners/basildon.png",
+    "mobileImage": "",
+    "desktopFocal": "center 50%",
+    "mobileFocal": "center 50%",
+    "desktopScale": "1.025",
+    "mobileScale": "1.025",
+    "desktopFit": "fill",
+    "mobileFit": "cover"
+  },
+  "south-london": {
+    "video": "",
+    "desktopImage": "./assets/images/branch-banners/south-london.png",
+    "mobileImage": "",
+    "desktopFocal": "center 50%",
+    "mobileFocal": "center 50%",
+    "desktopScale": "1.025",
+    "mobileScale": "1.025",
+    "desktopFit": "fill",
+    "mobileFit": "cover"
+  },
+  "branch-577260e2-0b63-4b6a-af48-e033d8b9d404": {
+    "video": "",
+    "desktopImage": "./assets/images/branch-banners/southend-on-sea.png",
+    "mobileImage": "",
+    "desktopFocal": "center 50%",
+    "mobileFocal": "center 50%",
+    "desktopScale": "1.025",
+    "mobileScale": "1.025",
+    "desktopFit": "fill",
+    "mobileFit": "cover"
+  },
+  "chadwell-heath": {
+    "video": "",
+    "desktopImage": "./assets/images/branch-banners/chadwell-heath.png",
+    "mobileImage": "",
+    "desktopFocal": "center 50%",
+    "mobileFocal": "center 50%",
+    "desktopScale": "1.025",
+    "mobileScale": "1.025",
+    "desktopFit": "fill",
+    "mobileFit": "cover"
+  }
+}
