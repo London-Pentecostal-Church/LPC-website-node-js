@@ -2101,7 +2101,7 @@ function renderFooter() {
           </section>
         </div>
         <div class="footer__bottom">
-          &copy; 2026 London Pentecostal Church. All rights reserved.
+          &copy; 2026 London Pentecostal Church | Part of Alpha International Ministries | Charity No : 1126140 | All rights reserved.
         </div>
       </div>
     </footer>
