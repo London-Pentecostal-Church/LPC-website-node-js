@@ -3,25 +3,25 @@
     "pastor-1": {
       "name": "Pr Binoy Jose",
       "role": "Associate Pastor",
-      "image": "./assets/images/team/binoy-jose.jpg",
+      "image": "./assets/images/team/Binoy.png",
       "intro": ""
     },
     "pastor-2": {
       "name": "Pr Tiju Thomas",
       "role": "Associate / Youth Pastor",
-      "image": "./assets/images/team/tiju-thomas.jpg",
+      "image": "./assets/images/team/Tiju.png",
       "intro": ""
     },
     "pastor-3": {
       "name": "Pr Joseph Varghese",
       "role": "Associate Pastor",
-      "image": "./assets/images/team/joseph-varghese.jpg",
+      "image": "./assets/images/team/Joseph.png",
       "intro": ""
     },
     "pastor-4": {
       "name": "Pr Eugene Skaria",
       "role": "Associate Pastor",
-      "image": "./assets/images/team/eugene-skaria.jpg",
+      "image": "./assets/images/team/Eugene.png",
       "intro": ""
     }
   }

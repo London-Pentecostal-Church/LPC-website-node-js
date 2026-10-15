@@ -311,27 +311,27 @@ let pastors = [
   {
     name: "Pr Sam John",
     role: "President & Senior Minister",
-    image: "./assets/images/team/sam-john-hero.jpg",
+    image: "./assets/images/team/sam-john-hero.png",
   },
   {
     name: "Pr Binoy Jose",
     role: "Associate Pastor",
-    image: "./assets/images/team/binoy-jose.jpg",
+    image: "./assets/images/team/Binoy.png",
   },
   {
     name: "Pr Tiju Thomas",
     role: "Associate / Youth Pastor",
-    image: "./assets/images/team/tiju-thomas.jpg",
+    image: "./assets/images/team/Tiju.png",
   },
   {
     name: "Pr Joseph Varghese",
     role: "Associate Pastor",
-    image: "./assets/images/team/joseph-varghese.jpg",
+    image: "./assets/images/team/Joseph.png",
   },
   {
     name: "Pr Eugene Skaria",
     role: "Associate Pastor",
-    image: "./assets/images/team/eugene-skaria.jpg",
+    image: "./assets/images/team/Eugene.png",
   },
 ];
 
