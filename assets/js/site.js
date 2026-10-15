@@ -423,10 +423,10 @@ const routes = {
         <section class="section section--tight section--swoosh">
           <div class="container">
             <div class="cards-grid">
-              ${infoCard("Worship", "Spirit-filled worship that draws people into the presence of God.", "music")}
+              ${infoCard("Food Bank", "Supporting our local community with nutritious meals and resources.", "utensils")}
               ${infoCard("Sunday School", "Biblical foundation for children and young families across our branches.", "book")}
-              ${infoCard("Youth Ministry", "A Christ-centred ministry shaping the next generation.", "users")}
-              ${infoCard("Media Ministry", "Using technology and communication to spread the gospel.", "play")}
+              ${infoCard("Christ Envoys Youth Ministry", "A Christ-centred ministry shaping the next generation.", "users")}
+              ${infoCard("Women in Christ", "LPC Women’s Group nurtures Christian growth, strengthens friendships, and builds a supportive community through faith, fellowship, laughter, and shared experiences.", "play")}
             </div>
           </div>
         </section>

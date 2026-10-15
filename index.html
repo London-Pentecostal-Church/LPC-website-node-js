@@ -1,65 +1,100 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>London Pentecostal Church</title>
-  <meta name="description" content="A welcoming church family across London and Essex. Find your local branch, plan a visit, and join us for worship.">
-  <meta name="theme-color" content="#071a3e">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23071a3e'/%3E%3Cpath d='M32 11v42M18 27h28' stroke='%23e8b63e' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./assets/css/styles.css">
-  <link rel="stylesheet" href="./assets/css/modern.css?v=20261009-media-frames">
-</head>
-<body>
-  <div class="site-shell">
-    <header class="topbar">
-      <div class="container topbar__inner">
-        <p class="topbar__celebration">25 years of God’s faithfulness <span class="anniversary-years">2001 — 2026</span></p>
-      </div>
-    </header>
-
-    <header class="site-header" id="site-header">
-      <div class="container site-header__inner">
-        <a class="brand" href="#/home" aria-label="London Pentecostal Church home">
-          <img class="brand__logo" src="./assets/images/brand/lpc-logo.png" alt="London Pentecostal Church logo">
-          <span class="brand__wordmark">
-            <span>London</span>
-            <span>Pentecostal</span>
-            <span>Church</span>
-          </span>
-        </a>
-
-        <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="primary-nav" aria-label="Open menu">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-
-        <nav class="primary-nav" id="primary-nav" aria-label="Primary">
-          <a href="#/home">Home</a>
-          <a href="#/about">About</a>
-          <a href="#/ministries">Ministries</a>
-          <a href="#/youth">Youth</a>
-          <a href="#/branches">Branches</a>
-          <a href="#/pastors">Pastors</a>
-          <a href="#/watch">Watch</a>
-          <a href="#/contact">Contact</a>
-        </nav>
-
-        <div class="header-actions">
-          <a class="btn btn--gold" href="#/plan-your-visit">Plan Your Visit</a>
-          <a class="btn btn--outline header-watch" href="#/watch">Watch Sermons</a>
+  <head>
+    <meta charset="utf-8" />
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>London Pentecostal Church</title>
+    <meta
+      name="description"
+      content="A welcoming church family across London and Essex. Find your local branch, plan a visit, and join us for worship."
+    />
+    <meta name="theme-color" content="#071a3e" />
+    <link
+      rel="icon"
+      sizes="180x180"
+      href="./assets/images/brand/favicon.ico"
+    />
+    <!-- <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23071a3e'/%3E%3Cpath d='M32 11v42M18 27h28' stroke='%23e8b63e' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E"> -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./assets/css/styles.css" />
+    <link
+      rel="stylesheet"
+      href="./assets/css/modern.css?v=20261009-media-frames"
+    />
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="topbar">
+        <div class="container topbar__inner">
+          <p class="topbar__celebration">
+            25 years of God’s faithfulness
+            <span class="anniversary-years">2001 — 2026</span>
+          </p>
         </div>
-      </div>
-    </header>
+      </header>
 
-    <main id="app"></main>
-  </div>
+      <header class="site-header" id="site-header">
+        <div class="container site-header__inner">
+          <a
+            class="brand"
+            href="#/home"
+            aria-label="London Pentecostal Church home"
+          >
+            <img
+              class="brand__logo"
+              src="./assets/images/brand/lpc-logo.png"
+              alt="London Pentecostal Church logo"
+            />
+            <span class="brand__wordmark">
+              <span>London</span>
+              <span>Pentecostal</span>
+              <span>Church</span>
+            </span>
+          </a>
 
-  <script src="./assets/js/site.js"></script>
-</body>
+          <button
+            class="menu-toggle"
+            id="menu-toggle"
+            aria-expanded="false"
+            aria-controls="primary-nav"
+            aria-label="Open menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+
+          <nav class="primary-nav" id="primary-nav" aria-label="Primary">
+            <a href="#/home">Home</a>
+            <a href="#/about">About</a>
+            <a href="#/ministries">Ministries</a>
+            <a href="#/youth">Youth</a>
+            <a href="#/branches">Branches</a>
+            <a href="#/pastors">Pastors</a>
+            <a href="#/watch">Watch</a>
+            <a href="#/contact">Contact</a>
+          </nav>
+
+          <div class="header-actions">
+            <a class="btn btn--gold" href="#/plan-your-visit"
+              >Plan Your Visit</a
+            >
+            <a class="btn btn--outline header-watch" href="#/watch"
+              >Watch Sermons</a
+            >
+          </div>
+        </div>
+      </header>
+
+      <main id="app"></main>
+    </div>
+
+    <script src="./assets/js/site.js"></script>
+  </body>
 </html>
