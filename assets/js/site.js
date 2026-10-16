@@ -582,7 +582,7 @@ const routes = {
             <div class="content-stack">
               ${card("Phone", "020 8690 0701")}
               ${card("Email", "info@lpc.org.uk")}
-              ${card("Main Address", "327 High Road, Chadwell Heath, Romford, Essex RM6 6PP")}
+              ${card("Main Address", "Oasis Centre, Essex Rd, Romford RM6 4JA")}
             </div>
             <article class="contact-card">
               <h3>Send a message</h3>
@@ -2074,31 +2074,102 @@ function renderFooter() {
             </ul>
           </section>
 
-          <section class="footer__column">
-            <h4>Contact Us</h4>
-            <p>${branch ? escapeHtml(branch.address || "Branch address to be confirmed.").replaceAll("\n", "<br>") : "327 High Road, Chadwell Heath<br>Romford, Essex RM6 6PP"}</p>
-            <p>+44 20 8690 0701<br>info@lpc.org.uk</p>
-          </section>
+        <section class="footer__column">
+  <h4>Contact Us</h4>
 
-          <section class="footer__column">
-            <h4>Service Times</h4>
-            <ul>
-              ${
-                branch
-                  ? (branch.services || "Service times to be confirmed.")
-                      .split(/\r?\n/)
-                      .filter((line) => line.trim())
-                      .map((line) => `<li>${escapeHtml(line)}</li>`)
-                      .join("")
-                  : `
-              <li>Sunday Service - 10:30 AM</li>
-              <li>Wednesday Prayer - 7:30 PM</li>
-              <li>Sunday School - 10:30 AM</li>
-              <li>Youth Service (Fri) - 7:00 PM</li>
-              `
-              }
-            </ul>
-          </section>
+  <p class="footer__address">
+    ${
+      branch
+        ? escapeHtml(
+            branch.address || "Branch address to be confirmed.",
+          ).replaceAll("\n", "<br>")
+        : "Oasis Centre, Essex Rd, <br> Romford RM6 4JA"
+    }
+  </p>
+
+  <div class="footer__contact-item">
+    <svg width="18" height="18" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="1.8"
+      stroke-linecap="round" stroke-linejoin="round"
+      aria-hidden="true">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2
+        19.79 19.79 0 0 1-8.63-3.07
+        19.5 19.5 0 0 1-6-6
+        19.79 19.79 0 0 1-3.07-8.67
+        A2 2 0 0 1 4.11 2h3
+        a2 2 0 0 1 2 1.72
+        c.12.96.36 1.9.7 2.8
+        a2 2 0 0 1-.45 2.11L8.09 9.91
+        a16 16 0 0 0 6 6l1.27-1.27
+        a2 2 0 0 1 2.11-.45
+        c.9.34 1.84.58 2.8.7
+        A2 2 0 0 1 22 16.92Z"/>
+    </svg>
+
+    <a href="tel:+442086900701">+44 20 8690 0701</a>
+  </div>
+
+  <div class="footer__contact-item">
+    <svg width="18" height="18" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="1.8"
+      stroke-linecap="round" stroke-linejoin="round"
+      aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="2"/>
+      <path d="m3 7 9 6 9-6"/>
+    </svg>
+
+    <a href="mailto:info@lpc.org.uk">info@lpc.org.uk</a>
+  </div>
+</section>
+
+         <section class="footer__column">
+  <h4>Service Times</h4>
+  <ul class="footer__services">
+    ${
+      branch
+        ? (branch.services || "Service times to be confirmed.")
+            .split(/\r?\n/)
+            .filter((line) => line.trim())
+            .map((line) => {
+              const [service, ...timing] = line.split(/\s*-\s*/);
+              return `
+                <li>
+                  <span class="service__name">${escapeHtml(service)}</span>
+                  ${
+                    timing.length
+                      ? `<span class="service__time">${escapeHtml(timing.join(" - "))}</span>`
+                      : ""
+                  }
+                </li>
+              `;
+            })
+            .join("")
+        : `
+          <li>
+            <span class="service__name">Sunday Service</span>
+            <span class="service__time">
+              8:00 AM — Hindi<br>
+              9:30 AM — English<br>
+              11:00 AM — Malayalam<br>
+              4:30 PM — Branches
+            </span>
+          </li>
+          <li>
+            <span class="service__name">Cell Prayers</span>
+            <span class="service__time">7:30 PM · Monday – Friday</span>
+          </li>
+          <li>
+            <span class="service__name">Sunday School</span>
+            <span class="service__time">10:30 AM</span>
+          </li>
+          <li>
+            <span class="service__name">Youth Meetings</span>
+            <span class="service__time">12:00 PM · Last Sunday of the month</span>
+          </li> 
+        `
+    }
+  </ul>
+</section>
         </div>
         <div class="footer__bottom">
           &copy; 2026 London Pentecostal Church | Part of Alpha International Ministries | Charity No : 1126140 | All rights reserved.
