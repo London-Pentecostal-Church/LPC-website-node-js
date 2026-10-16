@@ -1377,6 +1377,53 @@ textarea {
   color: rgba(107, 107, 107, 0.68);
 }
 
+.footer__services {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.footer__services li {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  line-height: 1.6;
+}
+
+.footer__contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.footer__contact-item svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: currentColor;
+}
+
+.footer__contact-item a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer__contact-item a:hover {
+  color: #fff;
+}
+
+.service__time {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.88rem;
+}
+
 .subhero {
   position: relative;
   overflow: hidden;
