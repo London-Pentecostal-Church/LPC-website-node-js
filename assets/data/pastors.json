@@ -23,6 +23,36 @@
       "role": "Associate Pastor",
       "image": "./assets/images/team/Eugene.png",
       "intro": ""
+    },
+    "pastor-5": {
+      "name": "Pr Joji Babu George",
+      "role": "Associate Pastor",
+      "image": "./assets/images/team/joji-babu-george-edit.png",
+      "intro": ""
+    },    
+    "pastor-6": {
+      "name": "Pr Jojy Varghese",
+      "role": "Associate Pastor",
+      "image": "./assets/images/team/Jojy-Varghese.png",
+      "intro": ""
+    },    
+    "pastor-7": {
+      "name": "Pr Anish Mavelil",
+      "role": "Associate Pastor",
+      "image": "./assets/images/team/Anish-Mavelil.png",
+      "intro": ""
+    },
+    "pastor-8": {
+      "name": "Pr Jinu kurian",
+      "role": "Associate Pastor",
+      "image": "./assets/images/team/Jinu-Kurian.png",
+      "intro": ""
+    },
+    "pastor-9": {
+      "name": "Pr Aju jacob",
+      "role": "Associate Pastor",
+      "image": "./assets/images/team/Aju-Jacob.png",
+      "intro": ""
     }
   }
 }
