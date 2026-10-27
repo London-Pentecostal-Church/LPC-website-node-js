@@ -1,3 +1,5 @@
+import { createVolunteerStore } from './volunteer-store.mjs';
+import { handleVolunteers } from './volunteers.mjs';
 import { calendarEvents } from './calendar.mjs';
 /* BUNDLED_DATA */
 const json = (body,status=200,extra={}) => new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store',...extra}});
@@ -50,7 +52,7 @@ async function assetList(env){
  });return {images:assets.filter(a=>a.type==='image'),videos:assets.filter(a=>a.type==='video')};
 }
 async function body(request){if(Number(request.headers.get('content-length')||0)>100000)throw new Error('Configuration too large');const raw=await request.text();if(raw.length>100000)throw new Error('Configuration too large');return JSON.parse(raw);}
-const sessionCookie = value => `lpc_admin=${value}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${value?28800:0}`;
+const sessionCookie = value => `lpc_admin=${value}; HttpOnly; Secure; SameSite=None; Partitioned; Path=/; Max-Age=${value?28800:0}`;
 async function resolveLatestYouTubeVideo(channelUrl, handle) {
   const baseUrl = normalizeChannelUrl(channelUrl, handle);
   const live = await findFirstVideo(`${baseUrl}/streams`, true);
@@ -218,6 +220,10 @@ export default {async fetch(request,env){
    if(!['GET','HEAD'].includes(request.method)){
     if(request.headers.get('origin')!==url.origin||request.headers.get('sec-fetch-site')==='cross-site')return json({error:'Invalid request origin'},403);
    }
+   if(path.startsWith('/api/volunteers')) {
+    const store = createVolunteerStore(env);
+    return handleVolunteers(request,store,await authenticated(request,env)?{id:'admin',name:env.LPC_ADMIN_USERNAME||'Administrator',admin:true}:null);
+   }
    if(path==='/api/admin/session')return json({authenticated:await authenticated(request,env),username:env.LPC_ADMIN_USERNAME||'admin'});
    if(path==='/api/admin/login'&&request.method==='POST'){
     if(!env.LPC_ADMIN_PASSWORD||!env.LPC_ADMIN_USERNAME)return json({error:'Admin sign-in has not been configured'},503);
@@ -294,7 +300,25 @@ export default {async fetch(request,env){
    if(deleted.includes('.'+decodeURIComponent(path))) return new Response('Not found',{status:404,headers:{'cache-control':'no-store'}});
   }
   if(path.startsWith('/uploads/')){
-   const object=await env.BUCKET.get(decodeURIComponent(path.slice(1)),{range:request.headers});if(!object)return new Response('Not found',{status:404});const headers=new Headers({'x-content-type-options':'nosniff','cache-control':'public,max-age=3600','accept-ranges':'bytes'});object.writeHttpMetadata(headers);headers.set('etag',object.httpEtag);let status=200;if(object.range){status=206;headers.set('content-range',`bytes ${object.range.offset}-${object.range.offset+object.range.length-1}/${object.size}`);}return new Response(object.body,{status,headers});
+   const object=await env.BUCKET.get(decodeURIComponent(path.slice(1)),{range:request.headers});
+   if(!object){
+    if(!bundledUploadPaths.includes(decodeURIComponent(path)))return new Response('Not found',{status:404});
+    return env.ASSETS.fetch(new Request(new URL('/assets/data'+path,url),request));
+   }
+   const headers=new Headers({'x-content-type-options':'nosniff','cache-control':'public,max-age=3600','accept-ranges':'bytes'});object.writeHttpMetadata(headers);headers.set('etag',object.httpEtag);let status=200;if(request.headers.has('range')&&object.range){status=206;headers.set('content-range',`bytes ${object.range.offset}-${object.range.offset+object.range.length-1}/${object.size}`);}return new Response(request.method==='HEAD'?null:object.body,{status,headers});
+  }
+  if(path.startsWith('/assets/videos/') && request.headers.has('range')){
+   const fullRequest=new Request(request);fullRequest.headers.delete('range');
+   const response=await env.ASSETS.fetch(fullRequest);
+   if(response.status!==200)return response;
+   const bytes=await response.arrayBuffer(),size=bytes.byteLength;
+   const match=request.headers.get('range').match(/^bytes=(\d*)-(\d*)$/);
+   if(!match||(!match[1]&&!match[2]))return new Response(null,{status:416,headers:{'content-range':`bytes */${size}`}});
+   const start=match[1]?Number(match[1]):Math.max(0,size-Number(match[2]));
+   const end=match[1]?(match[2]?Math.min(Number(match[2]),size-1):size-1):size-1;
+   if(start>=size||end<start)return new Response(null,{status:416,headers:{'content-range':`bytes */${size}`}});
+   const headers=new Headers(response.headers);headers.set('accept-ranges','bytes');headers.set('content-range',`bytes ${start}-${end}/${size}`);headers.set('content-length',String(end-start+1));headers.delete('content-encoding');
+   return new Response(request.method==='HEAD'?null:bytes.slice(start,end+1),{status:206,headers});
   }
   // Serve the application shell for direct URLs; all APIs remain server-authorized.
   if(/^\/(?:admin|lpcadmin)(?:\/|$)/.test(path)||path==='/'||/^\/(about|ministries|youth|branches|pastors|watch|contact|plan-your-visit)(\/.*)?$/.test(path)){

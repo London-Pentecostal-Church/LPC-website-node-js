@@ -6,5 +6,11 @@ dist/
 !.env.example
 *.zip
 *.log
-.openai/
+.openai/*
+!.openai/hosting.json
 .npm-cache/
+
+.private-volunteers/
+**/volunteer-private/
+
+.local-test/

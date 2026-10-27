@@ -1,18 +1,18 @@
 {
   "plan-your-visit": {
     "video": "",
-    "desktopImage": "/uploads/images/plan-visit-hero-mv5yhngf.jpg",
+    "desktopImage": "./assets/images/derived/plan-visit-hero.jpg",
     "mobileImage": "",
     "desktopFocal": "center 50%",
-    "mobileFocal": "center 50%",
+    "mobileFocal": "center 25%",
     "desktopScale": "1.025",
-    "mobileScale": "1.025",
-    "desktopFit": "fill",
+    "mobileScale": "0.913",
+    "desktopFit": "cover",
     "mobileFit": "cover"
   },
   "ministries": {
     "video": "",
-    "desktopImage": "/uploads/images/ministries-mv5seizm.png",
+    "desktopImage": "/uploads/images/6c3aa53db5f4-Ministries.png",
     "mobileImage": "",
     "desktopFocal": "center 50%",
     "mobileFocal": "center 50%",
@@ -34,10 +34,10 @@
   },
   "branches": {
     "video": "",
-    "desktopImage": "/uploads/images/london-pentecostal-church-branches-banner-mv5r7eiv.png",
+    "desktopImage": "/uploads/images/efabb9947854-London_Pentecostal_Church_Branches_Banner.png",
     "mobileImage": "",
-    "desktopFocal": "center 0%",
-    "mobileFocal": "center 0%",
+    "desktopFocal": "center 50%",
+    "mobileFocal": "center 50%",
     "desktopScale": "1.025",
     "mobileScale": "0.8",
     "desktopFit": "cover",
@@ -56,18 +56,18 @@
   },
   "pastors": {
     "video": "",
-    "desktopImage": "/uploads/images/all-pastors-mv5r3bqw.jpg",
+    "desktopImage": "/uploads/images/5188289bbed3-All_pastors.jpg",
     "mobileImage": "",
-    "desktopFocal": "center 0%",
+    "desktopFocal": "center 50%",
     "mobileFocal": "center 13%",
     "desktopScale": "1.025",
     "mobileScale": "0.969",
-    "desktopFit": "fill",
-    "mobileFit": "cover"
+    "desktopFit": "contain",
+    "mobileFit": "fill"
   },
   "watch": {
     "video": "",
-    "desktopImage": "/uploads/images/watch-hero-mv5xw9fg.jpg",
+    "desktopImage": "./assets/images/derived/watch-hero.jpg",
     "mobileImage": "",
     "desktopFocal": "center 50%",
     "mobileFocal": "center 50%",
@@ -78,7 +78,7 @@
   },
   "contact": {
     "video": "",
-    "desktopImage": "/uploads/images/contact-branch-network-map-mv5vtpbg.png",
+    "desktopImage": "./assets/images/derived/contact-hero.jpg",
     "mobileImage": "",
     "desktopFocal": "center 13%",
     "mobileFocal": "center 88%",

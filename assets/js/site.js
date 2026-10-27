@@ -1219,23 +1219,19 @@ function renderAdminPanel() {
             <div>
               <p class="section-label">Admin Control Panel</p>
               <h1 class="section-title">Manage your church website</h1>
-              <p class="section-copy">Maintain pastors, branches, and images, or publish weekly updates below.</p>
+              <p class="section-copy">Manage user access, weekly schedules, pastors, branches, and website content.</p>
             </div>
-            <button class="btn btn--outline" type="button" data-admin-logout>Logout</button>
+            <button class="btn btn--outline" type="button" data-admin-logout>Sign out</button>
           </div>
-          <nav class="admin-maintenance-links" aria-label="Website maintenance">
-            <a class="btn btn--gold" href="#/lpcadmin/pastors">Manage associate pastors</a>
-            <a class="btn btn--gold" href="#/lpcadmin/branches">Manage branches</a>
-            <a class="btn btn--gold" href="#/lpcadmin/assets">Manage asset images</a>
+          <nav class="admin-maintenance-links admin-shortcut-grid" aria-label="Website maintenance">
+            <a href="#/lpcadmin/users"><span class="admin-shortcut-icon" aria-hidden="true">01</span><strong>Users &amp; access</strong><small>User profiles, accounts, serving roles and scheduler permissions</small><span class="admin-shortcut-open">Manage users →</span></a>
+            <a href="#/lpcadmin/volunteers"><span class="admin-shortcut-icon" aria-hidden="true">02</span><strong>Weekly planner</strong><small>Meetings, pastors and volunteer duties</small><span class="admin-shortcut-open">Open planner →</span></a>
+            <a href="#/lpcadmin/pastors"><span class="admin-shortcut-icon" aria-hidden="true">03</span><strong>Pastor profiles</strong><small>Photos, names and introductions</small><span class="admin-shortcut-open">Manage pastors →</span></a>
+            <a href="#/lpcadmin/branches"><span class="admin-shortcut-icon" aria-hidden="true">04</span><strong>Church branches</strong><small>Colours, service times and contact details</small><span class="admin-shortcut-open">Manage branches →</span></a>
+            <a href="#/lpcadmin/assets"><span class="admin-shortcut-icon" aria-hidden="true">05</span><strong>Photos & videos</strong><small>Find, upload and reuse website media</small><span class="admin-shortcut-open">Open media library →</span></a>
           </nav>
-          <section class="admin-panel__section">
-            <h2>Watch Page Pastor Thought</h2>
-            ${renderPastorThoughtAdminFields()}
-          </section>
-          <section class="admin-panel__section">
-            <h2>Site Header Message</h2>
-            ${renderSiteSettingsAdminFields()}
-          </section>
+          <details class="admin-section-fold"><summary><strong>Pastor’s thought</strong><span>Edit the message on the Watch page</span></summary>${renderPastorThoughtAdminFields()}</details>
+          <details class="admin-section-fold"><summary><strong>Website header message</strong><span>Edit the announcement at the top of the website</span></summary>${renderSiteSettingsAdminFields()}</details>
           <section class="admin-panel__section">
             <div class="admin-panel__section-heading">
               <h2>Page images and heroes</h2><a class="btn btn--gold" href="#/lpcadmin/page-images">Edit images within pages</a>
@@ -1375,9 +1371,11 @@ function renderAdminLogin() {
       <section class="section section--tight section--admin-hero">
         <div class="container admin-login">
           <div>
-            <p class="section-label">Admin Login</p>
-            <h1 class="section-title">Service Sign in</h1>
-            <p class="section-copy">If you are having issues, Contact media@londonpentecostalchurch.org</p>
+            <p class="section-label">Website administration</p>
+            <h1 class="section-title">Website admin sign-in</h1>
+            <p class="section-copy">Use the website administrator username and password. This is a separate account from volunteer sign-in.</p>
+            <p class="section-copy"><a href="#/volunteers">Pastor, choir or media volunteer? Sign in to the weekly planner</a>.</p>
+            <details><summary>Forgot the website admin login?</summary><p>Email reset does not apply to this account. The site owner must replace the administrator username or password in hosting settings. Contact <a href="mailto:media@londonpentecostalchurch.org">media@londonpentecostalchurch.org</a> for help.</p></details>
           </div>
           <form class="admin-form" id="admin-login-form">
             <label>Username
@@ -2171,7 +2169,7 @@ function renderFooter() {
   </ul>
 </section>
         </div>
-        <div class="footer__bottom">
+        <div class="footer__bottom"><a href="#/volunteers">Team access</a><br>
           &copy; 2026 London Pentecostal Church | Part of Alpha International Ministries | Charity No : 1126140 | All rights reserved.
         </div>
       </div>
@@ -2228,7 +2226,7 @@ function normalizeRoute() {
     window.location.hash ||
     window.location.pathname.replace(/\/$/, "") ||
     "/home";
-  const route = hash.replace(/^#/, "");
+  const route = hash.replace(/^#/, "").split("?")[0];
   return route.startsWith("/") ? route : `/${route}`;
 }
 
@@ -2251,6 +2249,19 @@ function renderRoute() {
       ${renderFooter()}
     `;
 
+  // The planner owns its return navigation; all other routes share this one.
+  if (!app.querySelector('#volunteer-app')) {
+    const navigation = document.createElement('div');
+    navigation.className = 'container route-return';
+    navigation.innerHTML = window.LPCTeamAuth.navigation(adminSession.authenticated ? {admin:true} : null);
+    app.prepend(navigation);
+    fetch('/api/volunteers/session', {cache:'no-store'})
+      .then(response => response.ok ? response.json() : null)
+      .then(session => {
+        if (session && navigation.isConnected) navigation.innerHTML = window.LPCTeamAuth.navigation(session.actor);
+      }).catch(() => {});
+  }
+
   document.querySelectorAll(".primary-nav a").forEach((link) => {
     const href = link.getAttribute("href") || "";
     const active =
@@ -2270,6 +2281,7 @@ function renderRoute() {
   initAssetManager();
   applyImageFraming();
   initBranchAdmin();
+  window.LPCVolunteers?.mount();
   applyPageImages(document.getElementById("app"), route);
   initPageImageAdmin();
   initContactForm();
@@ -2303,6 +2315,9 @@ function renderRoute() {
 }
 
 function getDynamicRouteRenderer(route) {
+  if (route === '/lpcadmin/users') return () => adminSession.authenticated ? '<section class="section vs-section"><div id="volunteer-app" data-users-page="true" class="container"><p>Loading users &amp; access…</p></div></section>' : renderAdminLogin();
+  if (route === '/volunteers' || route === '/lpcadmin/volunteers') return () => '<section class="section vs-section"><div id="volunteer-app" class="container"><p>Loading volunteer schedules…</p></div></section>';
+
   if (route === "/lpcadmin/page-images") return renderPageImageAdmin;
   if (route === "/lpcadmin/branches" || route === "/admin/branches")
     return renderBranchAdmin;
@@ -2346,7 +2361,7 @@ function initHomeHeroAdmin() {
       if (!response.ok) {
         const failure = await response.json().catch(() => ({}));
         throw new Error(
-          failure.error || "Unable to sign in. Please try again.",
+          response.status === 401 ? "Website admin username or password is incorrect. Use the separate website admin credentials. If forgotten, open the recovery guidance above." : failure.error || "Unable to sign in. Please try again.",
         );
       }
       adminSession = await response.json();
@@ -2359,10 +2374,22 @@ function initHomeHeroAdmin() {
 
   document
     .querySelector("[data-admin-logout]")
-    ?.addEventListener("click", async () => {
-      await fetch("/api/admin/logout", { method: "POST" });
-      adminSession = { authenticated: false };
-      renderRoute();
+    ?.addEventListener("click", async (event) => {
+      const button = event.currentTarget;
+      button.disabled = true;
+      try {
+        await window.LPCTeamAuth.signOut();
+      } catch (error) {
+        button.disabled = false;
+        let status = button.parentElement.querySelector('[data-sign-out-error]');
+        if (!status) {
+          status = document.createElement('p');
+          status.dataset.signOutError = '';
+          status.setAttribute('role', 'alert');
+          button.parentElement.append(status);
+        }
+        status.textContent = error.message;
+      }
     });
 
   initAssetPicker();
@@ -2480,6 +2507,8 @@ function replaceAdminPreview(key, markup) {
 
 function initAssetPicker() {
   document.querySelectorAll("[data-asset-picker]").forEach((button) => {
+    if (button.dataset.pickerBound) return;
+    button.dataset.pickerBound = "true";
     button.addEventListener("click", () => {
       const field = button.closest(".admin-asset-field");
       const input = field?.querySelector("input");
@@ -3492,46 +3521,37 @@ function renderPastorProfile(id) {
 }
 function renderPastorAdmin() {
   if (!adminSession.authenticated) return renderAdminLogin();
-  return (
-    '<section class="section"><div class="container"><a href="#/lpcadmin">Back to admin</a><h1 class="section-title">Associate Pastors</h1><p>Changes appear on the website after you save. Removing a pastor removes their profile from the website.</p><form class="admin-form" id="pastors-form"><div id="pastor-editor-list">' +
-    Object.entries(pastorConfig.people)
-      .map(([id, p]) => renderPastorFields(id, p))
-      .join("") +
-    '</div><div class="admin-form__actions"><button type="button" class="btn btn--outline" id="add-pastor">Add associate pastor</button><button type="submit" class="btn btn--gold">Save pastors</button></div><p role="status" aria-live="polite" id="pastors-message"></p></form></div></section>' +
-    renderFooter()
-  );
+  return `<section class="section pastor-admin-page"><div class="container"><a href="#/lpcadmin" class="admin-back-link">← Back to admin</a><div class="admin-panel__header"><div><h1 class="section-title">Associate Pastors</h1><p>Choose a pastor to edit their profile. Save all changes when ready.</p></div><a class="btn btn--outline" href="#/pastors">View website profiles</a></div><form class="admin-form" id="pastors-form"><div class="pastor-admin-toolbar"><span>${Object.keys(pastorConfig.people).length} pastor profiles</span><button type="button" class="btn btn--outline" id="add-pastor">+ Add pastor</button></div><div id="pastor-editor-list">${Object.entries(pastorConfig.people).map(([id,p]) => renderPastorFields(id,p)).join("")}</div><div class="admin-form__actions pastor-admin-savebar"><span data-pastor-save-status>All changes saved</span><button type="submit" class="btn btn--gold">Save all changes</button></div><p role="status" aria-live="polite" id="pastors-message"></p></form></div></section>${renderFooter()}`;
 }
 function renderPastorFields(id, p) {
-  return (
-    '<fieldset class="pastor-editor" data-pastor-id="' +
-    escapeAttribute(id) +
-    '"><legend>' +
-    escapeHtml(p.name || "New associate pastor") +
-    '</legend><label>Name<input name="name" required maxlength="150" value="' +
-    escapeAttribute(p.name || "") +
-    '"></label><label>Role<input name="role" required maxlength="150" value="' +
-    escapeAttribute(p.role || "Associate Pastor") +
-    '"></label><label>Photo' +
-    renderAssetPickerInput({
-      name: "image",
-      value: p.image || "",
-      placeholder: "Choose or upload a photo",
-    }) +
-    '</label><label>Introduction<textarea name="intro" rows="5" maxlength="5000">' +
-    escapeHtml(p.intro || "") +
-    '</textarea></label><button type="button" class="btn btn--outline" data-remove-pastor>Remove pastor</button></fieldset>'
-  );
+  const initials = (p.name || "New pastor").split(/\s+/).filter(Boolean).slice(0,2).map(word => word[0]).join("");
+  return `<details class="pastor-admin-card" data-pastor-id="${escapeAttribute(id)}" ${p.name ? "" : "open"}><summary><span class="pastor-admin-portrait"><img data-pastor-preview src="${escapeAttribute(p.image || "")}" alt="" ${p.image ? "" : "hidden"}><span data-pastor-initials ${p.image ? "hidden" : ""}>${escapeHtml(initials)}</span></span><span class="pastor-admin-identity"><strong data-pastor-title>${escapeHtml(p.name || "New associate pastor")}</strong><small data-pastor-role>${escapeHtml(p.role || "Associate Pastor")}</small></span><span class="pastor-admin-edit-label">Edit details</span></summary><div class="pastor-editor"><div class="pastor-admin-basics"><label>Name<input name="name" required maxlength="150" value="${escapeAttribute(p.name || "")}"></label><label>Role<input name="role" required maxlength="150" value="${escapeAttribute(p.role || "Associate Pastor")}"></label></div><label class="pastor-admin-photo-control">Profile photo${renderAssetPickerInput({ name: "image", value: p.image || "", placeholder: "Choose a photo" }).replace('type="text"', 'type="hidden"').replace("Browse images", "Change photo")}</label><label>Introduction<textarea name="intro" rows="3" maxlength="5000" placeholder="A short introduction for the website">${escapeHtml(p.intro || "")}</textarea></label><div class="pastor-admin-card-actions"><button type="button" class="btn btn--outline" data-remove-pastor>Remove profile</button><button type="button" class="btn btn--outline" data-close-pastor>Done editing</button></div></div></details>`;
 }
 function initPastorAdmin() {
   const form = document.getElementById("pastors-form");
   if (!form) return;
+  const dirty = () => { form.querySelector('[data-pastor-save-status]').textContent = "Unsaved changes"; };
+  form.addEventListener("input", event => {
+    const card = event.target.closest('[data-pastor-id]');
+    if (!card) return;
+    dirty();
+    if (event.target.name === "name") card.querySelector('[data-pastor-title]').textContent = event.target.value || "New associate pastor";
+    if (event.target.name === "role") card.querySelector('[data-pastor-role]').textContent = event.target.value || "Associate Pastor";
+    if (event.target.name === "image") {
+      const image = card.querySelector('[data-pastor-preview]');
+      image.src = event.target.value; image.hidden = !event.target.value;
+      card.querySelector('[data-pastor-initials]').hidden = !!event.target.value;
+    }
+  });
+  form.addEventListener("invalid", event => { const card = event.target.closest('[data-pastor-id]'); if (card) card.open = true; }, true);
   form.addEventListener("click", (event) => {
+    if (event.target.closest('[data-close-pastor]')) event.target.closest('[data-pastor-id]').open = false;
     const remove = event.target.closest("[data-remove-pastor]");
     if (
       remove &&
-      confirm("Remove this pastor? Save pastors to publish this change.")
+      confirm("Remove this profile? Save all changes to update the website.")
     )
-      remove.closest("[data-pastor-id]").remove();
+      { remove.closest("[data-pastor-id]").remove(); dirty(); }
     if (event.target.closest("#add-pastor")) {
       document
         .getElementById("pastor-editor-list")
@@ -3540,6 +3560,7 @@ function initPastorAdmin() {
           renderPastorFields("pastor-" + crypto.randomUUID(), {}),
         );
       initAssetPicker();
+      dirty();
       form.querySelector("[data-pastor-id]:last-child input").focus();
     }
   });
@@ -3572,6 +3593,7 @@ function initPastorAdmin() {
           result.error || "Could not save. Please sign in again and retry.",
         );
       applyPastorConfig(result);
+      form.querySelector("[data-pastor-save-status]").textContent = "All changes saved";
       message.textContent = "Pastors saved. Your website is updated.";
     } catch (error) {
       message.textContent = error.message;
@@ -3777,13 +3799,13 @@ function renderBranchFields(slug, b) {
     escapeHtml(b.name || "New branch") +
     "</strong><small>" +
     escapeHtml(b.churchName || "Add branch details") +
-    '</small></span><span class="branch-editor-chevron">⌄</span></summary><div class="pastor-editor branch-editor-fields">' +
+    '</small></span><span class="branch-admin-colour-dot" aria-hidden="true"></span><span class="branch-editor-chevron">⌄</span></summary><div class="pastor-editor branch-editor-fields">' +
     text("name", "Branch name", true) +
     text("churchName", "Church name", true) +
     text("subtitle", "Label") +
-    '<label>Branch colour<input name="color" type="color" value="' +
+    '<label>Branch colour<span class="admin-colour-control"><input aria-label="Choose branch colour" name="color" type="color" value="' +
     escapeAttribute(b.color || "#1f59cb") +
-    '"></label><label>Logo' +
+    '"><output data-colour-value>' + escapeHtml(b.color || "#1f59cb") + '</output></span></label><label>Logo' +
     renderAssetPickerInput({ name: "logo", value: b.logo || "" }) +
     "</label><label>Branch photo" +
     renderAssetPickerInput({ name: "image", value: b.image || "" }) +
@@ -4042,8 +4064,10 @@ function initBranchAdmin() {
     if (event.target.name === "name")
       row.querySelector("[data-branch-title]").textContent =
         event.target.value || "New branch";
-    if (event.target.name === "color")
+    if (event.target.name === "color") {
       row.style.setProperty("--branch-color", event.target.value);
+      const code = row.querySelector("[data-colour-value]"); if (code) code.textContent = event.target.value;
+    }
   });
   document
     .getElementById("check-branch-recovery")

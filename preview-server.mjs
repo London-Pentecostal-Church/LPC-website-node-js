@@ -1,11 +1,18 @@
+import { accountMailConfigured, sendAccountMail } from './worker/account-mail.mjs';
+import { handleVolunteers } from './worker/volunteers.mjs';
 import { createServer } from "node:http";
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, stat, writeFile, rename } from "node:fs/promises";
 import { createReadStream, existsSync } from "node:fs";
 import { basename, dirname, extname, join, normalize, resolve } from "node:path";
 import { calendarEvents } from './worker/calendar.mjs';
 import { sendContact } from './worker/contact-mail.mjs';
 const contactAttempts=new Map();
+const volunteerRoot = process.env.DATA_DIR ? resolve(process.env.DATA_DIR, 'volunteer-private') : resolve(import.meta.dirname, '.private-volunteers');
+let volunteerQueue = Promise.resolve();
+async function volunteerRead(file) { try { return JSON.parse(await readFile(join(volunteerRoot,file+'.json'),'utf8')); } catch(error) { if(error.code==='ENOENT') return null; throw error; } }
+async function volunteerWrite(file,value) { await mkdir(volunteerRoot,{recursive:true}); const target=join(volunteerRoot,file+'.json'), temp=target+'.tmp'; await writeFile(temp,JSON.stringify(value),{mode:0o600}); await rename(temp,target); }
+
 
 const root = resolve(import.meta.dirname);
 const port = Number(process.env.PORT || 4173);
@@ -48,6 +55,14 @@ const videoExtensions = new Set([".mp4", ".webm", ".mov", ".m4v"]);
 createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host}`);
+    if(url.pathname.startsWith('/api/volunteers')) {
+      let raw; try { raw=['GET','HEAD'].includes(request.method)?undefined:await readLimitedBody(request,150000); } catch {sendJson(response,413,{error:'Request too large'});return;}
+      const headers=new Headers(request.headers); headers.delete('cf-connecting-ip'); headers.set('x-volunteer-client',request.socket.remoteAddress||'unknown');
+      const protocol=request.socket.encrypted?'https:':(process.env.PUBLIC_ORIGIN?new URL(process.env.PUBLIC_ORIGIN).protocol:request.headers['x-forwarded-proto']==='https'?'https:':'http:');
+      const apiRequest=new Request(protocol+'//'+request.headers.host+url.pathname,{method:request.method,headers,body:raw});
+      const execute=()=>handleVolunteers(apiRequest,{emailReady:accountMailConfigured(process.env),sendAccountMail:message=>sendAccountMail(process.env,message),getState:()=>volunteerRead('state'),saveState:async(value,expected)=>{const previous=await volunteerRead('state');if((previous?.revision||0)!==expected)throw Object.assign(new Error('Schedule changed. Reload before saving.'),{status:409});await volunteerWrite('state',value);},getKey:volunteerRead,putKey:volunteerWrite},isAuthenticated(request)?{id:'admin',name:adminUsername,admin:true}:null);
+      const result=await (volunteerQueue=volunteerQueue.catch(()=>{}).then(execute)); response.writeHead(result.status,Object.fromEntries(result.headers));response.end(await result.text());return;
+    }
     if(url.pathname==='/api/contact'){
       if(request.method!=='POST'){sendJson(response,405,{error:'Method not allowed'});return;}
       if(!['http:','https:'].some(protocol=>request.headers.origin===protocol+'//'+request.headers.host)||request.headers['sec-fetch-site']==='cross-site'){sendJson(response,403,{error:'Invalid request origin'});return;}
@@ -1102,6 +1117,9 @@ function withDefaultThumbnail(video) {
 
 async function serveStatic(pathname, response) {
   const requested = pathname === "/" ? "/index.html" : decodeURIComponent(pathname);
+  const candidate=resolve(root,'.'+requested);
+  if(candidate===volunteerRoot||candidate.startsWith(volunteerRoot+'/')||requested.split('/').some(p=>p==='.private-volunteers'||p==='volunteer-private')) {sendJson(response,404,{error:'Not found'});return;}
+
   const filePath = normalize(join(root, requested));
 
   if (!filePath.startsWith(root) || !existsSync(filePath)) {

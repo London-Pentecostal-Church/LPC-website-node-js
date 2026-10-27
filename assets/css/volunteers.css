@@ -1,0 +1,1300 @@
+.vs-app {
+  max-width: 1440px;
+  color: #172b42;
+  padding-top: 28px;
+  padding-bottom: 50px;
+  font-family: Inter, Arial, sans-serif;
+}
+.vs-app h1 {
+  font-size: clamp(26px, 3vw, 38px);
+  margin: 0 0 8px;
+}
+.vs-app h2 {
+  font-size: 23px;
+  margin: 0 0 12px;
+}
+.vs-app h3 {
+  margin: 0 0 10px;
+}
+.vs-app p {
+  margin: 8px 0 14px;
+}
+.vs-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.vs-header-actions,
+.vs-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.vs-eyebrow {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #087e84;
+}
+.vs-btn {
+  background: #00888c;
+  color: #fff;
+  border: 1px solid #00888c;
+  border-radius: 7px;
+  padding: 11px 16px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 42px;
+}
+.vs-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.vs-secondary {
+  background: white;
+  color: #17354c;
+  border-color: #cbd5df;
+}
+.vs-kind {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid #dfe8ee;
+  margin: 24px 0 0;
+}
+.vs-kind button,
+.vs-tabs button {
+  background: transparent;
+  border: 0;
+  padding: 16px;
+  color: #52667a;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.vs-kind .is-active,
+.vs-tabs .is-active {
+  color: #007f86;
+  border-bottom: 3px solid #00888c;
+}
+.vs-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  background: #f4f7fa;
+  margin-bottom: 12px;
+}
+.vs-tabs button {
+  font-size: 14px;
+  padding: 13px;
+}
+.vs-card {
+  background: #fff;
+  border: 1px solid #dce4eb;
+  padding: 24px;
+  border-radius: 12px;
+  margin: 16px 0;
+  box-shadow: 0 4px 16px #172b4205;
+}
+.vs-toolbar {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: end;
+}
+.vs-toolbar .vs-field {
+  flex: 1;
+  min-width: 180px;
+}
+.vs-toolbar .vs-field:last-child {
+  flex: 2;
+}
+.vs-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+.vs-app input:not([type="checkbox"]),
+.vs-app select,
+.vs-app textarea {
+  font: inherit;
+  font-weight: 400;
+  color: #172b42;
+  background: #fff;
+  padding: 10px;
+  border: 1px solid #b9c8d6;
+  border-radius: 6px;
+  width: 100%;
+  max-width: 100%;
+  min-height: 42px;
+  box-sizing: border-box;
+}
+.vs-app input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #00888c;
+  flex-shrink: 0;
+}
+.vs-app button:focus-visible,
+.vs-app input:focus-visible,
+.vs-app select:focus-visible,
+.vs-app a:focus-visible {
+  outline: 3px solid #e5ad35;
+  outline-offset: 3px;
+}
+.vs-app textarea {
+  min-height: 100px;
+}
+.vs-table-wrap {
+  overflow-x: auto;
+  margin: 16px 0;
+}
+.vs-app table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  text-align: left;
+}
+.vs-app th,
+.vs-app td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #e2e8ee;
+  vertical-align: middle;
+}
+.vs-app thead {
+  background: #eef3f7;
+}
+.vs-app th {
+  font-weight: 600;
+}
+.vs-app td select {
+  min-width: 160px;
+}
+.vs-app td small,
+.vs-app th small {
+  display: block;
+  margin-top: 6px;
+  font-weight: 400;
+}
+.vs-status {
+  font-size: 12px;
+  color: #67778a;
+}
+.vs-ok {
+  color: #16774c;
+}
+.vs-warning {
+  color: #a55200;
+}
+.vs-gap {
+  background: #fff7e8;
+}
+.vs-badge {
+  display: inline-block;
+  padding: 6px 11px;
+  border-radius: 20px;
+  background: #fff0d4;
+  color: #8a5700;
+  font-size: 12px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.vs-green {
+  background: #dcf6e5;
+  color: #16683f;
+}
+.vs-savebar {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+}
+.vs-savebar .vs-field {
+  flex: 1;
+  min-width: 240px;
+  margin: 0;
+}
+.vs-help {
+  font-size: 13px;
+  color: #5b6d80;
+  margin-top: 14px !important;
+}
+.vs-callout {
+  padding: 14px;
+  background: #e9f6f7;
+  border-radius: 6px;
+  margin: 16px 0;
+}
+.vs-availability {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+.vs-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.vs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #d7e1e9;
+  border-radius: 6px;
+  padding: 8px;
+  font-weight: 400;
+  font-size: 13px;
+  cursor: pointer;
+}
+.vs-chip:has(input:checked) {
+  background: #e3f5f4;
+  border-color: #8bcdca;
+}
+.vs-empty {
+  padding: 45px 20px;
+  text-align: center;
+  background: #f5f8fa;
+  border-radius: 10px;
+  margin: 20px 0;
+}
+.vs-message {
+  color: #16774c;
+  min-height: 20px;
+  font-size: 14px;
+}
+.vs-error {
+  color: #a12424;
+  padding: 6px 0;
+  font-size: 14px;
+}
+.vs-unread {
+  border-left: 4px solid #00888c;
+}
+.vs-dialog {
+  width: min(640px, 94vw);
+  max-height: 90vh;
+  padding: 24px;
+  border: 1px solid #d0dce7;
+  border-radius: 14px;
+  color: #172b42;
+  background: white;
+  box-shadow: 0 20px 70px #0004;
+}
+.vs-dialog::backdrop {
+  background: #0a203a88;
+}
+.vs-dialog header,
+.vs-dialog footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+.vs-dialog header {
+  margin-bottom: 20px;
+}
+.vs-dialog footer {
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+.vs-dialog h2 {
+  margin: 0;
+}
+.vs-dialog fieldset {
+  border: 1px solid #dae3eb;
+  border-radius: 8px;
+  padding: 15px;
+  margin: 16px 0;
+}
+.vs-dialog legend {
+  font-weight: 600;
+}
+.vs-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.vs-login {
+  max-width: 460px;
+  margin: 20px auto;
+}
+.vs-app blockquote {
+  border-left: 3px solid #7dbabd;
+  padding: 10px 16px;
+  background: #f3f8fa;
+  margin: 15px 0;
+}
+.vs-app small {
+  color: #5b6d80;
+}
+.vs-app [hidden] {
+  display: none !important;
+}
+@media (max-width: 650px) {
+  .vs-app {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .vs-card {
+    padding: 16px;
+  }
+  .vs-kind button {
+    flex: 1;
+    font-size: 14px;
+    padding: 14px 6px;
+  }
+  .vs-tabs {
+    gap: 0;
+  }
+  .vs-tabs button {
+    font-size: 12px;
+    padding: 12px 8px;
+  }
+  .vs-app th,
+  .vs-app td {
+    padding: 10px 6px;
+  }
+  .vs-app table {
+    font-size: 12px;
+  }
+  .vs-app td select {
+    min-width: 115px;
+    font-size: 12px;
+  }
+  .vs-table-wrap {
+    margin-left: -8px;
+    margin-right: -8px;
+  }
+  .vs-savebar > div {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+  .vs-savebar > div button {
+    flex: 1;
+  }
+  .vs-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .vs-dialog {
+    padding: 16px;
+  }
+  .vs-header-actions {
+    font-size: 13px;
+  }
+}
+
+/* Keep the working area compact within the existing public-site shell. */
+.section.vs-section {
+  padding: 24px 0;
+}
+.vs-app {
+  padding-top: 0;
+}
+.vs-mobile-swap {
+  display: none;
+}
+.vs-message:empty {
+  min-height: 0;
+  margin: 0;
+}
+@media (max-width: 650px) {
+  .section.vs-section {
+    padding: 18px 0;
+  }
+  .vs-header {
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .vs-header-actions {
+    gap: 6px;
+  }
+  .vs-header-actions .vs-btn {
+    padding: 7px 10px;
+    min-height: 36px;
+    font-size: 12px;
+  }
+  .vs-kind {
+    margin-top: 12px;
+  }
+  .vs-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .vs-toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .vs-toolbar .vs-field {
+    min-width: 0;
+    width: 100%;
+    margin-bottom: 0;
+  }
+  .vs-toolbar .vs-field:last-child {
+    grid-column: 1 / -1;
+  }
+  .vs-mobile-swap {
+    display: block;
+    margin-top: 8px;
+  }
+  .vs-mobile-swap .vs-btn {
+    padding: 5px 8px;
+    min-height: 34px;
+    font-size: 12px;
+  }
+  .vs-duty-table th:last-child,
+  .vs-duty-table td:last-child {
+    display: none;
+  }
+  .vs-duty-table {
+    table-layout: fixed;
+  }
+  .vs-duty-table th,
+  .vs-duty-table td {
+    overflow-wrap: anywhere;
+  }
+  .vs-duty-table td select {
+    min-width: 0;
+    padding: 8px 2px;
+  }
+  .vs-availability {
+    margin: 12px 0;
+    gap: 6px;
+  }
+  .vs-availability .vs-btn {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+}
+/* Weekly planner: common meetings, separate pastoral and choir responsibilities. */
+.wp-app {
+  max-width: 1520px;
+  width: calc(100% - 48px);
+}
+.wp-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 12px 0 24px;
+}
+.wp-heading h1 {
+  font-size: clamp(26px, 3vw, 36px);
+  letter-spacing: -0.8px;
+}
+.wp-heading p {
+  color: #617083;
+}
+.wp-heading .vs-eyebrow {
+  color: #087f85;
+}
+.wp-account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.wp-account > span {
+  font-weight: 600;
+}
+.wp-menu {
+  position: relative;
+}
+.wp-menu summary {
+  cursor: pointer;
+  padding: 10px 12px;
+  border: 1px solid #d6dfe7;
+  border-radius: 7px;
+  background: white;
+  list-style: none;
+  font-size: 13px;
+}
+.wp-menu summary:after {
+  content: " ▾";
+  color: #708399;
+}
+.wp-menu[open] > div {
+  position: absolute;
+  right: 0;
+  top: 44px;
+  min-width: 220px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 12px;
+  background: #fff;
+  box-shadow: 0 12px 35px #142a4230;
+  border: 1px solid #d6dfe7;
+  border-radius: 10px;
+}
+.wp-menu a {
+  padding: 10px;
+}
+.wp-primary {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #d9e3e9;
+  margin-bottom: 25px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.wp-primary button {
+  font: inherit;
+  font-weight: 600;
+  color: #617083;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  padding: 16px 20px;
+  cursor: pointer;
+}
+.wp-primary .is-active {
+  color: #087e85;
+  border-bottom-color: #087e85;
+  background: #edf8f7;
+  border-radius: 8px 8px 0 0;
+}
+.wp-section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+.wp-section-heading h2 {
+  font-size: 24px;
+  margin: 0 0 6px;
+}
+.wp-section-heading p {
+  margin: 0;
+  color: #617083;
+  font-size: 14px;
+}
+.wp-weekbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  background: #f2f6f8;
+  border: 1px solid #dfe7ec;
+  border-radius: 12px;
+  margin: 22px 0 14px;
+}
+.wp-week-nav {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.wp-week-nav > div {
+  text-align: center;
+  min-width: 170px;
+}
+.wp-week-nav strong {
+  font-size: 18px;
+}
+.wp-week-nav small {
+  display: block;
+  font-size: 12px;
+  margin-top: 4px;
+}
+.wp-date-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.wp-date-tools .vs-field {
+  margin: 0;
+  font-size: 12px;
+  flex-direction: row;
+  align-items: center;
+}
+.wp-date-tools input {
+  max-width: 160px;
+  font-size: 13px;
+}
+.wp-filters {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.wp-filters .vs-field {
+  width: 220px;
+  margin: 0;
+  font-size: 12px;
+}
+.wp-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+  align-items: start;
+}
+.wp-day {
+  min-width: 0;
+  border: 1px solid #e0e7ec;
+  background: #f7f9fb;
+  border-radius: 10px;
+  min-height: 340px;
+  overflow: hidden;
+}
+.wp-day > header {
+  padding: 14px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  border-bottom: 1px solid #e0e7ec;
+  background: #f0f4f7;
+  font-size: 12px;
+}
+.wp-day > header strong {
+  width: 100%;
+  font-size: 14px;
+}
+.wp-day > header small {
+  color: #087f85;
+  font-weight: 700;
+  margin-left: auto;
+}
+.wp-day > div {
+  padding: 7px;
+}
+.wp-today {
+  border-color: #70bbb9;
+}
+.wp-today > header {
+  background: #e5f4f2;
+}
+.wp-no-meeting {
+  color: #8796a7;
+  font-size: 12px;
+  text-align: center;
+  margin-top: 25px !important;
+}
+.wp-meeting {
+  padding: 12px;
+  background: white;
+  border: 1px solid #dce5eb;
+  border-left: 3px solid #159392;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  box-shadow: 0 2px 5px #18334805;
+}
+.wp-pastoral {
+  border-left-color: #b28c40;
+}
+.wp-meeting h3 {
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 10px 0 6px;
+}
+.wp-meeting p {
+  font-size: 12px;
+  margin: 6px 0;
+}
+.wp-meeting-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.wp-meeting time {
+  font-size: 14px;
+  font-weight: 700;
+  color: #17374f;
+}
+.wp-meeting .vs-badge {
+  font-size: 10px;
+  padding: 4px 6px;
+}
+.wp-branch {
+  color: #5c7082;
+  line-height: 1.5;
+}
+.wp-area {
+  color: #087e85;
+  font-size: 11px !important;
+}
+.wp-assigned {
+  border-top: 1px solid #edf0f3;
+  margin: 10px 0;
+  padding-top: 8px;
+}
+.wp-assigned > div {
+  padding: 5px 0;
+}
+.wp-assigned strong,
+.wp-assigned span,
+.wp-assigned small {
+  display: block;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.wp-assigned strong {
+  font-weight: 600;
+  color: #56697b;
+}
+.wp-assigned span {
+  font-size: 12px;
+  color: #17374f;
+}
+.wp-assigned > small {
+  font-size: 11px;
+  color: #72869a;
+}
+.wp-meeting > .vs-btn {
+  width: 100%;
+  font-size: 12px;
+  padding: 8px 5px;
+  min-height: 37px;
+}
+.wp-cancelled {
+  opacity: 0.65;
+}
+.wp-personal {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+.wp-personal .wp-meeting {
+  padding: 22px;
+  max-width: 560px;
+}
+.wp-personal .wp-meeting h3 {
+  font-size: 21px;
+}
+.wp-personal .wp-meeting p,
+.wp-personal .wp-assigned span {
+  font-size: 14px;
+}
+.wp-personal .wp-assigned strong,
+.wp-personal .wp-assigned small {
+  font-size: 13px;
+}
+.wp-personal .wp-meeting time {
+  font-size: 18px;
+}
+.wp-my-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+.wp-my-actions .vs-btn {
+  font-size: 12px;
+  padding: 9px 12px;
+}
+.wp-empty {
+  padding: 40px 24px;
+  background: #f4f8fa;
+  border: 1px dashed #c4d6df;
+  border-radius: 12px;
+  color: #5d7082;
+}
+.wp-empty h3 {
+  font-size: 20px;
+  color: #17374f;
+}
+.wp-detail-table {
+  table-layout: fixed;
+}
+.wp-detail-table td select {
+  min-width: 0;
+}
+.wp-detail-table th {
+  font-size: 13px;
+}
+.wp-detail-save {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #e3eaef;
+  padding-top: 18px;
+  margin-top: 20px;
+}
+.wp-detail-meta {
+  line-height: 1.8;
+}
+.wp-recurring {
+  margin: 28px 0;
+  background: #f7f9fb;
+  padding: 20px;
+  border: 1px solid #dce6ed;
+  border-radius: 10px;
+}
+.wp-recurring > summary {
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 600;
+}
+.wp-regular-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  border-top: 1px solid #e0e7ec;
+  margin-top: 15px;
+  padding-top: 15px;
+}
+.wp-regular-row small {
+  display: block;
+  margin-top: 6px;
+}
+.wp-regular-row > div:last-child {
+  display: flex;
+  gap: 8px;
+}
+@media (max-width: 1100px) and (min-width: 761px) {
+  .wp-calendar {
+    gap: 5px;
+  }
+  .wp-day > div {
+    padding: 4px;
+  }
+  .wp-meeting {
+    padding: 8px;
+  }
+  .wp-meeting h3 {
+    font-size: 12px;
+  }
+  .wp-weekbar {
+    gap: 12px;
+  }
+  .wp-week-nav {
+    gap: 10px;
+  }
+}
+@media (max-width: 760px) {
+  .wp-app {
+    width: 100%;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .wp-heading {
+    padding: 4px 0 15px;
+    gap: 12px;
+  }
+  .wp-heading h1 {
+    font-size: 27px;
+  }
+  .wp-account {
+    gap: 6px;
+    font-size: 12px;
+  }
+  .wp-account .vs-btn,
+  .wp-menu summary {
+    font-size: 12px;
+    padding: 8px;
+  }
+  .wp-primary {
+    gap: 0;
+    margin-bottom: 18px;
+  }
+  .wp-primary button {
+    font-size: 13px;
+    padding: 13px 12px;
+  }
+  .wp-section-heading h2 {
+    font-size: 22px;
+  }
+  .wp-section-heading p {
+    font-size: 13px;
+  }
+  .wp-weekbar {
+    padding: 12px;
+    gap: 14px;
+    display: block;
+  }
+  .wp-week-nav {
+    gap: 8px;
+    justify-content: space-between;
+  }
+  .wp-week-nav > div {
+    min-width: 0;
+  }
+  .wp-week-nav strong {
+    font-size: 14px;
+  }
+  .wp-week-nav .vs-btn {
+    font-size: 11px;
+    padding: 8px 9px;
+  }
+  .wp-date-tools {
+    justify-content: space-between;
+    margin-top: 12px;
+  }
+  .wp-date-tools .vs-btn {
+    font-size: 12px;
+    min-height: 36px;
+    padding: 7px 10px;
+  }
+  .wp-date-tools input {
+    min-height: 36px;
+    max-width: 145px;
+  }
+  .wp-filters {
+    gap: 10px;
+  }
+  .wp-filters .vs-field {
+    width: 50%;
+  }
+  .wp-calendar {
+    display: block;
+  }
+  .wp-day {
+    min-height: 0;
+    margin-bottom: 18px;
+    background: transparent;
+    border: 0;
+  }
+  .wp-day > header {
+    border: 0;
+    border-radius: 7px;
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .wp-day > header strong {
+    width: auto;
+  }
+  .wp-day-empty {
+    display: none;
+  }
+  .wp-day > div {
+    padding: 12px 0 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .wp-meeting {
+    padding: 18px;
+    margin: 0;
+  }
+  .wp-meeting h3 {
+    font-size: 19px;
+  }
+  .wp-meeting p,
+  .wp-assigned span {
+    font-size: 14px;
+  }
+  .wp-assigned strong,
+  .wp-assigned small {
+    font-size: 12px;
+  }
+  .wp-meeting .vs-btn {
+    font-size: 13px;
+  }
+  .wp-meeting time {
+    font-size: 17px;
+  }
+  .wp-calendar:has(.wp-day-empty:nth-child(7)):not(:has(.wp-meeting)):after {
+    content: "No meetings this week. Use the week controls above to browse other dates.";
+    display: block;
+    padding: 25px;
+    background: #f3f7f9;
+    border-radius: 10px;
+    color: #5d7082;
+  }
+  .wp-personal {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  .wp-personal .wp-meeting {
+    max-width: none;
+    padding: 18px;
+  }
+  .wp-detail-table td,
+  .wp-detail-table th {
+    padding: 10px 5px;
+    font-size: 12px;
+  }
+  .wp-detail-table td select {
+    font-size: 12px;
+    padding: 9px 3px;
+  }
+  .wp-detail-save .vs-btn {
+    flex: 1;
+  }
+  .wp-menu[open] > div {
+    right: 0;
+    min-width: 210px;
+  }
+}
+
+@media (max-width: 760px) {
+  .wp-primary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    overflow: visible;
+    white-space: normal;
+    border: 0;
+  }
+  .wp-primary button {
+    padding: 12px 8px;
+    border: 1px solid #dce5eb;
+    border-radius: 7px;
+    background: #f7f9fb;
+  }
+  .wp-primary .is-active {
+    background: #e7f5f3;
+    border-color: #73b9b7;
+    border-bottom: 3px solid #087e85;
+    border-radius: 7px;
+  }
+}
+
+/* Calendar cards inherit the branch colours maintained on the church website. */
+.wp-meeting {
+  border-left: 4px solid var(--wp-branch-colour, #159392);
+  background: color-mix(in srgb, var(--wp-branch-colour, #159392) 4%, white);
+}
+.wp-meeting .wp-branch {
+  color: color-mix(in srgb, var(--wp-branch-colour, #159392) 72%, black);
+  font-weight: 600;
+}
+.wp-meeting > .vs-btn:not(.vs-secondary) {
+  background: var(--wp-branch-colour, #159392);
+  border-color: var(--wp-branch-colour, #159392);
+  color: var(--wp-branch-foreground, white);
+}
+.wp-meeting > .vs-btn.vs-secondary {
+  border-color: color-mix(in srgb, var(--wp-branch-colour, #159392) 45%, white);
+  color: color-mix(in srgb, var(--wp-branch-colour, #159392) 72%, black);
+}
+
+/* Meeting-first weekly planner: empty dates stay in the compact strip only. */
+.wp-week-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin: 0 0 22px; }
+.wp-week-day { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 10px 12px; border: 1px solid #e0e7ec; border-radius: 9px; background: #f5f7f9; color: #627385; font: inherit; text-align: left; }
+.wp-week-day strong { font-size: 14px; }
+.wp-week-day span { font-size: 12px; }
+.wp-week-day small { font-size: 11px; }
+button.wp-week-day { cursor: pointer; }
+.wp-week-day.wp-has-meetings { background: #fff; border-color: #b6ccda; color: #17374f; box-shadow: 0 2px 5px #18334808; }
+.wp-week-day.wp-has-meetings small { color: #087f85; font-weight: 700; }
+.wp-week-day.wp-is-today { background: #e5f4f2; border-color: #70bbb9; }
+button.wp-week-day:hover { border-color: #087f85; background: #eef8f7; }
+button.wp-week-day:focus-visible { outline: 3px solid #087f85; outline-offset: 3px; }
+.wp-agenda { display: grid; gap: 24px; }
+.wp-event-day { min-width: 0; }
+.wp-event-day > header { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding: 10px 14px; background: #f0f4f7; border-radius: 8px; }
+.wp-event-day.wp-is-today > header { background: #e5f4f2; }
+.wp-event-day h3 { margin: 0; color: #17374f; font-size: 17px; scroll-margin-top: 24px; }
+.wp-day-count { margin-left: auto; font-size: 12px; color: #5d7082; }
+.wp-event-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 285px), 1fr)); gap: 12px; align-items: stretch; }
+.wp-event-grid .wp-meeting { margin: 0; padding: 14px; display: flex; flex-direction: column; }
+.wp-event-grid .wp-meeting h3 { font-size: 16px; margin: 9px 0 5px; }
+.wp-event-grid .wp-meeting > .vs-btn:last-child { margin-top: auto; }
+.wp-event-grid .wp-assigned { display: grid; gap: 7px; margin-bottom: 12px; }
+@media (max-width: 760px) {
+  .wp-week-strip { gap: 4px; margin-bottom: 16px; }
+  .wp-week-day { padding: 8px 3px; align-items: center; gap: 3px; }
+  .wp-week-day strong { font-size: 12px; }
+  .wp-week-day span, .wp-week-day small { font-size: 10px; }
+  .wp-event-day > header { padding: 10px; }
+  .wp-event-day h3 { font-size: 15px; }
+  .wp-event-grid .wp-meeting { padding: 14px; }
+  .wp-event-grid .wp-meeting p, .wp-event-grid .wp-assigned span { font-size: 13px; }
+  .wp-event-grid .wp-meeting time { font-size: 16px; }
+}
+
+.vs-recovery-hint { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding: 12px 16px; margin: 16px 0; background: #eef8f7; border: 1px solid #b8ded9; border-radius: 10px; font-size: 13px; }
+.vs-recovery-code { font-family: monospace; font-size: 16px; letter-spacing: .5px; }
+
+.vs-login-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+.vs-account-requests { padding: 18px; margin-bottom: 24px; background: #eef8f7; border: 1px solid #b8ded9; border-radius: 10px; }
+.vs-account-request { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 0; border-top: 1px solid #cde2df; }
+.vs-account-request > div { flex: 1; min-width: 180px; }
+.vs-account-request small { display: block; margin-top: 4px; }
+
+.wp-coverage { padding: 8px 0; border-top: 1px solid #e6edf0; margin: 8px 0; }
+.wp-coverage p { margin: 3px 0; }
+.wp-coverage small { color: #607383; font-size: 11px; }
+.wp-emergency { padding: 12px; margin: 16px 0; background: #fff8ed; border: 1px solid #e8d3ad; border-radius: 8px; }
+.wp-emergency summary { cursor: pointer; font-weight: 700; }
+
+.wp-event-grid .wp-assigned:empty { display: none; }
+
+.vs-availability-confirmed { display: inline-flex; align-items: center; min-height: 42px; padding: 10px 14px; border-radius: 8px; background: #dff5e8; border: 1px solid #a2d7b9; color: #14643f; font-size: 13px; font-weight: 700; }
+
+/* Personal responsibility remains visible at a glance, independently of branch colour. */
+.wp-duty-callout { margin: 14px 0; padding: 14px 16px; border: 2px solid #087c83; border-left-width: 6px; border-radius: 10px; background: #e3f5f4; color: #123b44; }
+.wp-duty-label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.wp-duty-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.wp-duty-line + .wp-duty-line { margin-top: 10px; padding-top: 10px; border-top: 1px solid #acd8d5; }
+.wp-duty-line strong { font-size: 20px; line-height: 1.3; overflow-wrap: anywhere; }
+.wp-duty-position { flex-shrink: 0; padding: 5px 10px; border-radius: 20px; background: #08676c; color: #fff; font-size: 12px; font-weight: 800; }
+.wp-duty-position.wp-duty-reserve { background: #785214; }
+
+.vs-badge.vs-red { background: #fce2e2; color: #a0141b; }
+.wp-coverage .wp-pastor-needed { color: #a0141b; font-weight: 700; }
+
+.wp-planner-focus h4 { margin: 0 0 14px; font-size: 1.1rem; color: #102e43; }
+.wp-team-group + .wp-team-group { border-top: 1px solid #dce3e8; margin-top: 14px; padding-top: 12px; }
+.wp-team-group h5 { margin: 0 0 8px; font-size: .9rem; color: #54697a; }
+.wp-team-group p small { display: block; }
+.wp-cross-team { padding-top: 12px; border-top: 1px solid #dce3e8; font-size: .88rem; }
+
+.wp-cross-team small { display: block; color: #54697a; margin-top: 4px; }
+
+.wp-meeting-top .vs-badge { white-space: normal; overflow-wrap: anywhere; text-align: left; }
+.wp-meeting-top { align-items: flex-start; gap: 12px; }
+.wp-meeting-top time { flex-shrink: 0; }
+
+.wp-account-role { display: block; font-size: .8rem; color: #54697a; margin-top: 3px; }
+
+/* Phone account menus expand in the page instead of overflowing the viewport. */
+@media (max-width: 760px) {
+  .wp-heading > div, .wp-account { min-width: 0; max-width: 100%; }
+  .wp-account { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; align-items: stretch; gap: 8px; }
+  .wp-account > span, .wp-account > .wp-menu { grid-column: 1 / -1; }
+  .wp-account > span { overflow-wrap: anywhere; }
+  .wp-account > .vs-btn { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+  .wp-account > .wp-menu { width: 100%; min-width: 0; }
+  .wp-account .wp-menu summary { box-sizing: border-box; width: 100%; min-height: 44px; padding: 12px; }
+  .wp-account .wp-menu[open] > div { position: static; inset: auto; min-width: 0; width: 100%; max-width: 100%; box-sizing: border-box; margin-top: 8px; box-shadow: none; }
+  .wp-account .wp-menu[open] > div > * { box-sizing: border-box; min-width: 0; max-width: 100%; width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left; }
+}
+
+@media (max-width: 760px) { .wp-account .vs-btn { min-height: 44px; } }
+
+/* Mobile workspace: readable forms, labelled assignment/member cards and reachable actions. */
+@media (max-width: 760px) {
+  .vs-app, .vs-app *, .vs-dialog, .vs-dialog * { box-sizing: border-box; }
+  .vs-app { padding: 16px 12px 32px; font-size: 16px; }
+  .vs-app h1 { font-size: clamp(24px, 7vw, 30px); }
+  .vs-app h2 { font-size: 22px; }
+  .vs-app p, .vs-app small, .vs-app h2, .vs-app h3, .vs-app h4, .vs-app label { overflow-wrap: anywhere; }
+  .vs-app input:not([type="checkbox"]), .vs-app select, .vs-app textarea, .vs-app td select { font-size: 16px; min-width: 0; min-height: 46px; }
+  .vs-app textarea { min-height: 112px; }
+  .vs-app .vs-btn, .vs-dialog .vs-btn, .wp-primary button { min-height: 46px; font-size: 14px; white-space: normal; overflow-wrap: anywhere; }
+  .vs-field { min-width: 0; font-size: 14px; }
+  .vs-card { padding: 16px; }
+  .vs-header, .vs-header-actions, .vs-toolbar, .vs-actions { gap: 10px; }
+  .vs-header > div, .vs-toolbar .vs-field { min-width: 0; width: 100%; }
+  .vs-header > div:last-child, .vs-actions { display: flex; flex-wrap: wrap; }
+  .vs-header > div:last-child .vs-btn, .vs-actions .vs-btn, .vs-login-links .vs-btn { flex: 1 1 140px; }
+  .vs-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .vs-chips { gap: 8px; }
+  .vs-chip { min-height: 44px; align-items: center; max-width: 100%; }
+  .vs-app input[type="checkbox"] { width: 22px; height: 22px; min-width: 22px; }
+  .wp-primary { gap: 8px; }
+  .wp-primary button { padding: 12px 8px; }
+  .wp-weekbar { padding: 12px; }
+  .wp-week-nav { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 10px; }
+  .wp-week-nav > div { grid-column: 1 / -1; grid-row: 1; padding: 4px; }
+  .wp-week-nav strong { font-size: 17px; }
+  .wp-week-nav .vs-btn { min-width: 0; font-size: 14px; }
+  .wp-date-tools { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .wp-date-tools .vs-field { margin: 0; width: 100%; }
+  .wp-date-tools input { max-width: 100%; width: 100%; }
+  .wp-date-tools .vs-btn { min-height: 46px; font-size: 14px; }
+  .wp-filters { display: grid; grid-template-columns: minmax(0,1fr); }
+  .wp-filters .vs-field { width: 100%; }
+  .wp-event-grid, .wp-personal { grid-template-columns: minmax(0,1fr); }
+  .wp-meeting, .wp-event-day, .wp-detail-meta, .wp-assigned { min-width: 0; max-width: 100%; }
+  .wp-event-grid .wp-meeting p, .wp-event-grid .wp-assigned span { font-size: 15px; line-height: 1.55; }
+  .wp-coverage small, .wp-assigned small, .wp-meeting .vs-help { font-size: 13px; line-height: 1.5; }
+  .wp-meeting h3, .wp-event-grid .wp-meeting h3 { font-size: 20px; line-height: 1.3; }
+  .wp-meeting-top { flex-wrap: wrap; }
+  .wp-meeting-top .vs-badge { max-width: 100%; font-size: 13px; line-height: 1.4; }
+  .wp-duty-line, .wp-my-actions { flex-wrap: wrap; }
+  .wp-my-actions .vs-btn { flex: 1 1 140px; }
+  .vs-table-wrap { margin: 16px 0; max-width: 100%; } .vs-app .wp-detail-table { display: block; width: 100%; min-width: 0; table-layout: auto; } .wp-detail-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); } .wp-detail-table tbody { display: grid; gap: 16px; width: 100%; } .wp-detail-table tbody tr { display: block; border: 1px solid #cad8e2; border-radius: 12px; overflow: hidden; width: 100%; } .vs-app .wp-detail-table tbody tr > * { display: block; position: static; width: 100%; min-width: 0; max-width: 100%; border-left: 0; padding: 12px; text-align: left; font-size: 15px; } .wp-detail-table tbody tr > th { background: #eaf2f6; } .wp-detail-table td[data-label]::before { content: attr(data-label); display: block; font-weight: 700; font-size: 14px; margin-bottom: 10px; color: #17354c; }
+  .vs-app .vs-dialog { width: calc(100% - 16px); max-width: 600px; max-height: calc(100dvh - 16px); padding: 16px; margin: auto; overflow-y: auto; overscroll-behavior: contain; }
+  .vs-dialog form, .vs-dialog-body, .vs-dialog fieldset { min-width: 0; max-width: 100%; }
+  .vs-dialog fieldset { margin-inline: 0; padding: 12px; }
+  .vs-dialog header { position: sticky; top: -16px; background: #fff; z-index: 2; padding-block: 12px; gap: 8px; }
+  .vs-dialog header h2 { min-width: 0; font-size: 21px; overflow-wrap: anywhere; }
+  .vs-dialog header .vs-btn { flex-shrink: 0; }
+  .vs-dialog footer, .wp-detail-save { position: static; display: flex; flex-wrap: wrap; gap: 10px; padding-top: 12px; }
+  .vs-dialog footer > .vs-btn, .wp-detail-save .vs-btn { flex: 1 1 120px; }
+  .vs-dialog .vs-error, .vs-app blockquote, .vs-recovery-code { overflow-wrap: anywhere; }
+  .vs-account-request > div { min-width: 0; flex-basis: 100%; }
+  .vs-account-request .vs-btn { flex: 1 1 120px; }
+  .wp-empty { padding: 22px 16px; }
+}
+@media (max-width: 480px) {
+  .wp-week-strip { grid-template-columns: repeat(4, minmax(0,1fr)); gap: 6px; }
+  .wp-week-day { min-height: 66px; padding: 8px 4px; }
+  .wp-week-day strong { font-size: 14px; }
+  .wp-week-day span, .wp-week-day small { font-size: 12px; }
+  .wp-meeting-top .vs-badge { width: 100%; }
+}
+@media (max-width: 760px) { .vs-app { padding-bottom: calc(32px + env(safe-area-inset-bottom)); } }
+
+.wp-users-page .wp-primary { display: none; }
+.wp-users-page > .admin-back-link { display: inline-flex; align-items: center; min-height: 44px; margin-bottom: 12px; }
+
+.vs-user-picker { max-width: 760px; }
+.vs-user-picker .vs-header { align-items: flex-start; }
+.vs-user-tools { margin: 18px 0; max-width: 760px; border: 1px solid #d4e0e7; border-radius: 10px; padding: 14px; background: #fff; }
+.vs-user-tools summary { cursor: pointer; font-weight: 700; min-height: 32px; overflow-wrap: anywhere; }
+.vs-user-tools > .vs-actions { margin-top: 14px; }
+@media (max-width: 760px) { .vs-user-picker .vs-header > .vs-btn { width: 100%; } .vs-user-tools summary { min-height: 44px; display: flex; align-items: center; } }
+.vs-time-field { min-width: 0; width: 100%; margin: 0; padding: 0; border: 0; }
+.vs-time-field legend { font-weight: 700; margin-bottom: 8px; padding: 0; }
+.vs-time-selects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.vs-time-selects label { display: grid; gap: 6px; min-width: 0; font-size: 14px; }
+.vs-time-selects select { width: 100%; min-width: 0; max-width: 100%; min-height: 46px; font-size: 16px; padding-inline: 8px; }
+.vs-dialog .vs-time-field { padding: 0; border: 0; margin: 0; }
+.wp-meeting > .vs-btn + .vs-btn { margin-top: 10px; }
+
+/* Compact meeting tiles: native disclosure keeps keyboard and touch support. */
+.vs-app details.wp-collapsible { display: block; align-self: start; }
+.wp-collapsible > summary { display: block; cursor: pointer; list-style: none; border-radius: 8px; }
+.wp-collapsible > summary::-webkit-details-marker { display: none; }
+.wp-collapsible > summary:focus-visible { outline: 3px solid #087d83; outline-offset: 5px; }
+.wp-collapsible .wp-tile-key, .wp-collapsible .wp-tile-duty { margin-block: 8px; font-size: 14px; line-height: 1.45; }
+.wp-collapsible .wp-tile-duty { padding: 8px; background: #e8f4f5; border-radius: 8px; }
+.wp-expand-label { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; margin-top: 6px; font-size: 14px; font-weight: 700; color: #087d83; }
+.wp-expand-icon { font-size: 24px; }
+.wp-collapsible:not([open]) > .wp-card-body, .wp-collapsible:not([open]) .wp-hide-details, .wp-collapsible[open] .wp-show-details { display: none; }
+.wp-collapsible[open] .wp-expand-icon { transform: rotate(180deg); }
+.wp-card-body { border-top: 1px solid #d4e0e7; margin-top: 8px; padding-top: 12px; }
+.wp-card-body > .vs-btn { width: 100%; margin-top: 10px; }
+@media (max-width: 760px) {
+  .wp-collapsible > summary .wp-meeting-top .vs-badge { width: auto; }
+  .wp-collapsible .wp-tile-key, .wp-collapsible .wp-tile-duty { font-size: 14px; }
+}
+
+/* Short summaries on small phones; the whole tile remains the touch target. */
+.wp-tile-when { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+.wp-tile-date { font-size: 12px; font-weight: 400; color: #596c7d; }
+@media (max-width: 480px) {
+  .vs-app details.wp-collapsible:not([open]) { padding: 10px 12px; border-radius: 10px; }
+  .wp-personal { gap: 10px; }
+  .vs-app .wp-collapsible:not([open]) > summary { min-height: 44px; }
+  .vs-app .wp-collapsible:not([open]) > summary .wp-meeting-top { gap: 6px; flex-wrap: nowrap; align-items: center; }
+  .vs-app .wp-collapsible:not([open]) > summary time { font-size: 16px; line-height: 1.3; }
+  .vs-app .wp-collapsible:not([open]) > summary .vs-badge { width: auto; max-width: 65%; padding: 4px 8px; font-size: 12px; line-height: 1.25; }
+  .vs-app .wp-collapsible:not([open]) > summary h3 { font-size: 17px; line-height: 1.3; margin: 6px 0 3px; }
+  .vs-app .wp-collapsible:not([open]) > summary .wp-branch { font-size: 13px; line-height: 1.35; margin: 0; }
+  .vs-app .wp-collapsible:not([open]) > summary .wp-tile-duty { font-size: 13px; line-height: 1.35; margin: 5px 0 0; padding: 0; background: none; }
+  .vs-app .wp-collapsible:not([open]) > summary .wp-tile-key { font-size: 13px; line-height: 1.35; margin: 5px 0 0; }
+  .vs-app .wp-collapsible:not([open]) .wp-expand-label { min-height: 22px; margin-top: 3px; font-size: 12px; line-height: 1.3; }
+  .vs-app .wp-collapsible:not([open]) .wp-expand-icon { font-size: 18px; }
+}

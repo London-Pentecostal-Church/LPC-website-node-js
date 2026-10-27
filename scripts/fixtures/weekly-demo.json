@@ -1,0 +1,515 @@
+{
+  "revision": 0,
+  "roles": [
+    "Lead singer",
+    "Choir singer",
+    "Keyboard player",
+    "Guitarist",
+    "Sound operator",
+    "Camera operator",
+    "Screen operator",
+    "Ministry volunteer"
+  ],
+  "members": [
+    {
+      "id": "23c8b689-8863-476a-9017-b833008dd393",
+      "name": "Demo Service Lead",
+      "username": "lead.test",
+      "skills": [
+        "Lead singer",
+        "Sound operator",
+        "Camera operator",
+        "Screen operator",
+        "Ministry volunteer"
+      ],
+      "teams": [
+        "Malayalam",
+        "English"
+      ],
+      "branches": [
+        "Main Church"
+      ],
+      "manage": [
+        "service"
+      ],
+      "active": true,
+      "availability": {}
+    },
+    {
+      "id": "d7131b1d-42fa-4646-949b-263686c33fe9",
+      "name": "Demo Volunteer",
+      "username": "volunteer.test",
+      "skills": [
+        "Lead singer",
+        "Sound operator",
+        "Camera operator",
+        "Screen operator",
+        "Ministry volunteer"
+      ],
+      "teams": [
+        "Malayalam",
+        "English"
+      ],
+      "branches": [
+        "Main Church"
+      ],
+      "manage": [],
+      "active": true,
+      "availability": {}
+    },
+    {
+      "id": "33d42fe4-c74a-47f7-8d23-1cbe050d9bb7",
+      "name": "Demo Ministry Scheduler",
+      "username": "pastor.test",
+      "skills": [
+        "Lead singer",
+        "Sound operator",
+        "Camera operator",
+        "Screen operator",
+        "Ministry volunteer"
+      ],
+      "teams": [
+        "Malayalam",
+        "English"
+      ],
+      "branches": [
+        "Main Church"
+      ],
+      "manage": [
+        "ministry"
+      ],
+      "active": true,
+      "availability": {}
+    }
+  ],
+  "services": [
+    {
+      "id": "98907bf2-94fe-4b92-b089-5e423111c31d",
+      "name": "DEMO - Malayalam Service",
+      "kind": "service",
+      "branch": "Main Church",
+      "team": "Malayalam",
+      "day": 0,
+      "time": "09:30",
+      "duration": 120,
+      "leadId": "23c8b689-8863-476a-9017-b833008dd393",
+      "roles": [
+        {
+          "role": "Sound operator",
+          "count": 1
+        },
+        {
+          "role": "Camera operator",
+          "count": 1
+        },
+        {
+          "role": "Screen operator",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "1e91b566-7227-4c47-a6db-63c2afabef47",
+      "name": "DEMO - English Service",
+      "kind": "service",
+      "branch": "Main Church",
+      "team": "English",
+      "day": 0,
+      "time": "13:00",
+      "duration": 120,
+      "leadId": "23c8b689-8863-476a-9017-b833008dd393",
+      "roles": [
+        {
+          "role": "Lead singer",
+          "count": 1
+        },
+        {
+          "role": "Sound operator",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "1fb88651-2089-4854-8c72-32755fc2f443",
+      "name": "DEMO - Ministry Allocation",
+      "kind": "ministry",
+      "branch": "Main Church",
+      "team": "Malayalam",
+      "day": 0,
+      "time": "17:00",
+      "duration": 120,
+      "leadId": "33d42fe4-c74a-47f7-8d23-1cbe050d9bb7",
+      "roles": [
+        {
+          "role": "Ministry volunteer",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "sessions": [
+    {
+      "id": "470ee1c7-7f2e-4393-bf47-1c4e98e07bff",
+      "serviceId": "98907bf2-94fe-4b92-b089-5e423111c31d",
+      "date": "2026-10-25",
+      "name": "DEMO - Malayalam Service",
+      "kind": "service",
+      "branch": "Main Church",
+      "team": "Malayalam",
+      "time": "09:30",
+      "duration": 120,
+      "leadId": "23c8b689-8863-476a-9017-b833008dd393",
+      "status": "draft",
+      "cancelled": false,
+      "slots": [
+        {
+          "id": "b0262d13-5ff1-45d6-b364-b60e214f139c",
+          "role": "Sound operator",
+          "main": "23c8b689-8863-476a-9017-b833008dd393",
+          "backup": ""
+        },
+        {
+          "id": "36da50bc-b5cf-410a-a753-acf2c426c147",
+          "role": "Camera operator",
+          "main": "",
+          "backup": ""
+        },
+        {
+          "id": "4e5305b8-60c2-4d6c-8c67-e76561c5a34b",
+          "role": "Screen operator",
+          "main": "",
+          "backup": ""
+        }
+      ],
+      "updatedAt": "2026-10-24T19:08:21.432Z",
+      "updatedBy": "tester"
+    },
+    {
+      "id": "3c6d4601-a1f1-48f8-bae8-4f4c6e366679",
+      "serviceId": "98907bf2-94fe-4b92-b089-5e423111c31d",
+      "date": "2026-11-01",
+      "name": "DEMO - Malayalam Service",
+      "kind": "service",
+      "branch": "Main Church",
+      "team": "Malayalam",
+      "time": "09:30",
+      "duration": 120,
+      "leadId": "23c8b689-8863-476a-9017-b833008dd393",
+      "status": "draft",
+      "cancelled": false,
+      "slots": [
+        {
+          "id": "af5d537f-54e8-4493-9acc-0b7985376c21",
+          "role": "Sound operator",
+          "main": "d7131b1d-42fa-4646-949b-263686c33fe9",
+          "backup": ""
+        },
+        {
+          "id": "6184f024-c4bb-4157-9533-ee100510513f",
+          "role": "Camera operator",
+          "main": "",
+          "backup": ""
+        },
+        {
+          "id": "41e73092-3a6e-48f2-ba8e-ae9a16f802e0",
+          "role": "Screen operator",
+          "main": "",
+          "backup": ""
+        }
+      ],
+      "updatedAt": "2026-10-24T19:08:21.450Z",
+      "updatedBy": "tester"
+    },
+    {
+      "id": "37cd3d2c-7395-4251-bdda-ad0d2dbbe206",
+      "serviceId": "98907bf2-94fe-4b92-b089-5e423111c31d",
+      "date": "2026-11-08",
+      "name": "DEMO - Malayalam Service",
+      "kind": "service",
+      "branch": "Main Church",
+      "team": "Malayalam",
+      "time": "09:30",
+      "duration": 120,
+      "leadId": "23c8b689-8863-476a-9017-b833008dd393",
+      "status": "draft",
+      "cancelled": false,
+      "slots": [
+        {
+          "id": "f6fd110f-2be9-4fd2-9272-2009df6a5879",
+          "role": "Sound operator",
+          "main": "23c8b689-8863-476a-9017-b833008dd393",
+          "backup": ""
+        },
+        {
+          "id": "3e3520ad-d1b4-44ad-a762-a06ee6aa907f",
+          "role": "Camera operator",
+          "main": "",
+          "backup": ""
+        },
+        {
+          "id": "9424335d-748d-4407-89a1-f977c6a9e0c0",
+          "role": "Screen operator",
+          "main": "",
+          "backup": ""
+        }
+      ],
+      "updatedAt": "2026-10-24T19:08:21.461Z",
+      "updatedBy": "tester"
+    },
+    {
+      "id": "1ba5ecad-2b6e-4cee-9fcf-9afc221129d6",
+      "serviceId": "98907bf2-94fe-4b92-b089-5e423111c31d",
+      "date": "2026-11-15",
+      "name": "DEMO - Malayalam Service",
+      "kind": "service",
+      "branch": "Main Church",
+      "team": "Malayalam",
+      "time": "09:30",
+      "duration": 120,
+      "leadId": "23c8b689-8863-476a-9017-b833008dd393",
+      "status": "draft",
+      "cancelled": false,
+      "slots": [
+        {
+          "id": "d4d2ece2-36ea-499d-a36f-1e8f2efdc498",
+          "role": "Sound operator",
+          "main": "d7131b1d-42fa-4646-949b-263686c33fe9",
+          "backup": ""
+        },
+        {
+          "id": "696356c4-28e2-46ec-962c-b0e79786ab58",
+          "role": "Camera operator",
+          "main": "",
+          "backup": ""
+        },
+        {
+          "id": "d6b8971a-b6d1-483d-af4c-b29430be39c7",
+          "role": "Screen operator",
+          "main": "",
+          "backup": ""
+        }
+      ],
+      "updatedAt": "2026-10-24T19:08:21.473Z",
+      "updatedBy": "tester"
+    },
+    {
+      "id": "5863769f-b1cc-425e-8e3b-23c05e15edcf",
+      "serviceId": "1e91b566-7227-4c47-a6db-63c2afabef47",
+      "date": "2026-10-25",
+      "name": "DEMO - English Service",
+      "kind": "service",
+      "branch": "Main Church",
+      "team": "English",
+      "time": "13:00",
+      "duration": 120,
+      "leadId": "23c8b689-8863-476a-9017-b833008dd393",
+      "status": "draft",
+      "cancelled": false,
+      "slots": [
+        {
+          "id": "08bd0a29-7234-4c66-83b6-5817105a28ee",
+          "role": "Lead singer",
+          "main": "23c8b689-8863-476a-9017-b833008dd393",
+          "backup": ""
+        },
+        {
+          "id": "80b3265a-fa0c-4e76-8bfd-479cc99ecb10",
+          "role": "Sound operator",
+          "main": "",
+          "backup": ""
+        }
+      ],
+      "updatedAt": "2026-10-24T19:08:21.494Z",
+      "updatedBy": "tester"
+    },
+    {
+      "id": "3aefe3d8-59ba-4264-a91e-586b2bda47fd",
+      "serviceId": "1e91b566-7227-4c47-a6db-63c2afabef47",
+      "date": "2026-11-01",
+      "name": "DEMO - English Service",
+      "kind": "service",
+      "branch": "Main Church",
+      "team": "English",
+      "time": "13:00",
+      "duration": 120,
+      "leadId": "23c8b689-8863-476a-9017-b833008dd393",
+      "status": "draft",
+      "cancelled": false,
+      "slots": [
+        {
+          "id": "6336ecbe-7ebe-4a69-95ad-384b624400d2",
+          "role": "Lead singer",
+          "main": "d7131b1d-42fa-4646-949b-263686c33fe9",
+          "backup": ""
+        },
+        {
+          "id": "41573e27-81dd-4d76-8e34-b49c3b27126a",
+          "role": "Sound operator",
+          "main": "",
+          "backup": ""
+        }
+      ],
+      "updatedAt": "2026-10-24T19:08:21.504Z",
+      "updatedBy": "tester"
+    },
+    {
+      "id": "1cede12b-e0c7-4066-8065-fd2e9ea724d9",
+      "serviceId": "1e91b566-7227-4c47-a6db-63c2afabef47",
+      "date": "2026-11-08",
+      "name": "DEMO - English Service",
+      "kind": "service",
+      "branch": "Main Church",
+      "team": "English",
+      "time": "13:00",
+      "duration": 120,
+      "leadId": "23c8b689-8863-476a-9017-b833008dd393",
+      "status": "draft",
+      "cancelled": false,
+      "slots": [
+        {
+          "id": "546e44f2-5f47-42df-a8c7-acaa86586aad",
+          "role": "Lead singer",
+          "main": "23c8b689-8863-476a-9017-b833008dd393",
+          "backup": ""
+        },
+        {
+          "id": "a51c3b5c-a659-4bbd-a489-9ecf774f1a26",
+          "role": "Sound operator",
+          "main": "",
+          "backup": ""
+        }
+      ],
+      "updatedAt": "2026-10-24T19:08:21.513Z",
+      "updatedBy": "tester"
+    },
+    {
+      "id": "ca0737fc-ab17-4eae-9427-206d619f577f",
+      "serviceId": "1e91b566-7227-4c47-a6db-63c2afabef47",
+      "date": "2026-11-15",
+      "name": "DEMO - English Service",
+      "kind": "service",
+      "branch": "Main Church",
+      "team": "English",
+      "time": "13:00",
+      "duration": 120,
+      "leadId": "23c8b689-8863-476a-9017-b833008dd393",
+      "status": "draft",
+      "cancelled": false,
+      "slots": [
+        {
+          "id": "01feceb1-520b-4080-9021-701b86490d9a",
+          "role": "Lead singer",
+          "main": "d7131b1d-42fa-4646-949b-263686c33fe9",
+          "backup": ""
+        },
+        {
+          "id": "de417942-c375-44d6-be09-e0a4d7911f21",
+          "role": "Sound operator",
+          "main": "",
+          "backup": ""
+        }
+      ],
+      "updatedAt": "2026-10-24T19:08:21.524Z",
+      "updatedBy": "tester"
+    },
+    {
+      "id": "fe50c9ba-f3c1-47a7-8196-ccbfd68ad449",
+      "serviceId": "1fb88651-2089-4854-8c72-32755fc2f443",
+      "date": "2026-10-25",
+      "name": "DEMO - Ministry Allocation",
+      "kind": "ministry",
+      "branch": "Main Church",
+      "team": "Malayalam",
+      "time": "17:00",
+      "duration": 120,
+      "leadId": "33d42fe4-c74a-47f7-8d23-1cbe050d9bb7",
+      "status": "draft",
+      "cancelled": false,
+      "slots": [
+        {
+          "id": "1412d125-be81-4ab3-850d-d8ab31aa8624",
+          "role": "Ministry volunteer",
+          "main": "23c8b689-8863-476a-9017-b833008dd393",
+          "backup": ""
+        }
+      ],
+      "updatedAt": "2026-10-24T19:08:21.540Z",
+      "updatedBy": "tester"
+    },
+    {
+      "id": "3d7bdacd-df4f-439d-b330-92e3c1b60b7d",
+      "serviceId": "1fb88651-2089-4854-8c72-32755fc2f443",
+      "date": "2026-11-01",
+      "name": "DEMO - Ministry Allocation",
+      "kind": "ministry",
+      "branch": "Main Church",
+      "team": "Malayalam",
+      "time": "17:00",
+      "duration": 120,
+      "leadId": "33d42fe4-c74a-47f7-8d23-1cbe050d9bb7",
+      "status": "draft",
+      "cancelled": false,
+      "slots": [
+        {
+          "id": "3ec92c5f-905b-4f56-b0ed-5f8e43f4a751",
+          "role": "Ministry volunteer",
+          "main": "d7131b1d-42fa-4646-949b-263686c33fe9",
+          "backup": ""
+        }
+      ],
+      "updatedAt": "2026-10-24T19:08:21.551Z",
+      "updatedBy": "tester"
+    },
+    {
+      "id": "2e90d0cc-3c6a-4a46-a01c-ae7d31e4dfd8",
+      "serviceId": "1fb88651-2089-4854-8c72-32755fc2f443",
+      "date": "2026-11-08",
+      "name": "DEMO - Ministry Allocation",
+      "kind": "ministry",
+      "branch": "Main Church",
+      "team": "Malayalam",
+      "time": "17:00",
+      "duration": 120,
+      "leadId": "33d42fe4-c74a-47f7-8d23-1cbe050d9bb7",
+      "status": "draft",
+      "cancelled": false,
+      "slots": [
+        {
+          "id": "659e1029-b6ac-4bfa-82a1-eecc1c877b19",
+          "role": "Ministry volunteer",
+          "main": "23c8b689-8863-476a-9017-b833008dd393",
+          "backup": ""
+        }
+      ],
+      "updatedAt": "2026-10-24T19:08:21.560Z",
+      "updatedBy": "tester"
+    },
+    {
+      "id": "4f06e669-dd46-4d39-96a1-1e852e7b6b8a",
+      "serviceId": "1fb88651-2089-4854-8c72-32755fc2f443",
+      "date": "2026-11-15",
+      "name": "DEMO - Ministry Allocation",
+      "kind": "ministry",
+      "branch": "Main Church",
+      "team": "Malayalam",
+      "time": "17:00",
+      "duration": 120,
+      "leadId": "33d42fe4-c74a-47f7-8d23-1cbe050d9bb7",
+      "status": "draft",
+      "cancelled": false,
+      "slots": [
+        {
+          "id": "d618536f-87d9-4771-b13b-afdb7b9bf32c",
+          "role": "Ministry volunteer",
+          "main": "d7131b1d-42fa-4646-949b-263686c33fe9",
+          "backup": ""
+        }
+      ],
+      "updatedAt": "2026-10-24T19:08:21.573Z",
+      "updatedBy": "tester"
+    }
+  ],
+  "swaps": [],
+  "notifications": [],
+  "history": []
+}
