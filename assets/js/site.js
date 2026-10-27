@@ -2169,9 +2169,9 @@ function renderFooter() {
   </ul>
 </section>
         </div>
-        <div class="footer__bottom"><a href="#/volunteers">Team access</a><br>
-          &copy; 2026 London Pentecostal Church | Part of Alpha International Ministries | Charity No : 1126140 | All rights reserved.
-        </div>
+        <div class="footer__bottom"><span>
+          &copy; 2026 London Pentecostal Church | Part of Alpha International Ministries | Charity No : 1126140 | All rights reserved. | <a href="#/volunteers">Team access</a>
+        </span></div>
       </div>
     </footer>
   `;

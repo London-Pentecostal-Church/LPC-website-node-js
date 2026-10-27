@@ -539,6 +539,15 @@ export async function handleVolunteers(request, store, adminActor = null) {
         currentMember(state, session.memberId));
     if (actor && !actor.admin)
       actor = { ...cleanMember(actor), name: actor.name };
+    if (route === "/backup") {
+      if (!actor?.admin) fail("Only the website administrator can export private planner data.", 403);
+      if (request.method !== "GET") return reply({error:"Method not allowed"},405);
+      if (request.headers.get("sec-fetch-site") === "cross-site") fail("Open backups from the website admin screen.",403);
+      return reply({format:"lpc-private-planner",version:1,exportedAt:new Date().toISOString(),data:state},200,{
+        "content-disposition":'attachment; filename="lpc-private-planner-backup.json"',
+        "x-content-type-options":"nosniff", "x-robots-tag":"noindex, nofollow",
+      });
+    }
     if (route === "/account-options") return reply({ emailEnabled: !!store.emailReady, registrationEnabled: false });
     const emailAddress = value => {
       const email = String(value || "").trim().toLowerCase();

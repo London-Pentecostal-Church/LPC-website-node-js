@@ -14,3 +14,5 @@ dist/
 **/volunteer-private/
 
 .local-test/
+lpc-private-planner-backup*.json
+*.lpc-private-backup.json

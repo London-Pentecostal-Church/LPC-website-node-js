@@ -4,10 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "data:import": "node scripts/import-private-planner.mjs",
     "dev": "node preview-server.mjs",
     "start": "node preview-server.mjs",
     "build": "node scripts/build.mjs",
-    "test:volunteers": "node --test --test-timeout=20000 scripts/test-volunteers.mjs scripts/test-weekly-planner.mjs scripts/test-account-access.mjs scripts/test-team-access.mjs scripts/test-volunteer-store.mjs",
+    "test:volunteers": "node --test --test-timeout=20000 scripts/test-volunteers.mjs scripts/test-weekly-planner.mjs scripts/test-account-access.mjs scripts/test-team-access.mjs scripts/test-volunteer-store.mjs scripts/test-private-planner-sync.mjs",
     "dev:test": "node scripts/local-test.mjs",
     "check": "node scripts/check.mjs",
     "test": "npm run check && npm run test:volunteers && npm run build && node --test scripts/test-build.mjs scripts/test-contact-mail.mjs && node scripts/test-branch-page.mjs"
