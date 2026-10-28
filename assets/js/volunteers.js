@@ -764,7 +764,8 @@ window.LPCVolunteers = (() => {
     return '<section class="vs-card vs-user-picker"><div class="vs-header"><div><h2>Select or add a user</h2><p>Choose one person to view or edit their profile, serving roles and access.</p></div>' + btn('Add new user', 'member') + '</div>' +
       field('Search users', '<input type="search" data-user-search placeholder="Search by name or username" autocomplete="off" aria-controls="existing-user">') +
       field('Select existing user', '<select id="existing-user" data-user-select ' + (!list.length ? 'disabled' : '') + '>' + options(list, '', list.length ? 'Choose a user…' : 'No users yet') + '</select>') +
-      '<p class="vs-help" data-user-results role="status">' + list.length + ' user' + (list.length === 1 ? '' : 's') + '. Select a person to open their details.</p></section>' +
+      '<div class="vs-actions">' + btn('Edit selected user', 'edit-selected-user', 'disabled') + '</div>' +
+      '<p class="vs-help" data-user-results role="status">' + list.length + ' user' + (list.length === 1 ? '' : 's') + '. Select a person to open their details. Use Edit selected user to reopen them.</p></section>' +
       (state.pendingAccounts?.length ? '<details class="vs-user-tools"><summary>Invitations awaiting approval (' + state.pendingAccounts.length + ')</summary>' + pendingAccounts() + '</details>' : '') +
       '<details class="vs-user-tools"><summary>Invitations & role settings</summary><div class="vs-actions">' + (accountEmailEnabled ? btn('Invite team member','invite-account','',true) : '<p class="vs-help">Email invitations are unavailable. Use Add new user to create a selected account.</p>') + btn('Manage serving roles','roles','',true) + '</div></details>' +
       '<details class="vs-user-tools"><summary>Private backup & local sync</summary><p>Includes all planner users, password hashes, roles, meetings, assignments and responses. Keep this private file outside GitHub. Website-admin hosting credentials are configured separately.</p><a class="vs-btn vs-secondary" href="/api/volunteers/backup" download="lpc-private-planner-backup.json">Download private planner backup</a><p class="vs-help">Stop the local server, then restore with: npm run data:import -- path-to-backup.json. The existing local planner is backed up first.</p></details>';
@@ -1313,6 +1314,11 @@ window.LPCVolunteers = (() => {
           },
         );
       if (a === "member") return memberDialog(b.dataset.id);
+      if (a === "edit-selected-user") {
+        const id = root.querySelector("[data-user-select]")?.value;
+        if (id) return memberDialog(id);
+        return;
+      }
       if (a === "roles")
         return modal(
           "Manage roles",
@@ -1459,7 +1465,11 @@ window.LPCVolunteers = (() => {
     root.innerHTML = window.LPCTeamAuth.navigation(null) + '<p>Loading team access…</p>';
     root.onclick = click;
     root.onchange = async (e) => {
-      if (e.target.matches("[data-user-select]") && e.target.value) return memberDialog(e.target.value);
+      if (e.target.matches("[data-user-select]")) {
+        root.querySelector('[data-vs="edit-selected-user"]').disabled = !e.target.value;
+        if (e.target.value) return memberDialog(e.target.value);
+        return;
+      }
       if (e.target.matches("[data-view-volunteer]")) {
         viewedMemberId = e.target.value || null;
         return render();
@@ -1522,6 +1532,7 @@ window.LPCVolunteers = (() => {
         const select = root.querySelector("[data-user-select]");
         select.innerHTML = options(list, "", list.length ? "Choose a user…" : "No matching users");
         select.disabled = !list.length;
+        root.querySelector('[data-vs="edit-selected-user"]').disabled = true;
         root.querySelector("[data-user-results]").textContent = list.length + " matching user" + (list.length === 1 ? "" : "s");
         return;
       }
