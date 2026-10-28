@@ -116,6 +116,9 @@ test('Role menus expose only the permitted planner lanes and always offer sign-o
     runInNewContext(authSource + render + '\nrender();', context);
     const html = root.innerHTML;
     assert(html.includes('Sign out'));
+    assert(html.includes('class="wp-account-identity" role="group" aria-label="Signed-in account"'));
+    assert(html.includes('<strong class="wp-account-name">'+actor.name+'</strong>'));
+    assert(html.includes('<b>Role:</b>'));
     assert(html.includes('Sign in as another account'));
     assert.equal(html.includes('data-tab="pastoral"'), !!(actor.admin || actor.manage?.includes('ministry')));
     assert.equal(html.includes('data-tab="choir"'), !!(actor.admin || actor.manage?.includes('service')));
