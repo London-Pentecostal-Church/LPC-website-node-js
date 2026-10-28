@@ -7,6 +7,35 @@ const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls()'));
 
+test('Watch lists playable videos ahead of collapsed coming-soon branches', () => {
+  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+  const source=site.slice(site.indexOf('function renderWatchHub()'),site.indexOf('function prioritiseWatchPlayer('));
+  const entry=(label,videoUrl='',youtubeUrl='')=>({key:label,label,branchHref:'#/branches/'+label,source:{videoUrl,youtubeUrl,watchTitle:label,socials:[]}});
+  const context={mediaCollections:()=>[entry('Soon'),entry('Channel','','https://youtube.com/@example'),entry('Video','playable')],youtubeVideoId:v=>v==='playable'?'abc123':'',escapeHtml:v=>v,escapeAttribute:v=>v,collectionThemeStyle:()=>'',socialIcon:()=>''};
+  const html=runInNewContext(source+';renderWatchHub()',context);
+  assert(html.indexOf('data-watch-priority="2"')<html.indexOf('data-watch-priority="1"'));
+  assert(html.indexOf('data-watch-available')<html.indexOf('<details class="watch-coming-soon"'));
+  assert(html.includes('Videos coming soon'));
+  assert(!html.includes('class="watch-coming-soon" open'));
+  assert(html.includes('#/branches/Soon'));
+});
+
+test('Resolving a live stream promotes only its placeholder and leaves existing players in place', () => {
+  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+  const source=site.slice(site.indexOf('function prioritiseWatchPlayer('),site.indexOf('function collectionColor('));
+  const rows=[1,2,3].map((order)=>({dataset:{watchPriority:'1',watchOrder:String(order)}}));
+  const moved=[];
+  const list={children:rows,matches:()=>true,insertBefore(row,next){moved.push(row);rows.splice(rows.indexOf(row),1);rows.splice(next?rows.indexOf(next):rows.length,0,row);}};
+  rows.forEach(row=>{row.parentElement=list;Object.defineProperty(row,'nextElementSibling',{get:()=>rows[rows.indexOf(row)+1]||null});});
+  const promote=runInNewContext(source+';prioritiseWatchPlayer',{});
+  const latest=rows[1],live=rows[2];
+  promote({closest:()=>latest},'Latest video');
+  promote({closest:()=>live},'Live now');
+  assert.equal(rows[0],live);assert.equal(rows[1],latest);
+  assert.deepEqual(moved,[latest,live]);
+  promote({closest:()=>live},'Live now');assert.equal(moved.length,2);
+});
+
 test('Home reference sections collapse by default while the service stream stays visible', () => {
   const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
   const source=site.slice(site.indexOf('function homeDisclosure('),site.indexOf('function renderHomeHeroMedia()'));

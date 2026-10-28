@@ -1824,7 +1824,7 @@ function mediaCollections() {
 }
 function renderWatchHub() {
   const rows = mediaCollections()
-    .map(({ key, label, branchHref, source }) => {
+    .map(({ key, label, branchHref, source }, index) => {
       const id = youtubeVideoId(source.videoUrl);
       const player = id
         ? '<div class="youtube-preview youtube-preview--compact"><iframe src="https://www.youtube.com/embed/' +
@@ -1851,8 +1851,8 @@ function renderWatchHub() {
               ? "Open the channel to explore services and sermons."
               : "Visit this branch for service times and contact details.") +
             "</p></div>";
-      return (
-        '<article class="watch-row" style="' +
+      const row = (
+        '<article class="watch-row" data-watch-priority="' + (id ? '2' : '1') + '" data-watch-order="' + index + '" style="' +
         collectionThemeStyle(key) +
         '"><div class="watch-collection"><div class="watch-collection__meta"><p class="section-label">' +
         escapeHtml(label) +
@@ -1899,13 +1899,26 @@ function renderWatchHub() {
             '">View branch details</a>') +
         "</div></aside></article>"
       );
+      const available = !!(id || source.youtubeUrl);
+      return { available, priority: id ? 2 : 1, html: available ? row : '<details class="watch-coming-soon" style="' + collectionThemeStyle(key) + '"><summary><span><strong>' + escapeHtml(label) + '</strong><small>Videos coming soon · Open for branch details</small></span><span aria-hidden="true">⌄</span></summary><div class="watch-coming-soon__body">' + row + '</div></details>' };
     })
-    .join("");
+    .sort((a,b) => b.priority - a.priority);
+  const availableRows = rows.filter(row => row.available).map(row => row.html).join('');
+  const upcomingRows = rows.filter(row => !row.available).map(row => row.html).join('');
   return (
-    '<section class="section section--watch-hub"><div class="container watch-hub"><h2 class="section-title">Choose a branch to watch</h2><div class="watch-hub__rows">' +
-    rows +
-    "</div></div></section>"
+    '<section class="section section--watch-hub"><div class="container watch-hub"><h2 class="section-title">Watch services</h2><p>Live streams and available videos appear first. Open other branches below for updates.</p><div class="watch-hub__rows" data-watch-available>' +
+    (availableRows || '<p>No videos are available yet. Open a branch below for updates.</p>') +
+    '</div>' + (upcomingRows ? '<section class="watch-upcoming"><h3>More branches · Videos coming soon</h3><div class="watch-upcoming__rows">' + upcomingRows + '</div></section>' : '') + '</div></section>'
   );
+}
+
+function prioritiseWatchPlayer(player, mode) {
+  const row = player.closest('.watch-row[data-watch-priority]');
+  if (!row || !row.parentElement.matches('[data-watch-available]')) return;
+  row.dataset.watchPriority = mode === 'Live now' ? '3' : '2';
+  const list = row.parentElement;
+  const next = [...list.children].find(entry => entry !== row && (Number(entry.dataset.watchPriority) < Number(row.dataset.watchPriority) || (entry.dataset.watchPriority === row.dataset.watchPriority && Number(entry.dataset.watchOrder) > Number(row.dataset.watchOrder))));
+  if (row.nextElementSibling !== (next || null)) list.insertBefore(row, next || null);
 }
 
 function collectionColor(key) {
@@ -3191,6 +3204,7 @@ async function hydrateYouTubePlayers() {
       }
       if (!player.isConnected) return;
       if (localVideo) {
+        prioritiseWatchPlayer(player, localVideo.mode || "Latest video");
         renderYouTubeVideoPreview(player, {
           title,
           channelUrl,
@@ -3234,6 +3248,7 @@ async function hydrateYouTubePlayers() {
         }
 
         const mode = liveVideo ? "Live now" : "Latest video";
+        prioritiseWatchPlayer(player, mode);
         renderYouTubeVideoPreview(player, {
           title,
           channelUrl,

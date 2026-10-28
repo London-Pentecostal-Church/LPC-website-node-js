@@ -2509,6 +2509,24 @@ body.is-red-header-sample .menu-toggle {
 .home-disclosure[open] > summary .home-disclosure__chevron { transform: rotate(180deg); }
 .home-disclosure > summary:focus-visible { outline: 3px solid #087d83; outline-offset: 3px; border-radius: 12px; }
 .home-disclosure__body { border-top: 1px solid #d4e0e7; }
+.watch-upcoming { margin-top: 28px; }
+.watch-upcoming > h3 { font-size: 20px; color: #17354c; }
+.watch-upcoming__rows { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; align-items: start; }
+.watch-coming-soon { min-width: 0; border: 1px solid #d4e0e7; border-left: 4px solid var(--collection-color); border-radius: 12px; background: #fff; }
+.watch-coming-soon[open] { grid-column: 1 / -1; }
+.watch-coming-soon > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 76px; padding: 14px 16px; cursor: pointer; list-style: none; box-sizing: border-box; }
+.watch-coming-soon > summary::-webkit-details-marker { display: none; }
+.watch-coming-soon > summary strong { display: block; color: #17354c; font-size: 16px; line-height: 1.35; }
+.watch-coming-soon > summary small { display: block; color: #526b7d; font-size: 13px; line-height: 1.4; margin-top: 4px; }
+.watch-coming-soon > summary > span:last-child { color: #087d83; font-size: 24px; transition: transform .2s ease; }
+.watch-coming-soon[open] > summary > span:last-child { transform: rotate(180deg); }
+.watch-coming-soon > summary:focus-visible { outline: 3px solid #087d83; outline-offset: 3px; border-radius: 8px; }
+.watch-coming-soon__body { border-top: 1px solid #d4e0e7; }
+.watch-coming-soon[open] > .watch-coming-soon__body { animation: home-reveal .22s ease-out; }
+.watch-coming-soon .watch-row { margin: 0; border: 0; border-radius: 0 0 10px 10px; box-shadow: none; }
+.watch-coming-soon .watch-collection, .watch-coming-soon .watch-collection__empty { min-height: 0; }
+@media (max-width: 760px) { .watch-upcoming__rows { grid-template-columns: minmax(0,1fr); } }
+@media (prefers-reduced-motion: reduce) { .watch-coming-soon[open] > .watch-coming-soon__body { animation: none; } .watch-coming-soon > summary > span:last-child { transition: none; } }
 .page-home > .home-featured-media { margin-top: 24px; padding-block: 60px; }
 .home-featured-media .media-section__header { margin-bottom: 20px; }
 .home-featured-media .section-title { font-size: clamp(26px,3vw,38px); }
