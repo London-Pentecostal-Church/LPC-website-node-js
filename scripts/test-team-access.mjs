@@ -146,7 +146,7 @@ test('Role menus expose only the permitted planner lanes and always offer sign-o
       manager: () => actor.admin || actor.manage?.includes('service'),
       esc: value => value,
       btn: (label, action, extra = '') => `<button data-vs="${action}" ${extra}>${label}</button>`,
-      weekly: () => '',
+      weekly: () => '', members: () => '',
     };
     context.window = {};
     runInNewContext(authSource + render + '\nrender();', context);
@@ -160,10 +160,13 @@ test('Role menus expose only the permitted planner lanes and always offer sign-o
     assert.equal(html.includes('data-tab="choir"'), !!(actor.admin || actor.manage?.includes('service')));
     assert.equal(html.includes('Members & skills'), !!actor.admin);
     assert(!html.includes('Create account'));
-    const home = context.window.LPCTeamAuth.landing(actor);
-    assert(html.includes(`href="${home.href}"`));
-    assert(html.indexOf(home.label) < html.indexOf('<header'));
-    assert(html.includes('href="#/home"'));
+    assert(!html.includes('aria-label="Return navigation"'));
+    if (actor.admin) {
+      root.dataset = { usersPage: 'true' };
+      runInNewContext('render();', context);
+      assert(root.innerHTML.includes('aria-label="Return navigation"'));
+      assert(root.innerHTML.includes('href="#/lpcadmin"'));
+    }
   }
 });
 
