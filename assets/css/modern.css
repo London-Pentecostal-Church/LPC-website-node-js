@@ -2495,6 +2495,9 @@ body.is-red-header-sample .menu-toggle {
 .landing-navigation { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
 .landing-navigation a { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 10px 16px; border: 1px solid #b6cad4; border-radius: 10px; background: #fff; color: #17354c; font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
 .landing-navigation a:focus-visible { outline: 3px solid #087d83; outline-offset: 3px; }
+.footer__website-return { display: flex; flex-wrap: wrap; gap: 12px; padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid #ffffff30; }
+.footer__website-return a { min-height: 44px; white-space: normal; text-align: center; }
+@media (max-width: 760px) { .footer__website-return a { flex: 1 1 180px; padding: 10px 14px; font-size: 14px; } }
 @media (max-width: 480px) { .landing-navigation a { flex: 1 1 145px; } }
 
 /* Home is a short overview; each section opens its complete existing content. */

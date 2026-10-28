@@ -2054,7 +2054,7 @@ function renderBranchesSection(includePadding = false) {
   );
 }
 
-function renderFooter() {
+function renderFooter(teamScreen = false) {
   const branch = branchCards.find(
     (item) => normalizeRoute() === `/branches/${item.slug}`,
   );
@@ -2062,6 +2062,7 @@ function renderFooter() {
     <footer class="footer">
       <svg class="footer-swoosh" viewBox="0 0 1440 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0 86C300 12 460 8 720 8C1080 8 1290 22 1440 4L1440 0H0Z" fill="#fff"/><path d="M0 86C300 12 460 8 720 8C1080 8 1290 22 1440 4" fill="none" stroke="#efc45b" stroke-width="4" vector-effect="non-scaling-stroke"/></svg>
       <div class="container">
+        ${teamScreen ? '<nav class="footer__website-return" aria-label="Return to church website"><a class="btn btn--light" href="#/home">← Back to church website</a><a class="btn btn--light" href="#/watch">Watch services</a></nav>' : ''}
         <div class="footer__inner">
           <section class="footer__brand">
             <div class="footer__brandmark">
@@ -2333,8 +2334,8 @@ function renderRoute() {
 }
 
 function getDynamicRouteRenderer(route) {
-  if (route === '/lpcadmin/users') return () => adminSession.authenticated ? '<section class="section vs-section"><div id="volunteer-app" data-users-page="true" class="container"><p>Loading users &amp; access…</p></div></section>' : renderAdminLogin();
-  if (route === '/volunteers' || route === '/lpcadmin/volunteers') return () => '<section class="section vs-section"><div id="volunteer-app" class="container"><p>Loading volunteer schedules…</p></div></section>';
+  if (route === '/lpcadmin/users') return () => adminSession.authenticated ? '<section class="section vs-section"><div id="volunteer-app" data-users-page="true" class="container"><p>Loading users &amp; access…</p></div></section>' + renderFooter(true) : renderAdminLogin();
+  if (route === '/volunteers' || route === '/lpcadmin/volunteers') return () => '<section class="section vs-section"><div id="volunteer-app" class="container"><p>Loading volunteer schedules…</p></div></section>' + renderFooter(true);
 
   if (route === "/lpcadmin/page-images") return renderPageImageAdmin;
   if (route === "/lpcadmin/branches" || route === "/admin/branches")

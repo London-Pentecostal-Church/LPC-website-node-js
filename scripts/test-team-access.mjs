@@ -173,9 +173,16 @@ test('Main admin opens a dedicated, administrator-only user management route', (
   for (const authenticated of [false, true]) {
     const html = runInNewContext(routeSource + '\ngetDynamicRouteRenderer("/lpcadmin/users")();', {
       adminSession: { authenticated }, renderAdminLogin: () => 'Admin sign-in required',
+      renderFooter: team => team ? '<footer>Back to church website</footer>' : '',
     });
     assert.equal(html.includes('data-users-page="true"'), authenticated);
+    assert.equal(html.includes('<footer>Back to church website</footer>'), authenticated);
     if (!authenticated) assert.equal(html, 'Admin sign-in required');
+  }
+  for (const route of ['/volunteers','/lpcadmin/volunteers']) {
+    const html=runInNewContext(routeSource+';getDynamicRouteRenderer("'+route+'")();',{renderFooter:()=>'<footer>Back to church website</footer>'});
+    assert(html.indexOf('<footer>') > html.indexOf('</section>'));
+    assert.equal((html.match(/<footer>/g)||[]).length,1);
   }
   const root = { isConnected: true, dataset: { usersPage: 'true' }, querySelector: () => ({ innerHTML: '' }) };
   const context = {
