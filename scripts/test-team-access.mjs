@@ -7,6 +7,22 @@ const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls()'));
 
+test('Home reference sections collapse by default while the service stream stays visible', () => {
+  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+  const source=site.slice(site.indexOf('function homeDisclosure('),site.indexOf('function renderHomeHeroMedia()'));
+  const context={escapeHtml:v=>String(v),branchCards:[{},{}],pastors:[],mediaSources:{home:{}},quickItem:()=>'<a>Quick action</a>',
+    renderHomeHeroMedia:()=>'<video></video>',renderCalendarSection:()=>'<section>Events</section>',renderBranchesSection:()=>'<section>Branches</section>',
+    renderMediaSection:(_,featured)=>featured?'<section data-featured-stream>Service stream</section>':'',renderSocialSection:()=>'<section>Socials</section>',renderFooter:()=>'<footer>Contact and service times</footer>'};
+  const html=runInNewContext(source+';renderHome()',context);
+  assert.equal((html.match(/<details class="home-disclosure">/g)||[]).length,4);
+  assert(!html.includes('class="home-disclosure" open'));
+  assert(html.indexOf('data-featured-stream')<html.indexOf('<details'));
+  for(const label of ['Upcoming events','Our branches','Stay connected','Our people &amp; your next step']) {
+    assert(html.includes(label.replace('&amp;','&')));
+  }
+  assert(html.includes('<footer>Contact and service times</footer>'));
+});
+
 test('Meeting tiles start collapsed while critical cover and personal responsibilities remain visible', () => {
   const source=ui.slice(ui.indexOf('  function meetingTile('),ui.indexOf('  function meetingCard('));
   for(const tab of ['my-week','pastoral','choir','meetings']){

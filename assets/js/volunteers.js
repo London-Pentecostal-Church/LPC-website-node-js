@@ -338,7 +338,7 @@ window.LPCVolunteers = (() => {
   }
   function weekControls() {
     const end = addDays(weekStart, 6);
-    return `<div class="wp-weekbar"><div class="wp-week-nav">${btn("← Previous week", "week", 'data-step="-1" aria-label="Previous week"', true)}<div aria-live="polite"><strong>${shortDate(weekStart)} – ${shortDate(end)}</strong><small>${end.slice(0, 4)}</small></div>${btn("Next week →", "week", 'data-step="1" aria-label="Next week"', true)}</div><div class="wp-date-tools">${btn("This week", "this-week", "", true)}${field("Go to date", `<input type="date" data-filter="week" value="${weekStart}" aria-label="Go to date">`)}</div></div>`;
+    return `<div class="wp-weekbar"><div class="wp-week-nav">${btn('<span aria-hidden="true">←</span><span class="wp-week-word"> Previous week</span>', "week", 'data-step="-1" aria-label="Previous week"', true)}<div aria-live="polite"><strong>${shortDate(weekStart)} – ${shortDate(end)}</strong><small>${end.slice(0, 4)}</small></div>${btn('<span class="wp-week-word">Next week </span><span aria-hidden="true">→</span>', "week", 'data-step="1" aria-label="Next week"', true)}</div><div class="wp-date-tools">${btn("This week", "this-week", "", true)}<details class="wp-date-picker"><summary>Go to date</summary>${field("Choose date", `<input type="date" data-filter="week" value="${weekStart}" aria-label="Go to date">`)}</details></div></div>`;
   }
   function selectedSessions() {
     return state.sessions
@@ -369,14 +369,14 @@ window.LPCVolunteers = (() => {
       });
     } else list = list.filter((s) => s.kind === kind);
     const titles = {
-      "my-week": ["My Week", "All your duties and meetings you lead, across every branch and service team."],
+      "my-week": ["My Week", "Your duties and lineups across all teams."],
       pastoral: [
         "Pastoral Planner",
-        "Arrange the pastor for each meeting. Review pastoral gaps, optional reserves and local prayer leaders.",
+        "Arrange pastors and resolve pastoral gaps.",
       ],
       choir: [
         "Choir & Media Planner",
-        "Arrange worship leadership, singers, musicians and the technical team. Other vacancies can be arranged locally.",
+        "Arrange worship, music and the technical team.",
       ],
       meetings: [
         "Church Meetings",

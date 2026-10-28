@@ -863,9 +863,12 @@ async function hydrateCalendarEvents() {
   }
 }
 
+function homeDisclosure(title, preview, content) {
+  return `<details class="home-disclosure"><summary><span><strong>${escapeHtml(title)}</strong><small>${escapeHtml(preview)}</small></span><span class="home-disclosure__chevron" aria-hidden="true">⌄</span></summary><div class="home-disclosure__body">${content}</div></details>`;
+}
 function renderHome() {
   return `
-    <article class="page">
+    <article class="page page-home">
       <section class="hero">
         <div class="container hero__inner">
           <div class="hero__content">
@@ -886,6 +889,7 @@ function renderHome() {
         <svg class="hero-orbit" viewBox="0 0 700 700" fill="none" aria-hidden="true"><path d="M35 650C620 730 805 31 420 45C250 49 150 177 212 288" stroke="#efc45b" stroke-width="2"/></svg>
       </section>
 
+      ${renderMediaSection(mediaSources.home, true)}
       <section class="quick-strip">
         <div class="container">
           <div class="quick-strip__grid">
@@ -897,12 +901,11 @@ function renderHome() {
         </div>
       </section>
 
-      ${renderCalendarSection()}
-      ${renderBranchesSection()}
-
-      ${renderMediaSection(mediaSources.home)}
-      ${renderSocialSection(mediaSources.home, "LPC")}
-
+      <div class="container home-sections" aria-label="Explore LPC">
+      ${homeDisclosure('Upcoming events', 'Dates, times and places for church events', renderCalendarSection())}
+      ${homeDisclosure('Our branches', branchCards.length + ' churches · Find your local community', renderBranchesSection())}
+      ${homeDisclosure('Stay connected', 'YouTube, Facebook and social updates', renderSocialSection(mediaSources.home, "LPC"))}
+      ${homeDisclosure('Our people & your next step', 'Meet the pastors and plan your visit', `
       <section class="section section--tight section--leadership">
         <div class="container">
           <div class="team-ribbon">
@@ -939,7 +942,8 @@ function renderHome() {
             </div>
           </div>
         </div>
-      </section>
+      </section>`)}
+      </div>
 
       ${renderFooter()}
     </article>
@@ -1214,7 +1218,7 @@ function renderAdminPanel() {
   return `
     <article class="page">
       <section class="section section--tight section--admin-hero">
-        <div class="container admin-panel">
+        <div class="container admin-panel admin-dashboard">
           <div class="admin-panel__header">
             <div>
               <p class="section-label">Admin Control Panel</p>
@@ -1232,7 +1236,7 @@ function renderAdminPanel() {
           </nav>
           <details class="admin-section-fold"><summary><strong>Pastor’s thought</strong><span>Edit the message on the Watch page</span></summary>${renderPastorThoughtAdminFields()}</details>
           <details class="admin-section-fold"><summary><strong>Website header message</strong><span>Edit the announcement at the top of the website</span></summary>${renderSiteSettingsAdminFields()}</details>
-          <section class="admin-panel__section">
+          <details class="admin-section-fold admin-images-fold"><summary><strong>Page images and heroes</strong><span>Open image, video and crop settings</span></summary><section class="admin-panel__section">
             <div class="admin-panel__section-heading">
               <h2>Page images and heroes</h2><a class="btn btn--gold" href="#/lpcadmin/page-images">Edit images within pages</a>
               <p>Open a tile to edit the active video/image, desktop crop, and mobile crop. After saving, you return here and the preview updates.</p>
@@ -1240,7 +1244,7 @@ function renderAdminPanel() {
             <div class="admin-hero-tiles">
               ${renderHeroPreviewTiles()}
             </div>
-          </section>
+          </section></details>
         </div>
       </section>
       ${renderFooter()}
@@ -1712,7 +1716,7 @@ function renderBranchHeroMedia(branch, image, source) {
   `;
 }
 
-function renderMediaSection(source) {
+function renderMediaSection(source, featured = false) {
   if (!source) return "";
   const socialLinks = source.socials
     .map(
@@ -1722,12 +1726,12 @@ function renderMediaSection(source) {
     .join("");
 
   return `
-    <section class="section section--tight section--media">
+    <section class="section section--tight section--media ${featured ? 'home-featured-media' : ''}">
       <div class="container media-section">
         <div class="media-section__header">
           <p class="section-label">Media</p>
           <h2 class="section-title">${source.title}</h2>
-          <p class="section-copy">Make room for faith in your week. Join us online for worship and messages from our church family.</p>
+          <p class="section-copy">${featured ? 'Join the live service or watch the latest message.' : 'Make room for faith in your week. Join us online for worship and messages from our church family.'}</p>
         </div>
         <div class="media-section__body">
           ${
@@ -1751,7 +1755,8 @@ function renderMediaSection(source) {
           <aside class="media-socials">
             <p class="media-kicker"><span></span>Live on Sundays</p>
             <h3>${source.watchTitle || "Watch online"}</h3>
-            <p>Join the service live when available, catch up on the latest message, or open the full channel collection.</p>
+            <p>${featured ? 'Worship with us wherever you are.' : 'Join the service live when available, catch up on the latest message, or open the full channel collection.'}</p>
+            ${featured ? '<a class="btn btn--gold" href="#/watch">Watch services →</a>' : ''}
              <div class="footer__socials">
   ${mediaSources.home.socials
     .filter(([name]) => name !== "Instagram")
