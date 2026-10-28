@@ -287,13 +287,17 @@ body:has(.hero) .hero__title {
   position: relative;
   z-index: 8;
 }
+.visit-service-times .service__time { color: inherit; }
+.visit-service-times .service__name { font-weight: 700; }
+.visit-service-times .footer__services { gap: 12px; }
+
 .quick-strip__grid {
   background: none;
   border-radius: 0;
   border: 0;
   box-shadow: none;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   overflow: visible;
 }
 .quick-item {

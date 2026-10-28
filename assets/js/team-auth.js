@@ -9,7 +9,7 @@ window.LPCTeamAuth = Object.freeze({
   },
   navigation(actor, planner = false) {
     const home = this.landing(actor);
-    return `<nav class="landing-navigation" aria-label="Return navigation"><a href="${home.href}"${planner && actor && !actor.admin ? ' data-vs="landing"' : ''}>← ${home.label}</a>${actor ? '<a href="#/home">Website home</a>' : ''}</nav>`;
+    return `<nav class="landing-navigation" aria-label="Return navigation"><a href="${home.href}"${planner && actor && !actor.admin ? ' data-vs="landing"' : ''}>← ${home.label}</a></nav>`;
   },
   async signOut() {
     for (const path of ["/api/volunteers/logout", "/api/admin/logout"]) {

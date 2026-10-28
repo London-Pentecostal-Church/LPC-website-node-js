@@ -47,7 +47,7 @@ test('Watch lists playable videos ahead of collapsed coming-soon branches', () =
 
 test('Shared footer keeps Home and Watch as quick links without a second exit button group', () => {
   const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
-  const source=site.slice(site.indexOf('function renderFooter()'),site.indexOf('function quickItem('));
+  const source=site.slice(site.indexOf('function renderServiceTimes('),site.indexOf('function quickItem('));
   const html=runInNewContext(source+';renderFooter()',{
     branchCards:[],normalizeRoute:()=>'/volunteers',defaultTheme:{logo:'logo.png'},escapeHtml:v=>v,escapeAttribute:v=>v,mediaSources:{home:{socials:[]}},socialIcon:()=>''});
   assert.equal(html.split('href="#/home"').length-1,1);
@@ -82,7 +82,7 @@ test('Home reference sections collapse by default while the service stream stays
   assert.equal((html.match(/<details class="home-disclosure">/g)||[]).length,4);
   assert(!html.includes('class="home-disclosure" open'));
   assert(html.indexOf('data-featured-stream')<html.indexOf('<details'));
-  for(const label of ['Upcoming events','Our branches','Stay connected','Our people &amp; your next step']) {
+  for(const label of ['Upcoming events','Our branches','Stay connected','Our people']) {
     assert(html.includes(label.replace('&amp;','&')));
   }
   assert(html.includes('<footer>Contact and service times</footer>'));
@@ -155,7 +155,8 @@ test('Role menus expose only the permitted planner lanes and always offer sign-o
     assert(html.includes('class="wp-account-identity" role="group" aria-label="Signed-in account"'));
     assert(html.includes('<strong class="wp-account-name">'+actor.name+'</strong>'));
     assert(html.includes('<b>Role:</b>'));
-    assert(html.includes('Sign in as another account'));
+    assert(!html.includes('Sign in as another account'));
+    assert(!html.includes('data-tab="meetings" class="vs-btn vs-btn--secondary">Church meetings'));
     assert.equal(html.includes('data-tab="pastoral"'), !!(actor.admin || actor.manage?.includes('ministry')));
     assert.equal(html.includes('data-tab="choir"'), !!(actor.admin || actor.manage?.includes('service')));
     assert.equal(html.includes('Members & skills'), !!actor.admin);
@@ -286,14 +287,14 @@ test('User management starts with a picker and opens only the selected profile',
   const handler = ui.slice(ui.indexOf('    root.onchange = async (e) => {'),ui.indexOf('    root.oninput = (e) => {'));
   runInNewContext(handler,{root,memberDialog:id=>opened.push(id)});
   await root.onchange({target:{matches:selector=>selector==='[data-user-select]',value:'a'}});
-  assert.deepEqual(opened,['a']);
+  assert.deepEqual(opened,[]);
   assert.equal(editButton.disabled,false);
   const clickStart=ui.indexOf('      if (a === "edit-selected-user")');
   const clickEnd=ui.indexOf('      if (a === ',clickStart+10);
   const reopen=()=>runInNewContext('(async()=>{'+ui.slice(clickStart,clickEnd)+'})()',{a:'edit-selected-user',root,memberDialog:id=>opened.push(id)});
   await reopen();
   await reopen();
-  assert.deepEqual(opened,['a','a','a']);
+  assert.deepEqual(opened,['a','a']);
   await root.onchange({target:{matches:selector=>selector==='[data-user-select]',value:''}});
   assert.equal(editButton.disabled,true);
   const results={textContent:''};

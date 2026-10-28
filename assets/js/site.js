@@ -393,7 +393,7 @@ const routes = {
             <article class="cards-banner">
               <p class="section-label">What To Expect</p>
               <h2 class="cards-banner__title">A Sunday centred on worship, prayer, and the Word.</h2>
-              <p class="cards-banner__copy">Our Sunday services begin at 10:30 AM. Expect passionate worship, Bible teaching, family connection, and ministry for all ages.</p>
+              <p class="cards-banner__copy">Expect worship, Bible teaching and a welcome for all ages. Choose your service from the times below.</p>
               <ul class="feature-list" style="margin-top:20px">
                 <li>Friendly welcome team and clear arrival guidance</li>
                 <li>Prayer and ministry time during the service</li>
@@ -402,7 +402,7 @@ const routes = {
               </ul>
             </article>
             <div class="content-stack">
-              ${card("Service Times", "Sunday Worship - 10:30 AM<br>Wednesday Prayer - 7:30 PM<br>Youth Service - Friday 7:00 PM")}
+              <article class="content-card visit-service-times"><h3>Service Times</h3><ul class="footer__services">${renderServiceTimes()}</ul></article>
               ${card("Need directions?", "Use the branch directory to choose the nearest LPC location and plan your route before Sunday.")}
               ${card("First time at LPC", "If it helps, come a few minutes early. Our team can help with seating, children, and any questions about the service.")}
             </div>
@@ -487,8 +487,7 @@ const routes = {
         <section class="section section--tight section--about">
           <div class="container about-layout">
             <div class="about-copy">
-              <p class="section-label">About Us</p>
-              <h2 class="section-title">Welcome to London Pentecostal Church</h2>
+
               <p>Thank you for taking time to find out more about who we are. As a church we are all about knowing Jesus Christ and making Him known. Our desire is to spread the Word of God, so that we can transform our city, this nation and even the world.</p>
               <p>We are a community of people who are from all walks of life and who are at different stages in their relationships with God. LPC is a blend of new believers and established Christians. Most importantly we are a people hungry for more of God in our lives.</p>
               <p>If you are looking for a place to connect with God and to connect with His people, this is the place for you. We are looking forward to meeting you.</p>
@@ -501,7 +500,7 @@ const routes = {
             <article class="vision-card vision-card--teal">
               <h3>Our Vision</h3>
               <p>Building a spiritual house for spiritual sacrifices.</p>
-              <a href="#/pastors">Meet Our Team</a>
+
             </article>
             <article class="vision-card vision-card--gold">
               <h3>Our Mission</h3>
@@ -884,7 +883,7 @@ function renderHome() {
           </div>
           ${renderHomeHeroMedia()}
         </div>
-        <div class="hero-caption"><span>Worship. Community. Purpose.</span><a href="#/branches" class="explore-link">Find your community <span aria-hidden="true">↘</span></a><button class="hero-motion" type="button" aria-label="Pause background video">Pause video</button></div>
+        <div class="hero-caption"><span>Worship. Community. Purpose.</span><button class="hero-motion" type="button" aria-label="Pause background video">Pause video</button></div>
         <svg class="hero-sweep" viewBox="0 0 1440 220" preserveAspectRatio="none" aria-hidden="true"><path class="sweep-gold" d="M0 180C380 290 680 40 1060 65C1230 76 1350 109 1440 0V220H0Z" fill="#efc45b"/><path d="M0 193C370 284 745 91 1090 100C1250 104 1370 114 1440 45V220H0Z" fill="#fff"/><path class="swoosh-edge" d="M0 193C370 284 745 91 1090 100C1250 104 1370 114 1440 45" fill="none"/></svg>
         <svg class="hero-orbit" viewBox="0 0 700 700" fill="none" aria-hidden="true"><path d="M35 650C620 730 805 31 420 45C250 49 150 177 212 288" stroke="#efc45b" stroke-width="2"/></svg>
       </section>
@@ -893,10 +892,8 @@ function renderHome() {
       <section class="quick-strip">
         <div class="container">
           <div class="quick-strip__grid">
-            ${quickItem("calendar", "Join us this Sunday", "Find service details", "#/plan-your-visit")}
-            ${quickItem("marker", "Find your church", "Across London & Essex", "#/branches")}
             ${quickItem("users", "The next generation", "Discover LPC Youth", "#/youth")}
-            ${quickItem("play", "Church, wherever you are", "Watch online", "#/watch")}
+            ${quickItem("users", "Meet our pastors", "Here to serve you", "#/pastors")}
           </div>
         </div>
       </section>
@@ -905,14 +902,14 @@ function renderHome() {
       ${homeDisclosure('Upcoming events', 'Dates, times and places for church events', renderCalendarSection())}
       ${homeDisclosure('Our branches', branchCards.length + ' churches · Find your local community', renderBranchesSection())}
       ${homeDisclosure('Stay connected', 'YouTube, Facebook and social updates', renderSocialSection(mediaSources.home, "LPC"))}
-      ${homeDisclosure('Our people & your next step', 'Meet the pastors and plan your visit', `
+      ${homeDisclosure('Our people', 'Leadership serving the LPC family', `
       <section class="section section--tight section--leadership">
         <div class="container">
           <div class="team-ribbon">
             <div class="team-ribbon__intro">
               <p class="section-label">Our people</p><h3>Here to serve.<br>Here for you.</h3>
               <p>Leadership serving the LPC family across every branch.</p>
-              <a class="btn btn--outline" href="#/pastors">Meet the Team</a>
+
             </div>
             <div class="team-ribbon__people">
               ${pastors
@@ -928,19 +925,6 @@ function renderHome() {
             </div>
           </div>
 
-          <div class="welcome-banner">
-            <div class="welcome-banner__copy">
-              <p class="section-label">Your next step</p><h3>Come as you are.<br>Find your place.</h3>
-              <p>Wherever you are on your journey, there's a place for you at LPC. Visit a branch, meet the family, and grow in faith with us.</p>
-            </div>
-            <div class="welcome-banner__actions">
-              <a class="btn btn--gold" href="#/branches">Find Your Nearest Branch</a>
-              <a class="btn btn--light" href="#/plan-your-visit">Plan Your Visit</a>
-            </div>
-            <div class="welcome-banner__media">
-              <img src="./assets/images/derived/welcome-crowd.jpg" alt="Church fellowship">
-            </div>
-          </div>
         </div>
       </section>`)}
       </div>
@@ -1592,6 +1576,7 @@ function renderSubPage({
   body,
 }) {
   const hero = getHeroImageConfig(pageKey, image);
+  actions = actions.filter(action => !(pageKey === "watch" && action[1] === "#/watch"));
   return `
     <article class="page">
       <section class="subhero">
@@ -1636,7 +1621,7 @@ function renderBranchPage(branch, image) {
   const source = getBranchMedia(branch);
   return renderSubPage({
     pageKey: branch.slug,
-    label: escapeHtml(branch.churchName),
+    label: "Our branches",
     title: escapeHtml(branch.churchName),
     copy: escapeHtml(branch.summary),
     image,
@@ -1667,11 +1652,10 @@ function renderBranchPage(branch, image) {
             <article class="content-card content-card--feature">
               <p class="section-label">What To Expect</p>
               <h3>Warm welcome, worship, prayer, and branch family life.</h3>
-              <p>${escapeHtml(branch.summary)}</p>
+
               <p style="margin-top:14px">Every LPC branch carries the same worship culture, biblical teaching, and family heart while serving its local community faithfully.</p>
             </article>
             <div class="branch-engagement__cards">
-              ${card("Service Life", escapeHtml(branch.services || "Contact this branch for service times."))}
               ${card("Local Connection", "A branch community for worship, friendship, pastoral care, and outreach.")}
             </div>
           </div>
@@ -2054,6 +2038,50 @@ function renderBranchesSection(includePadding = false) {
   );
 }
 
+function renderServiceTimes(branch = null) {
+  return branch
+        ? (branch.services || "Service times to be confirmed.")
+            .split(/\r?\n/)
+            .filter((line) => line.trim())
+            .map((line) => {
+              const [service, ...timing] = line.split(/\s*-\s*/);
+              return `
+                <li>
+                  <span class="service__name">${escapeHtml(service)}</span>
+                  ${
+                    timing.length
+                      ? `<span class="service__time">${escapeHtml(timing.join(" - "))}</span>`
+                      : ""
+                  }
+                </li>
+              `;
+            })
+            .join("")
+        : `
+          <li>
+            <span class="service__name">Sunday Service</span>
+            <span class="service__time">
+              8:00 AM — Hindi<br>
+              9:30 AM — English<br>
+              11:00 AM — Malayalam<br>
+              4:30 PM — Branches
+            </span>
+          </li>
+          <li>
+            <span class="service__name">Cell Prayers</span>
+            <span class="service__time">7:30 PM · Monday – Friday</span>
+          </li>
+          <li>
+            <span class="service__name">Sunday School</span>
+            <span class="service__time">10:30 AM</span>
+          </li>
+          <li>
+            <span class="service__name">Youth Meetings</span>
+            <span class="service__time">12:00 PM · Last Sunday of the month</span>
+          </li>
+        `;
+}
+
 function renderFooter() {
   const branch = branchCards.find(
     (item) => normalizeRoute() === `/branches/${item.slug}`,
@@ -2142,49 +2170,7 @@ function renderFooter() {
          <section class="footer__column">
   <h4>Service Times</h4>
   <ul class="footer__services">
-    ${
-      branch
-        ? (branch.services || "Service times to be confirmed.")
-            .split(/\r?\n/)
-            .filter((line) => line.trim())
-            .map((line) => {
-              const [service, ...timing] = line.split(/\s*-\s*/);
-              return `
-                <li>
-                  <span class="service__name">${escapeHtml(service)}</span>
-                  ${
-                    timing.length
-                      ? `<span class="service__time">${escapeHtml(timing.join(" - "))}</span>`
-                      : ""
-                  }
-                </li>
-              `;
-            })
-            .join("")
-        : `
-          <li>
-            <span class="service__name">Sunday Service</span>
-            <span class="service__time">
-              8:00 AM — Hindi<br>
-              9:30 AM — English<br>
-              11:00 AM — Malayalam<br>
-              4:30 PM — Branches
-            </span>
-          </li>
-          <li>
-            <span class="service__name">Cell Prayers</span>
-            <span class="service__time">7:30 PM · Monday – Friday</span>
-          </li>
-          <li>
-            <span class="service__name">Sunday School</span>
-            <span class="service__time">10:30 AM</span>
-          </li>
-          <li>
-            <span class="service__name">Youth Meetings</span>
-            <span class="service__time">12:00 PM · Last Sunday of the month</span>
-          </li> 
-        `
-    }
+    ${renderServiceTimes(branch)}
   </ul>
 </section>
         </div>
@@ -2273,9 +2259,11 @@ function renderRoute() {
     const navigation = document.createElement('div');
     navigation.className = 'container route-return';
     const setReturnNavigation = actor => {
-      navigation.innerHTML = window.LPCTeamAuth.navigation(actor);
+      navigation.innerHTML = actor ? window.LPCTeamAuth.navigation(actor) : '';
+      const existingHrefs = new Set(Array.from(app.querySelectorAll('a[href]')).filter(link => !navigation.contains(link)).map(link => link.getAttribute('href')));
       navigation.querySelectorAll('a').forEach(link => {
-        if (link.getAttribute('href') === '#' + route) link.remove();
+        const href = link.getAttribute('href');
+        if (href === '#/home' || href === '#' + route || existingHrefs.has(href)) link.remove();
       });
       navigation.hidden = !navigation.querySelector('a');
     };
