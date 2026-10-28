@@ -2513,6 +2513,16 @@ body.is-red-header-sample .menu-toggle {
 .home-featured-media .media-section__header { margin-bottom: 20px; }
 .home-featured-media .section-title { font-size: clamp(26px,3vw,38px); }
 .home-featured-media .section-copy { font-size: 15px; line-height: 1.5; }
+/* An aspect-ratio player must be allowed to shrink with its grid column. */
+.media-section .media-section__body { grid-template-columns: minmax(0,1.5fr) minmax(0,1fr); gap: clamp(20px,3vw,48px); }
+.media-section__body > * { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.media-section__body .youtube-preview { width: 100%; min-width: 0; min-height: 0; height: auto; max-height: none; aspect-ratio: 16 / 9; align-self: center; border-radius: 18px; }
+.media-section__body .media-socials { overflow-wrap: anywhere; }
+.media-section__body .media-socials h3 { font-size: clamp(22px,2.5vw,32px); }
+.media-section__body .media-socials .btn { max-width: 100%; white-space: normal; }
+@media (max-width: 1000px) {
+  .media-section .media-section__body { grid-template-columns: minmax(0,1fr); gap: 18px; }
+}
 @media (min-width: 761px) {
   body .page-home .hero, body .page-home .hero__inner { min-height: 560px; }
   body .page-home .hero .hero__content { min-height: 560px; padding-block: 64px 120px; }
