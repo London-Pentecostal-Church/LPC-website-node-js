@@ -109,9 +109,11 @@ const upcoming = (session, now = londonNow()) => `${session.date}T${session.time
 function syncUpcomingSeries(state, meeting, actor) {
   const changes = state.sessions.filter(s => s.meetingId === meeting.id && upcoming(s)).map(session => {
     const base = new Date((session.scheduledDate || session.date) + "T12:00:00Z");
-    base.setUTCDate(base.getUTCDate() + (meeting.day - base.getUTCDay() + 7) % 7);
-    const date = base.toISOString().slice(0, 10);
-    const next = { ...session, name: meeting.name, branch: meeting.branch, team: meeting.team, time: meeting.time, duration: meeting.duration, date, scheduledDate: date, occurrenceId: meeting.id + ":" + date };
+    const weekly = !meeting.recurrence || meeting.recurrence === "weekly";
+    if (weekly) base.setUTCDate(base.getUTCDate() + (meeting.day - base.getUTCDay() + 7) % 7);
+    const date = weekly ? base.toISOString().slice(0, 10) : session.date;
+    const scheduledDate = weekly ? date : session.scheduledDate || session.date;
+    const next = { ...session, name: meeting.name, branch: meeting.branch, team: meeting.team, time: meeting.time, duration: meeting.duration, date, scheduledDate, occurrenceId: weekly ? meeting.id + ":" + date : session.occurrenceId || meeting.id + ":" + scheduledDate };
     if (!upcoming(next)) fail("This change would move an upcoming meeting into the past. Change that date individually instead.");
     return { session, next, before: structuredClone(session) };
   });
@@ -251,14 +253,20 @@ function pendingGuard(state, sessionId) {
       409,
     );
 }
-function createOccurrences(state, service, start, weeks) {
+function createOccurrences(state, service, start, weeks, futureOnly = false) {
   if (service.archived || (state.meetings || []).some(m => m.id === service.meetingId && m.archived)) fail("This meeting series has ended; new dates cannot be created.");
   if (!validDate(start) || !Number.isInteger(weeks) || weeks < 1 || weeks > 26)
     fail("Choose a start date and between 1 and 26 weeks.");
-  let d = new Date(start + "T12:00:00Z");
-  d.setUTCDate(d.getUTCDate() + ((service.day - d.getUTCDay() + 7) % 7));
-  for (let i = 0; i < weeks; i++) {
+  const bounded = service.recurrence === "once" || service.recurrence === "daily";
+  const end = new Date(start + "T12:00:00Z");
+  end.setUTCDate(end.getUTCDate() + weeks * 7 - 1);
+  let d = new Date((bounded && service.startDate > start ? service.startDate : start) + "T12:00:00Z");
+  if (!bounded) d.setUTCDate(d.getUTCDate() + ((service.day - d.getUTCDay() + 7) % 7));
+  for (; d <= end; d.setUTCDate(d.getUTCDate() + (bounded ? 1 : 7))) {
     const date = d.toISOString().slice(0, 10);
+    if (bounded && (!validDate(service.startDate) || !validDate(service.endDate))) fail("This meeting needs valid start and end dates.");
+    if (bounded && date > service.endDate) break;
+    if (futureOnly && !upcoming({ date, time: service.time })) continue;
     if (
       !state.sessions.some(
         (s) =>
@@ -296,7 +304,6 @@ function createOccurrences(state, service, start, weeks) {
         ),
       });
     }
-    d.setUTCDate(d.getUTCDate() + 7);
   }
 }
 const slotList = (service) =>
@@ -940,12 +947,21 @@ export async function handleVolunteers(request, store, adminActor = null) {
       const m = input.meeting || {},
         previous = state.meetings.find((x) => x.id === m.id);
       if (previous?.archived) fail("This series has ended. Create a new meeting instead.");
+      const recurrence = m.recurrence || previous?.recurrence || "weekly";
+      if (!["weekly", "once", "daily"].includes(recurrence)) fail("Choose a weekly meeting, one-off meeting or daily series.");
+      const bounded = recurrence !== "weekly";
+      const startDate = m.startDate ?? previous?.startDate;
+      const endDate = recurrence === "once" ? startDate : m.endDate ?? previous?.endDate;
+      if (bounded && (!validDate(startDate) || !validDate(endDate) || endDate < startDate || (Date.parse(endDate) - Date.parse(startDate)) / 86400000 >= 90)) fail("Choose valid dates for a meeting or daily series of 1 to 90 days.");
+      if (previous && ((previous.recurrence || "weekly") !== recurrence || (bounded && (startDate !== previous.startDate || endDate !== previous.endDate)))) fail("Keep the existing meeting pattern and date range. Change an individual date from its meeting card, or create a new series.");
       const meeting = {
         id: previous?.id || id(),
         name: text(m.name, 100),
         branch: text(m.branch, 100),
         team: text(m.team, 100),
-        day: Number(m.day),
+        recurrence,
+        ...(bounded ? { startDate, endDate } : {}),
+        day: bounded ? new Date(startDate + "T12:00:00Z").getUTCDay() : Number(m.day),
         time: text(m.time, 5),
         duration: Number(m.duration),
       };
@@ -990,7 +1006,10 @@ export async function handleVolunteers(request, store, adminActor = null) {
           };
           state.services.push(service);
         }
-        if (input.start)
+        if (bounded && !previous) {
+          const days = (Date.parse(endDate) - Date.parse(startDate)) / 86400000 + 1;
+          createOccurrences(state, service, startDate, Math.ceil(days / 7));
+        } else if (input.start)
           createOccurrences(state, service, input.start, Number(input.weeks));
       }
       if (previous) syncUpcomingSeries(state, meeting, actor);
@@ -1002,9 +1021,7 @@ export async function handleVolunteers(request, store, adminActor = null) {
       const before = state.sessions.length;
       for (const meeting of (state.meetings || []).filter(m => !m.archived)) {
         for (const service of state.services.filter(s => s.meetingId === meeting.id && !s.archived)) {
-          const candidate = new Date(input.start + "T12:00:00Z");
-          candidate.setUTCDate(candidate.getUTCDate() + (service.day - candidate.getUTCDay() + 7) % 7);
-          if (upcoming({ date: candidate.toISOString().slice(0,10), time: service.time })) createOccurrences(state, service, input.start, 1);
+          createOccurrences(state, service, input.start, 1, true);
         }
       }
       if (state.sessions.length === before) return reply(view(state, actor));

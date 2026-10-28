@@ -391,7 +391,7 @@ window.LPCVolunteers = (() => {
         ? `<div class="wp-personal">${list.length ? list.map((s) => personalMeetingCard(s)).join("") : `<div class="wp-empty"><h3>${state.actor.admin && !personalId() ? "Choose your volunteer profile above" : "No duties assigned this week"}</h3><p>${state.actor.admin && !personalId() ? "Your website admin account is separate from the person on the rota. Choose your name once to see your weekly duties." : "This includes every branch and service team. Use Previous week or Next week to browse other weeks."}</p></div>`}</div>`
         : weekAgenda(list, title)
     }
-    ${tab === "meetings" && isCoordinator() ? `<details class="wp-recurring"><summary>Regular weekly meetings</summary><p>Meetings appear automatically when you browse each upcoming week.</p>${(state.meetings || []).map((m) => `<div class="wp-regular-row"><div><strong>${esc(m.name)}</strong><small>${esc(m.branch)} · ${["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][m.day]} ${esc(m.time)} · ${esc(m.team)}</small></div><div>${canMeetings() ? btn("Edit meeting", "meeting", `data-id="${m.id}"`, true) + btn("Delete series", "delete-meeting-series", `data-id="${m.id}"`, true) : ""}</div></div>`).join("") || "<p>No regular meetings yet. Add your first meeting above.</p>"}</details>` : ""}${tab === "meetings" ? archivedSeries() : ""}`;
+    ${tab === "meetings" && isCoordinator() ? `<details class="wp-recurring"><summary>Meeting patterns &amp; special dates</summary><p>Weekly meetings repeat automatically. One-off meetings and daily series stay within their selected dates.</p>${(state.meetings || []).map((m) => `<div class="wp-regular-row"><div><strong>${esc(m.name)}</strong><small>${esc(m.branch)} · ${esc(meetingPatternLabel(m))} · ${esc(m.team)}</small></div><div>${canMeetings() ? btn("Edit meeting", "meeting", `data-id="${m.id}"`, true) + btn("Delete series", "delete-meeting-series", `data-id="${m.id}"`, true) : ""}</div></div>`).join("") || "<p>No regular meetings yet. Add your first meeting above.</p>"}</details>` : ""}${tab === "meetings" ? archivedSeries() : ""}`;
   }
   function personalMeetings(sessions) {
     const mine = sessions.filter(s => ownDuty(s) || (personalId() && s.leadId === personalId()));
@@ -895,6 +895,29 @@ window.LPCVolunteers = (() => {
     const time = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date());
     return `${session.date}T${session.time}` >= `${today()}T${time}`;
   }
+  function meetingPatternLabel(m) {
+    if (m.recurrence === "once") return "One-off · " + date(m.startDate) + " · " + m.time;
+    if (m.recurrence === "daily") return "Daily · " + date(m.startDate) + " – " + date(m.endDate) + " · " + m.time;
+    return "Weekly · " + ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][m.day] + " · " + m.time;
+  }
+  function refreshMeetingPattern() {
+    const dialog = root.querySelector("dialog");
+    const pattern = dialog?.querySelector('[name="recurrence"]')?.value;
+    if (!pattern) return;
+    dialog.querySelectorAll('[data-meeting-pattern]').forEach(group => {
+      const show = group.dataset.meetingPattern === pattern || (group.dataset.meetingPattern === 'dated' && pattern !== 'weekly');
+      group.hidden = !show;
+      group.querySelectorAll('input, select').forEach(control => control.disabled = !show || control.hasAttribute('data-fixed-pattern'));
+    });
+    const length = dialog.querySelector('[name="seriesLength"]');
+    const custom = dialog.querySelector('[data-custom-days]');
+    custom.hidden = pattern !== 'daily' || length.value !== 'custom';
+    custom.querySelector('input').disabled = custom.hidden || custom.querySelector('input').hasAttribute('data-fixed-pattern');
+    const start = dialog.querySelector('[name="startDate"]').value;
+    const days = pattern === 'once' ? 1 : Number(length.value === 'custom' ? custom.querySelector('input').value : length.value);
+    const note = dialog.querySelector('[data-meeting-dates]');
+    note.textContent = pattern === 'weekly' ? 'Repeats every week on the selected day.' : /^\d{4}-\d{2}-\d{2}$/.test(start) && Number.isInteger(days) && days >= 1 && days <= 90 ? (pattern === 'once' ? 'One meeting on ' + date(start) + '.' : days + ' daily meetings: ' + date(start) + ' to ' + date(addDays(start, days - 1)) + ', inclusive. Ends automatically.') : 'Choose a date and a series length from 1 to 90 days.';
+  }
   function archivedSeries() {
     if (!state.actor.admin || !state.archivedSeries?.length) return "";
     return `<details class="wp-recurring"><summary>Ended series · preserved history</summary><p>Past meetings are kept for review. Permanently remove a series here only for an explicit test-data cleansing request.</p>${state.archivedSeries.map(m => `<div class="wp-regular-row"><div><strong>${esc(m.name)}</strong><small>${esc(m.branch)} · ${esc(m.team)} · ${m.pastDates} past dates</small></div>${btn("Cleanse past test data", "cleanse-series", `data-id="${m.id}"`, true)}</div>`).join("")}</details>`;
@@ -915,7 +938,7 @@ window.LPCVolunteers = (() => {
     const dates = [...new Set(sessions.map(s => s.date))].sort();
     const assigned = sessions.reduce((count, s) => count + s.slots.reduce((n, slot) => n + !!slot.main + !!slot.backup, 0), 0);
     modal("Delete upcoming meeting series?",
-      `<p><strong>${esc(meeting.name)}</strong><br>${esc(meeting.branch)} · ${esc(meeting.team)}</p><p>This ends the weekly pattern and removes <strong>${dates.length} upcoming dates</strong> from both planners. Past meetings and assignments are preserved.</p>${dates.length ? `<p>${esc(date(dates[0]))} to ${esc(date(dates.at(-1)))} · ${assigned} upcoming assignments</p>` : ""}<p>Related future cover requests and availability will be removed. Affected volunteers will receive an update.</p><label><input type="checkbox" required> End this series and remove its upcoming meetings.</label>`,
+      `<p><strong>${esc(meeting.name)}</strong><br>${esc(meeting.branch)} · ${esc(meeting.team)}</p><p>This ends the meeting pattern and removes <strong>${dates.length} upcoming dates</strong> from both planners. Past meetings and assignments are preserved.</p>${dates.length ? `<p>${esc(date(dates[0]))} to ${esc(date(dates.at(-1)))} · ${assigned} upcoming assignments</p>` : ""}<p>Related future cover requests and availability will be removed. Affected volunteers will receive an update.</p><label><input type="checkbox" required> End this series and remove its upcoming meetings.</label>`,
       "Delete upcoming dates", () => save({ action: "delete-meeting-series", meetingId: id, confirm: true }));
   }
   function churchMeetingDialog(id) {
@@ -929,6 +952,9 @@ window.LPCVolunteers = (() => {
       time: "09:30",
       duration: 120,
     };
+    const recurrence = m.recurrence || 'weekly';
+    const days = m.startDate && m.endDate ? Math.round((Date.parse(m.endDate) - Date.parse(m.startDate)) / 86400000) + 1 : 7;
+    const fixed = id ? 'disabled data-fixed-pattern' : '';
     modal(
       id ? "Edit meeting details" : "Add a church meeting",
       field(
@@ -950,7 +976,8 @@ window.LPCVolunteers = (() => {
             .map((t) => `<option value="${esc(t)}">`)
             .join("")}</datalist>`,
         ) +
-        `<div class="vs-form-grid">${field(
+        field('Meeting pattern', `<select name="recurrence" data-meeting-recurrence ${fixed}>${options([['weekly','Weekly meeting'],['once','One-off meeting'],['daily','Daily series · fasting prayer']], recurrence)}</select>`) +
+        `<div class="vs-form-grid"><div data-meeting-pattern="weekly">${field(
           "Day",
           `<select name="day">${options(
             [
@@ -964,7 +991,7 @@ window.LPCVolunteers = (() => {
             ].map((d, i) => [String(i), d]),
             String(m.day),
           )}</select>`,
-        )}${timeField(m.time)}${field("Duration · minutes", input("duration", m.duration, "number", 'required min="15" max="720"'))}</div>` +
+        )}</div><div data-meeting-pattern="dated">${field('Meeting date / start date', input('startDate', m.startDate || today(), 'date', 'required ' + fixed))}</div><div data-meeting-pattern="daily">${field('Number of consecutive days', `<select name="seriesLength" data-series-length ${fixed}>${options([['3','3 days'],['7','7 days'],['21','21 days'],['custom','Custom length']], [3,7,21].includes(days) ? String(days) : 'custom')}</select>`)}<div data-custom-days>${field('Custom number of days', input('dayCount', days, 'number', 'required min="1" max="90" ' + fixed))}</div></div>${timeField(m.time)}${field("Duration · minutes", input("duration", m.duration, "number", 'required min="15" max="720"'))}</div><p class="vs-help" data-meeting-dates role="status"></p>` +
         (!id
           ? field(
               "Pastoral scheduler",
@@ -975,10 +1002,13 @@ window.LPCVolunteers = (() => {
               `<select name="choirLeadId">${leadOptions({ ...m, kind: "service" })}</select>`,
             )
           : "") +
-        `<p class="vs-callout">Enter the meeting once. It appears in both planners. Saving updates all upcoming dates in both planners, including already-created dates. Past records stay unchanged. Changed assignments return to draft for review; cancellations remain cancelled.</p>`,
+        `<p class="vs-callout">${id ? 'Saving updates upcoming details in both planners. Past records stay unchanged; changed assignments return to draft and cancellations remain cancelled. Meeting type and one-off/daily date ranges are fixed after creation. Move or cancel an individual date from its card.' : 'Enter the meeting once. It appears in both planners. One-off and daily meetings are created immediately for the selected dates; daily series end automatically.'}</p>`,
       "Save meeting",
-      (f) =>
-        save({
+      (f) => {
+        const pattern = f.get('recurrence') || recurrence;
+        const startDate = f.get('startDate') || m.startDate;
+        const count = id ? days : Number(f.get('seriesLength') === 'custom' ? f.get('dayCount') : f.get('seriesLength'));
+        return save({
           action: "meeting",
           meeting: {
             ...m,
@@ -986,14 +1016,18 @@ window.LPCVolunteers = (() => {
             branch: f.get("branch"),
             team: f.get("team"),
             day: Number(f.get("day")),
+            recurrence: pattern,
+            ...(pattern !== 'weekly' ? { startDate, endDate: pattern === 'once' ? startDate : addDays(startDate, count - 1) } : {}),
             time: timeValue(f),
             duration: Number(f.get("duration")),
             pastorLeadId: f.get("pastorLeadId"),
             choirLeadId: f.get("choirLeadId"),
           },
 
-        }),
+        });
+      },
     );
+    refreshMeetingPattern();
   }
   function swaps() {
     const list = state.swaps.filter(
@@ -1465,6 +1499,7 @@ window.LPCVolunteers = (() => {
     root.innerHTML = window.LPCTeamAuth.navigation(null) + '<p>Loading team access…</p>';
     root.onclick = click;
     root.onchange = async (e) => {
+      if (e.target.matches('[data-meeting-recurrence], [data-series-length], [name="startDate"], [name="dayCount"]')) return refreshMeetingPattern();
       if (e.target.matches("[data-user-select]")) {
         root.querySelector('[data-vs="edit-selected-user"]').disabled = !e.target.value;
         if (e.target.value) return memberDialog(e.target.value);
@@ -1527,6 +1562,7 @@ window.LPCVolunteers = (() => {
       }
     };
     root.oninput = (e) => {
+      if (e.target.matches('dialog [name="startDate"], dialog [name="dayCount"]')) return refreshMeetingPattern();
       if (e.target.matches("[data-user-search]")) {
         const list = memberChoices(e.target.value);
         const select = root.querySelector("[data-user-select]");

@@ -7,6 +7,25 @@ const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls()'));
 
+test('Meeting form supports weekly, one-off and daily patterns with exact date payloads', () => {
+  const source=ui.slice(ui.indexOf('  function churchMeetingDialog('),ui.indexOf('  function swaps()'));
+  let body,submit,payload,refreshed=0;
+  const context={canMeetings:()=>true,state:{meetings:[]},branches:['Main Church'],teams:()=>['English'],esc:v=>v,
+    field:(label,html)=>label+html,input:(name,value,type,extra)=>`<input name="${name}" value="${value}" ${extra}>`,
+    options:values=>values.map(([id,label])=>`<option value="${id}">${label}</option>`).join(''),today:()=> '2032-04-01',
+    timeField:()=>'',timeValue:()=> '19:30',leadOptions:()=>'',refreshMeetingPattern:()=>refreshed++,
+    modal:(_title,html,_submit,callback)=>{body=html;submit=callback;},save:value=>payload=value,
+    addDays:(iso,n)=>{const d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}};
+  runInNewContext(source+';churchMeetingDialog();',context);
+  assert.equal(refreshed,1);for(const value of ['weekly','once','daily','3','7','21','custom'])assert(body.includes('value="'+value+'"'));
+  for(const [pattern,count,end]of [['once','7','2032-04-01'],['daily','3','2032-04-03'],['daily','7','2032-04-07'],['daily','21','2032-04-21'],['daily','custom','2032-04-05']]) {
+    submit(new Map([['recurrence',pattern],['name','Prayer'],['branch','Main Church'],['team','English'],['startDate','2032-04-01'],['seriesLength',count],['dayCount','5'],['duration','60']]));
+    assert.equal(payload.meeting.recurrence,pattern);assert.equal(payload.meeting.endDate,end);
+  }
+  submit(new Map([['recurrence','weekly'],['day','0'],['name','Weekly'],['branch','Main Church'],['team','English'],['duration','60']]));
+  assert.equal(payload.meeting.day,0);assert.equal(payload.meeting.startDate,undefined);
+});
+
 test('Watch lists playable videos ahead of collapsed coming-soon branches', () => {
   const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
   const source=site.slice(site.indexOf('function renderWatchHub()'),site.indexOf('function prioritiseWatchPlayer('));
@@ -18,6 +37,23 @@ test('Watch lists playable videos ahead of collapsed coming-soon branches', () =
   assert(html.includes('Videos coming soon'));
   assert(!html.includes('class="watch-coming-soon" open'));
   assert(html.includes('#/branches/Soon'));
+  const withFollow=entry('Channel','','https://youtube.com/@example');
+  withFollow.source.socials=[['YouTube',withFollow.source.youtubeUrl,'Services']];
+  context.mediaCollections=()=>[withFollow];
+  const deduplicated=runInNewContext(source+';renderWatchHub()',context);
+  assert.equal(deduplicated.split('href="https://youtube.com/@example"').length-1,1);
+  assert(!deduplicated.includes('Open YouTube channel'));
+});
+
+test('Shared footer keeps Home and Watch as quick links without a second exit button group', () => {
+  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+  const source=site.slice(site.indexOf('function renderFooter()'),site.indexOf('function quickItem('));
+  const html=runInNewContext(source+';renderFooter()',{
+    branchCards:[],normalizeRoute:()=>'/volunteers',defaultTheme:{logo:'logo.png'},escapeHtml:v=>v,escapeAttribute:v=>v,mediaSources:{home:{socials:[]}},socialIcon:()=>''});
+  assert.equal(html.split('href="#/home"').length-1,1);
+  assert.equal(html.split('href="#/watch"').length-1,1);
+  assert(!html.includes('footer__website-return'));
+  assert(html.indexOf('Team access')>html.indexOf('All rights reserved.'));
 });
 
 test('Resolving a live stream promotes only its placeholder and leaves existing players in place', () => {
@@ -173,14 +209,14 @@ test('Main admin opens a dedicated, administrator-only user management route', (
   for (const authenticated of [false, true]) {
     const html = runInNewContext(routeSource + '\ngetDynamicRouteRenderer("/lpcadmin/users")();', {
       adminSession: { authenticated }, renderAdminLogin: () => 'Admin sign-in required',
-      renderFooter: team => team ? '<footer>Back to church website</footer>' : '',
+      renderFooter: () => '<footer>Home and Watch quick links</footer>',
     });
     assert.equal(html.includes('data-users-page="true"'), authenticated);
-    assert.equal(html.includes('<footer>Back to church website</footer>'), authenticated);
+    assert.equal(html.includes('<footer>Home and Watch quick links</footer>'), authenticated);
     if (!authenticated) assert.equal(html, 'Admin sign-in required');
   }
   for (const route of ['/volunteers','/lpcadmin/volunteers']) {
-    const html=runInNewContext(routeSource+';getDynamicRouteRenderer("'+route+'")();',{renderFooter:()=>'<footer>Back to church website</footer>'});
+    const html=runInNewContext(routeSource+';getDynamicRouteRenderer("'+route+'")();',{renderFooter:()=>'<footer>Home and Watch quick links</footer>'});
     assert(html.indexOf('<footer>') > html.indexOf('</section>'));
     assert.equal((html.match(/<footer>/g)||[]).length,1);
   }

@@ -1861,7 +1861,7 @@ function renderWatchHub() {
         "</h3></div>" +
         player +
         '<div class="watch-collection__actions">' +
-        (source.youtubeUrl
+        (source.youtubeUrl && !source.socials.some(([,url]) => url === source.youtubeUrl)
           ? '<a class="btn btn--gold" href="' +
             escapeAttribute(source.youtubeUrl) +
             '" target="_blank" rel="noopener">Open YouTube channel</a>'
@@ -2054,7 +2054,7 @@ function renderBranchesSection(includePadding = false) {
   );
 }
 
-function renderFooter(teamScreen = false) {
+function renderFooter() {
   const branch = branchCards.find(
     (item) => normalizeRoute() === `/branches/${item.slug}`,
   );
@@ -2062,7 +2062,6 @@ function renderFooter(teamScreen = false) {
     <footer class="footer">
       <svg class="footer-swoosh" viewBox="0 0 1440 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0 86C300 12 460 8 720 8C1080 8 1290 22 1440 4L1440 0H0Z" fill="#fff"/><path d="M0 86C300 12 460 8 720 8C1080 8 1290 22 1440 4" fill="none" stroke="#efc45b" stroke-width="4" vector-effect="non-scaling-stroke"/></svg>
       <div class="container">
-        ${teamScreen ? '<nav class="footer__website-return" aria-label="Return to church website"><a class="btn btn--light" href="#/home">← Back to church website</a><a class="btn btn--light" href="#/watch">Watch services</a></nav>' : ''}
         <div class="footer__inner">
           <section class="footer__brand">
             <div class="footer__brandmark">
@@ -2081,6 +2080,7 @@ function renderFooter(teamScreen = false) {
           <section class="footer__column">
             <h4>Quick Links</h4>
             <ul>
+              <li><a href="#/home">Home</a></li>
               <li><a href="#/about">About Us</a></li>
               <li><a href="#/pastors">Pastors</a></li>
               <li><a href="#/ministries">Ministries</a></li>
@@ -2272,12 +2272,19 @@ function renderRoute() {
   if (!app.querySelector('#volunteer-app')) {
     const navigation = document.createElement('div');
     navigation.className = 'container route-return';
-    navigation.innerHTML = window.LPCTeamAuth.navigation(adminSession.authenticated ? {admin:true} : null);
+    const setReturnNavigation = actor => {
+      navigation.innerHTML = window.LPCTeamAuth.navigation(actor);
+      navigation.querySelectorAll('a').forEach(link => {
+        if (link.getAttribute('href') === '#' + route) link.remove();
+      });
+      navigation.hidden = !navigation.querySelector('a');
+    };
+    setReturnNavigation(adminSession.authenticated ? {admin:true} : null);
     app.prepend(navigation);
     fetch('/api/volunteers/session', {cache:'no-store'})
       .then(response => response.ok ? response.json() : null)
       .then(session => {
-        if (session && navigation.isConnected) navigation.innerHTML = window.LPCTeamAuth.navigation(session.actor);
+        if (session && navigation.isConnected) setReturnNavigation(session.actor);
       }).catch(() => {});
   }
 
@@ -2334,8 +2341,8 @@ function renderRoute() {
 }
 
 function getDynamicRouteRenderer(route) {
-  if (route === '/lpcadmin/users') return () => adminSession.authenticated ? '<section class="section vs-section"><div id="volunteer-app" data-users-page="true" class="container"><p>Loading users &amp; access…</p></div></section>' + renderFooter(true) : renderAdminLogin();
-  if (route === '/volunteers' || route === '/lpcadmin/volunteers') return () => '<section class="section vs-section"><div id="volunteer-app" class="container"><p>Loading volunteer schedules…</p></div></section>' + renderFooter(true);
+  if (route === '/lpcadmin/users') return () => adminSession.authenticated ? '<section class="section vs-section"><div id="volunteer-app" data-users-page="true" class="container"><p>Loading users &amp; access…</p></div></section>' + renderFooter() : renderAdminLogin();
+  if (route === '/volunteers' || route === '/lpcadmin/volunteers') return () => '<section class="section vs-section"><div id="volunteer-app" class="container"><p>Loading volunteer schedules…</p></div></section>' + renderFooter();
 
   if (route === "/lpcadmin/page-images") return renderPageImageAdmin;
   if (route === "/lpcadmin/branches" || route === "/admin/branches")

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { handleVolunteers, upgradePlanner, meetingReadiness } from "../worker/volunteers.mjs";
+import { handleVolunteers, upgradePlanner, meetingReadiness, emptyVolunteers } from "../worker/volunteers.mjs";
 import { readFileSync } from "node:fs";
 const demo = JSON.parse(
   readFileSync(new URL("./fixtures/weekly-demo.json", import.meta.url), "utf8"),
@@ -36,6 +36,67 @@ function setup(seed = demo) {
     },
   };
 }
+test("One-off meetings create exactly one paired date and never repeat in later weeks", async () => {
+  const h=setup(emptyVolunteers());
+  const meeting={name:'Family day',branch:'Main Church',team:'English',recurrence:'once',startDate:'2032-04-10',time:'10:00',duration:120};
+  assert.equal((await h.call({action:'meeting',meeting})).status,200);
+  assert.equal(h.get().sessions.length,2);
+  assert.deepEqual(new Set(h.get().sessions.map(s=>s.kind)),new Set(['ministry','service']));
+  assert(h.get().sessions.every(s=>s.date==='2032-04-10'));
+  for(const start of ['2032-04-05','2032-04-12','2032-05-03']) assert.equal((await h.call({action:'ensure-week',start})).status,200);
+  assert.equal(h.get().sessions.length,2);
+});
+
+test("Daily fasting series create 3, 7 or 21 inclusive dates across weeks and stop at the end", async () => {
+  for(const days of [3,7,21]) {
+    const h=setup(emptyVolunteers());
+    const startDate='2032-02-25', end=new Date(startDate+'T12:00:00Z');end.setUTCDate(end.getUTCDate()+days-1);
+    const endDate=end.toISOString().slice(0,10);
+    assert.equal((await h.call({action:'meeting',meeting:{name:days+' days fasting',branch:'Main Church',team:'Malayalam',recurrence:'daily',startDate,endDate,time:'19:30',duration:90}})).status,200);
+    const saved=h.get().sessions;
+    assert.equal(saved.length,days*2);assert.equal(new Set(saved.map(s=>s.date)).size,days);
+    for(const date of new Set(saved.map(s=>s.date))) assert.equal(saved.filter(s=>s.date===date).length,2);
+    assert.equal(saved.map(s=>s.date).sort()[0],startDate);assert.equal(saved.map(s=>s.date).sort().at(-1),endDate);
+    const before=structuredClone(saved);
+    for(const start of ['2032-02-23','2032-03-01','2032-03-08','2032-03-15','2032-03-22']) await h.call({action:'ensure-week',start});
+    assert.deepEqual(h.get().sessions,before);
+  }
+});
+
+test("Dated series validate dates, limits and permissions without saving partial calendars", async () => {
+  const h=setup(emptyVolunteers());
+  const meeting={name:'Prayer',branch:'Main Church',team:'English',recurrence:'daily',startDate:'2032-04-01',endDate:'2032-04-07',time:'19:30',duration:60};
+  for(const changes of [{recurrence:'monthly'},{startDate:'2032-02-30'},{endDate:'2032-03-31'},{endDate:'2032-07-01'}]) {
+    assert.equal((await h.call({action:'meeting',meeting:{...meeting,...changes}})).status,400);
+    assert.equal(h.get().sessions.length,0);assert.equal(h.get().meetings.length,0);
+  }
+  assert.equal((await h.call({action:'meeting',meeting},{id:'choir',name:'Choir coordinator',manage:['service']})).status,403);
+  assert.equal((await h.call({action:'meeting',meeting})).status,200);
+  const m=h.get().meetings[0],before=structuredClone(h.get());
+  for(const changes of [{recurrence:'weekly',day:1},{startDate:'2032-04-02'},{endDate:'2032-04-10'}]) {
+    assert.equal((await h.call({action:'meeting',meeting:{...m,...changes}})).status,400);
+    assert.deepEqual(h.get(),before);
+  }
+});
+
+test("Editing a daily series preserves shifted dates, assignments and cancellations; ending it prevents regeneration", async () => {
+  const h=setup();await h.call({action:'upgrade-planner'});
+  const meetingInput={name:'Fasting prayer',branch:'Main Church',team:'Malayalam',recurrence:'daily',startDate:'2032-04-01',endDate:'2032-04-03',time:'19:30',duration:60};
+  assert.equal((await h.call({action:'meeting',meeting:meetingInput})).status,200);
+  const meeting=h.get().meetings.find(m=>m.name===meetingInput.name);
+  const original=h.get().sessions.find(s=>s.meetingId===meeting.id&&s.kind==='ministry');
+  const pastor=h.get().members.find(m=>m.username==='pastor.test');original.slots[0].main=pastor.id;
+  assert.equal((await h.call({action:'meeting-occurrence',sessionId:original.id,date:'2032-04-05',time:'20:00',cancelled:true,comment:'Moved date'})).status,200);
+  assert.equal((await h.call({action:'meeting',meeting:{...meeting,name:'Fasting and family prayer',time:'18:30'}})).status,200);
+  const edited=h.get().sessions.find(s=>s.id===original.id);
+  assert.equal(edited.date,'2032-04-05');assert.equal(edited.scheduledDate,'2032-04-01');assert.equal(edited.slots[0].main,pastor.id);assert.equal(edited.cancelled,true);
+  assert.equal((await h.call({action:'ensure-week',start:'2032-03-29'})).status,200);
+  assert.equal(h.get().sessions.filter(s=>s.meetingId===meeting.id).length,6);
+  assert.equal((await h.call({action:'delete-meeting-series',meetingId:meeting.id,confirm:true})).status,200);
+  await h.call({action:'ensure-week',start:'2032-03-29'});
+  assert.equal(h.get().sessions.filter(s=>s.meetingId===meeting.id).length,0);
+});
+
 test("Shared weekly planner migration preserves all prior duties", () => {
   const before = structuredClone(demo);
   const migrated = upgradePlanner(structuredClone(demo));
