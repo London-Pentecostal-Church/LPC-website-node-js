@@ -37,3 +37,20 @@ test('XLSX contains filtered sheets, freeze panes and literal text instead of fo
  for(const name of ['Overview','Participation','Schedule','Notes'])assert(text.includes('name="'+name+'"'));
  assert(text.includes('state="frozen"'));assert(text.includes('autoFilter'));assert(text.includes('=HYPERLINK(&quot;bad&quot;) &lt;&amp;&gt;'));assert(!text.includes('<f>'));assert(!text.includes('PRIVATE-HASH'));
 });
+
+test('Rota puts dated meetings first, names under duties and reserves explicitly labelled',()=>{
+ const s=fixture();s.sessions.push(session('outside','2032-04-01'));
+ const report=plannerReport(s,filters,now);const first=report.rota[0];
+ assert.equal(first.date,'2032-01-01');assert.equal(first.day,'Thursday');assert.equal(first.branch,'Main Church');assert.equal(first.duties['Lead singer'],'A\nReserve: B');
+ assert(!report.rota.some(r=>r.meeting==='outside'));
+ const text=new TextDecoder().decode(reportWorkbook(report));
+ assert(text.indexOf('name="Meeting rota"')<text.indexOf('name="Overview"'));
+ assert(text.includes('name="By person"'));assert(text.includes('2032-01-01 to 2032-03-31'));assert(text.includes('Covering / duty'));assert(text.includes('topLeftCell="A5"'));assert(text.includes('ref="A4:'));assert(text.includes('Reserve: B'));
+});
+
+test('Choir rota includes the pastor in charge from the linked occurrence only',()=>{
+ const s=fixture();s.members.push(member('Pastor',{skills:['Ministry volunteer']}));
+ s.sessions[0].meetingId='meeting';s.sessions.push(session('linked','2032-01-01',{kind:'ministry',meetingId:'meeting',slots:[{role:'Ministry volunteer',main:'Pastor',backup:''}]}));
+ s.sessions.push(session('unrelated','2032-03-01',{kind:'ministry',meetingId:'other',slots:[{role:'Ministry volunteer',main:'Pastor',backup:''}]}));
+ const r=plannerReport(s,filters,now);assert.equal(r.rota[0].pastorInCharge,'Pastor');assert.equal(r.rota[1].pastorInCharge,'Not allocated — action needed');
+});
