@@ -33,6 +33,44 @@ test('Participation chart keeps role cohorts separate, shows real zero counts, a
   assert(chart({participation:[]},'Pastor').includes('No matching people'));
 });
 
+test('All roles combines each person once and compares their eligible role mix', () => {
+  const source=ui.slice(ui.indexOf('  function participationChart('),ui.indexOf('  function bindParticipationDashboard('));
+  const chart=runInNewContext(source+';participationChart',{esc:v=>String(v)});
+  const row=(memberId,role,confirmed,eligible,average)=>({memberId,name:memberId,role,confirmed,eligible,average,rate:confirmed/eligible,past:confirmed,upcoming:0,draft:0,reserve:0,unknown:0,suggestion:'In line with rotation'});
+  const report={participation:[row('Alex','Pastor',2,10,.4),row('Alex','Prayer',1,5,.2),row('Ben','Pastor',6,10,.4)]};
+  const html=chart(report,'');
+  assert.equal((html.match(/wp-report-person-name">Alex/g)||[]).length,1);
+  assert(html.includes('9</strong><span>Confirmed duties'));
+  assert(html.includes('2</strong><span>Eligible people'));
+  assert(html.includes('1</strong><span>Need opportunity'));
+  assert(html.includes('3 confirmed allocations'));assert(html.includes('Eligible role opportunities'));
+  const needs=chart(report,'',true);assert(needs.includes('Alex'));assert(!needs.includes('>Ben'));
+});
+
+test('Date edits refresh all dashboard figures and download scope, ignore stale responses, and reject invalid ranges', async () => {
+  const source=ui.slice(ui.indexOf('  function bindParticipationDashboard('),ui.indexOf('  async function participationReport('));
+  for(const kind of ['ministry','service']) {
+    const events={},pending=[];
+    const start={value:'2032-01-01'},end={value:'2032-02-01'},submit={hidden:false},chart={innerHTML:'old',hidden:false},status={},caption={},error={},download={hidden:false,setAttribute:(key,value)=>download[key]=value};
+    const role={value:''},needs={checked:false},search={value:''};
+    const dashboard={querySelector:key=>({'[data-report-chart]':chart,'[data-report-role]':role,'[data-report-needs]':needs,'[data-report-search]':search})[key]};
+    const form={querySelector:key=>({'[name="start"]':start,'[name="end"]':end,'footer button[type="submit"]':submit})[key],addEventListener:(name,fn)=>events[name]=fn};
+    const dialog={isConnected:true,classList:{add(){}},querySelector:key=>({'form':form,'[data-participation-dashboard]':dashboard,'[data-report-status]':status,'[data-report-scope]':caption,'[data-report-download]':download,'[data-dialog-error]':error})[key]};
+    const initial={kind,start:start.value,end:end.value,branch:'Main Church',team:'English',meetings:10,participation:[]};
+    const context={root:{querySelector:()=>dialog},URLSearchParams,esc:v=>String(v),setTimeout,clearTimeout,participationChart:r=>'meetings:'+r.meetings,api:path=>new Promise(resolve=>pending.push({path,resolve}))};
+    runInNewContext(source+';bindParticipationDashboard(report)',{...context,report:initial});
+    assert.equal(submit.hidden,true);
+    const event={target:{matches:()=>true}};
+    end.value='2031-01-01';await events.change(event);assert.equal(pending.length,0);assert(chart.hidden);assert(download.hidden);assert(status.textContent.includes('valid dates'));
+    end.value='2032-03-01';const first=events.change(event);assert(pending[0].path.includes('kind='+kind));assert(pending[0].path.includes('end=2032-03-01'));assert(chart.hidden);
+    end.value='2032-04-01';const second=events.change(event);
+    pending[1].resolve({...initial,end:end.value,meetings:3});await second;
+    assert.equal(chart.innerHTML,'meetings:3');assert.equal(chart.hidden,false);assert(caption.textContent.includes('3 meetings'));assert(download.href.includes('end=2032-04-01'));assert.equal(download.hidden,false);
+    pending[0].resolve({...initial,end:'2032-03-01',meetings:99});await first;
+    assert.equal(chart.innerHTML,'meetings:3');assert(!caption.textContent.includes('99'));assert(download.href.includes('end=2032-04-01'));
+  }
+});
+
 test('Meeting form supports weekly, one-off and daily patterns with exact date payloads', () => {
   const source=ui.slice(ui.indexOf('  function churchMeetingDialog('),ui.indexOf('  function swaps()'));
   let body,submit,payload,refreshed=0;

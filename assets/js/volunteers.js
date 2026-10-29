@@ -1212,15 +1212,28 @@ window.LPCVolunteers = (() => {
     );
   }
   function participationChart(report, role, needsOnly = false, search = '', page = 0) {
-    const cohort=report.participation.filter(r=>r.role===role && r.eligible>0);
+    let cohort=report.participation.filter(r=>(!role || r.role===role) && r.eligible>0);
+    if (!role) {
+      const people=new Map();
+      for (const row of cohort) {
+        const key=row.memberId || row.name;
+        const person=people.get(key) || {name:row.name,memberId:key,past:0,upcoming:0,confirmed:0,draft:0,reserve:0,eligible:0,unknown:0,expected:0,last:'',next:''};
+        for(const field of ['past','upcoming','confirmed','draft','reserve','eligible','unknown']) person[field]+=Number(row[field]) || 0;
+        person.expected+=(Number(row.average) || 0)*row.eligible;
+        if(row.last && row.last>person.last)person.last=row.last;
+        if(row.next && (!person.next || row.next<person.next))person.next=row.next;
+        people.set(key,person);
+      }
+      cohort=[...people.values()].map(person=>({...person,rate:person.confirmed/person.eligible,suggestion:person.confirmed===0?'No confirmed opportunities':person.confirmed+0.0001<person.expected?'Consider next':'In line with rotation'}));
+    }
     const needs=r=>['No confirmed opportunities','Consider next'].includes(r.suggestion);
     const matches=cohort.filter(r=>(!needsOnly || needs(r)) && r.name.toLowerCase().includes(search.trim().toLowerCase())).sort((a,b)=>a.rate-b.rate || a.confirmed-b.confirmed || a.name.localeCompare(b.name));
     const max=Math.max(1,...cohort.map(r=>r.confirmed));
     const totalPages=Math.max(1,Math.ceil(matches.length/8)); page=Math.min(Math.max(0,page),totalPages-1);
     const metric=(value,label)=>`<div><strong>${value}</strong><span>${label}</span></div>`;
-    return `<div class="wp-report-metrics">${metric(cohort.length,'Eligible people')}${metric(cohort.reduce((n,r)=>n+r.confirmed,0),'Confirmed duties')}${metric(cohort.filter(needs).length,'Need opportunity')}</div><div class="wp-report-chart-head"><h3>Allocation balance</h3><span class="wp-report-legend"><span><i class="wp-report-past"></i>Past</span><span><i class="wp-report-future"></i>Upcoming</span></span></div><p class="wp-report-chart-hint">Primary allocations · fewest opportunities first · tap a name for detail</p><div class="wp-report-bars" role="group" aria-label="Confirmed allocations by person">${matches.slice(page*8,page*8+8).map(r=>{
+    return `<div class="wp-report-metrics">${metric(cohort.length,'Eligible people')}${metric(cohort.reduce((n,r)=>n+r.confirmed,0),'Confirmed duties')}${metric(cohort.filter(needs).length,'Need opportunity')}</div><div class="wp-report-chart-head"><h3>Allocation balance</h3><span class="wp-report-legend"><span><i class="wp-report-past"></i>Past</span><span><i class="wp-report-future"></i>Upcoming</span></span></div><p class="wp-report-chart-hint">${role?'Primary allocations':'All roles · duties combined'} · fewest opportunities first · tap a name for detail</p><div class="wp-report-bars" role="group" aria-label="Confirmed allocations by person">${matches.slice(page*8,page*8+8).map(r=>{
       const status=r.confirmed===0?'No allocations':needs(r)?'Below average':'';
-      return `<details class="wp-report-person${needs(r)?' needs-opportunity':''}"><summary><span class="wp-report-person-name">${esc(r.name)}${status?`<small>${status}</small>`:''}</span><span class="wp-report-bar" aria-hidden="true"><i class="wp-report-past" style="width:${100*r.past/max}%"></i><i class="wp-report-future" style="width:${100*r.upcoming/max}%"></i></span><strong class="wp-report-total" aria-label="${r.confirmed} confirmed allocations">${r.confirmed}<span aria-hidden="true">⌄</span></strong></summary><div class="wp-report-person-detail">${metric(r.past,'Past confirmed')}${metric(r.upcoming,'Upcoming')}${metric(r.draft,'Draft')}${metric(r.reserve,'Reserve')}${metric(r.eligible,'Eligible meetings')}${metric(r.unknown,'Availability to check')}<p>Last: ${esc(r.last || 'None in period')} · Next: ${esc(r.next || 'Not booked')}</p></div></details>`;
+      return `<details class="wp-report-person${needs(r)?' needs-opportunity':''}"><summary><span class="wp-report-person-name">${esc(r.name)}${status?`<small>${status}</small>`:''}</span><span class="wp-report-bar" aria-hidden="true"><i class="wp-report-past" style="width:${100*r.past/max}%"></i><i class="wp-report-future" style="width:${100*r.upcoming/max}%"></i></span><strong class="wp-report-total" aria-label="${r.confirmed} confirmed allocations">${r.confirmed}<span aria-hidden="true">⌄</span></strong></summary><div class="wp-report-person-detail">${metric(r.past,'Past confirmed')}${metric(r.upcoming,'Upcoming')}${metric(r.draft,'Draft')}${metric(r.reserve,'Reserve')}${metric(r.eligible,role?'Eligible meetings':'Eligible role opportunities')}${metric(r.unknown,role?'Availability to check':'Availability checks')}<p>Last: ${esc(r.last || 'None in period')} · Next: ${esc(r.next || 'Not booked')}</p></div></details>`;
     }).join('') || '<p class="wp-report-empty">No matching people for this view.</p>'}</div><div class="wp-report-pagination"><span>${matches.length?`${page*8+1}–${Math.min((page+1)*8,matches.length)} of ${matches.length}`:'0 people'}</span><button type="button" class="vs-btn vs-secondary" data-report-page="${page-1}" ${page===0?'disabled':''} aria-label="Previous people">←</button><button type="button" class="vs-btn vs-secondary" data-report-page="${page+1}" ${page>=totalPages-1?'disabled':''} aria-label="Next people">→</button></div>`;
   }
   function bindParticipationDashboard(report) {
@@ -1228,8 +1241,34 @@ window.LPCVolunteers = (() => {
     if (!dialog) return;
     dialog.classList.add('wp-report-dialog');
     const dashboard=dialog.querySelector('[data-participation-dashboard]');
-    let page=0;
-    const refresh=()=>{dashboard.querySelector('[data-report-chart]').innerHTML=participationChart(report,dashboard.querySelector('[data-report-role]').value,dashboard.querySelector('[data-report-needs]').checked,dashboard.querySelector('[data-report-search]').value,page);};
+    const form=dialog.querySelector('form'), chart=dashboard.querySelector('[data-report-chart]'), status=dialog.querySelector('[data-report-status]'), caption=dialog.querySelector('[data-report-scope]'), download=dialog.querySelector('[data-report-download]'), error=dialog.querySelector('[data-dialog-error]');
+    let page=0, version=0, timer, valid=true;
+    const refresh=()=>{chart.innerHTML=participationChart(report,dashboard.querySelector('[data-report-role]').value,dashboard.querySelector('[data-report-needs]').checked,dashboard.querySelector('[data-report-search]').value,page);chart.hidden=!valid;};
+    const invalidate=()=>{version++;valid=false;chart.hidden=true;download.hidden=true;error.textContent='';status.textContent='Updating date range…';caption.textContent=`${report.branch || 'All branches'} · ${report.team || 'All teams'}`;};
+    const updateDates=async()=>{
+      clearTimeout(timer);
+      if(!dialog.isConnected)return;
+      const start=form.querySelector('[name="start"]').value,end=form.querySelector('[name="end"]').value;
+      if(valid && start===report.start && end===report.end)return;
+      invalidate(); const requestVersion=version;
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end) || end<start || (Date.parse(end)-Date.parse(start))/86400000>366){status.textContent='Choose valid dates, up to one year apart.';return;}
+      try {
+        const params=new URLSearchParams({kind:report.kind,start,end,branch:report.branch || '',team:report.team || ''});
+        const next=await api('/report?'+params);
+        if(requestVersion!==version || !dialog.isConnected)return;
+        report=next;valid=true;page=0;
+        const select=dashboard.querySelector('[data-report-role]'), previousRole=select.value;
+        const roles=[...new Set([...(report.roleNames || []),...report.participation.map(r=>r.role)])].filter(role=>report.participation.some(r=>r.role===role));
+        select.innerHTML='<option value="">All roles</option>'+roles.map(role=>`<option value="${esc(role)}">${esc(role)}</option>`).join('');select.value=roles.includes(previousRole)?previousRole:'';
+        caption.textContent=`${report.branch || 'All branches'} · ${report.team || 'All teams'} · ${report.meetings} meetings`;
+        download.setAttribute('href','/api/volunteers/report?'+params+'&format=xlsx');download.hidden=false;
+        status.textContent=`Showing ${report.start} to ${report.end}`;refresh();
+      } catch(problem){if(requestVersion===version && dialog.isConnected){status.textContent='';error.textContent=problem.message;}}
+    };
+    form.addEventListener('input',e=>{if(e.target.matches('[name="start"], [name="end"]')){clearTimeout(timer);invalidate();timer=setTimeout(updateDates,250);}});
+    form.addEventListener('change',async e=>{if(e.target.matches('[name="start"], [name="end"]'))await updateDates();});
+    form.onsubmit=e=>{e.preventDefault();return updateDates();};
+    form.querySelector('footer button[type="submit"]').hidden=true;
     dashboard.onchange=()=>{page=0;refresh();};
     dashboard.oninput=e=>{if(e.target.matches('[data-report-search]')){page=0;refresh();}};
     dashboard.onclick=e=>{const button=e.target.closest('[data-report-page]');if(button&&!button.disabled){page=Number(button.dataset.reportPage);refresh();}};
@@ -1240,9 +1279,9 @@ window.LPCVolunteers = (() => {
     const report = await api('/report?' + params);
     const rows = report.participation;
     const roles=[...new Set([...(report.roleNames || []),...rows.map(r=>r.role)])].filter(role=>rows.some(r=>r.role===role));
-    const role=roles.includes(range.role)?range.role:roles[0] || '';
+    const role=roles.includes(range.role)?range.role:'';
     modal(kind==='ministry'?'Pastoral participation report':'Choir & media participation report',
-      `<p class="vs-help">${esc(branch || 'All branches')} · ${esc(team || 'All teams')} · ${report.meetings} meetings</p><div class="wp-report-toolbar"><div class="wp-report-dates">${field('From',input('start',report.start,'date','required'))}${field('To',input('end',report.end,'date','required'))}</div><a class="vs-btn" href="/api/volunteers/report?${esc(params.toString())}&amp;format=xlsx" download>Download Excel (.xlsx)</a></div><section data-participation-dashboard class="wp-participation-dashboard"><div class="wp-report-filters">${field('Compare one role',`<select name="report-role" data-report-role>${roles.map(r=>`<option value="${esc(r)}" ${r===role?'selected':''}>${esc(r)}</option>`).join('') || '<option value="">No roles</option>'}</select>`)}<label class="wp-report-needs"><input type="checkbox" data-report-needs>Needs opportunity</label>${field('Find a person','<input type="search" data-report-search placeholder="Search name">')}</div><div data-report-chart>${participationChart(report,role)}</div></section><details class="wp-report-method"><summary>How the comparison works</summary><p class="vs-help">${report.notes.map(esc).join('</p><p class="vs-help">')}</p></details><p class="vs-help">Changed dates? Choose Update report. Excel includes all roles and detailed counts.</p>`,
+      `<p class="vs-help" data-report-scope>${esc(branch || 'All branches')} · ${esc(team || 'All teams')} · ${report.meetings} meetings</p><div class="wp-report-toolbar"><div class="wp-report-dates">${field('From',input('start',report.start,'date','required'))}${field('To',input('end',report.end,'date','required'))}</div><a class="vs-btn" data-report-download href="/api/volunteers/report?${esc(params.toString())}&amp;format=xlsx" download>Download Excel (.xlsx)</a></div><p class="vs-help wp-report-status" data-report-status role="status" aria-live="polite">Dates update automatically.</p><section data-participation-dashboard class="wp-participation-dashboard"><div class="wp-report-filters">${field('Compare roles',`<select name="report-role" data-report-role><option value="" ${role?'':'selected'}>All roles</option>${roles.map(r=>`<option value="${esc(r)}" ${r===role?'selected':''}>${esc(r)}</option>`).join('')}</select>`)}<label class="wp-report-needs"><input type="checkbox" data-report-needs>Needs opportunity</label>${field('Find a person','<input type="search" data-report-search placeholder="Search name">')}</div><div data-report-chart>${participationChart(report,role)}</div></section><details class="wp-report-method"><summary>How the comparison works</summary><p class="vs-help">All roles combines duties per person. Fairness is compared with the expected opportunities for their eligible role mix.</p><p class="vs-help">${report.notes.map(esc).join('</p><p class="vs-help">')}</p></details>`,
       'Update report',async data=>{try{await participationReport({start:data.get('start'),end:data.get('end'),role:data.get('report-role')});}catch(error){const errorBox=root.querySelector('[data-dialog-error]');if(errorBox)errorBox.textContent=error.message;}});
     bindParticipationDashboard(report);
   }

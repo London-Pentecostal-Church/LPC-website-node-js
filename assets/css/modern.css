@@ -2515,6 +2515,8 @@ body.is-red-header-sample .menu-toggle {
 .home-disclosure__body { border-top: 1px solid #d4e0e7; }
 .wp-report-dates { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
 .vs-dialog.wp-report-dialog { width: min(960px,calc(100vw - 24px)); max-width: 960px; }
+.wp-report-dialog [hidden] { display: none !important; }
+.wp-report-status { min-height: 18px; margin: 0 0 10px; }
 .wp-report-toolbar { display: flex; gap: 16px; align-items: end; margin-bottom: 16px; }
 .wp-report-toolbar .wp-report-dates { flex: 1; min-width: 0; }
 .wp-report-toolbar > a { white-space: nowrap; }
