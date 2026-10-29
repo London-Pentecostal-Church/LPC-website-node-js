@@ -642,6 +642,36 @@
   margin: 0;
   font-size: 12px;
 }
+.vs-app .wp-weekbar--filtered {
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
+  gap: 10px;
+  padding: 10px;
+  margin: 12px 0;
+}
+.vs-app .wp-weekbar--filtered .wp-filters {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 10px;
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid #dfe7ec;
+  min-width: 0;
+}
+.vs-app .wp-weekbar--filtered .wp-filters .vs-field { width: auto; min-width: 0; margin: 0; font-size: 12px; }
+.vs-app .wp-weekbar--filtered .wp-filters select { width: 100%; min-width: 0; min-height: 44px; padding: 8px; font-size: 16px; }
+@media (min-width: 960px) {
+  .vs-app .wp-weekbar--filtered { grid-template-columns: minmax(380px,1.15fr) minmax(280px,.85fr); grid-template-areas: "week filters" "dates filters"; gap: 6px 20px; padding: 12px 16px; }
+  .vs-app .wp-weekbar--filtered .wp-week-nav { grid-area: week; justify-content: center; gap: 10px; }
+  .vs-app .wp-weekbar--filtered .wp-week-nav > div { min-width: 160px; }
+  .vs-app .wp-weekbar--filtered .wp-week-nav strong { font-size: 17px; white-space: nowrap; }
+  .vs-app .wp-weekbar--filtered .wp-week-nav .vs-btn { min-height: 44px; padding: 8px 10px; font-size: 12px; }
+  .vs-app .wp-weekbar--filtered .wp-date-tools { grid-area: dates; justify-content: center; gap: 10px; }
+  .vs-app .wp-weekbar--filtered .wp-date-tools > .vs-btn,
+  .vs-app .wp-weekbar--filtered .wp-date-picker > summary { min-height: 36px; padding: 7px 12px; font-size: 12px; }
+  .vs-app .wp-weekbar--filtered .wp-filters { grid-area: filters; align-self: center; padding: 0; border: 0; }
+  .vs-app .wp-weekbar--filtered .wp-filters select { font-size: 14px; }
+}
 .wp-calendar {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));

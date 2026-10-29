@@ -5,7 +5,7 @@ import { runInNewContext } from 'node:vm';
 
 const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 'utf8');
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
-const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls()'));
+const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls('));
 
 test('Participation dialog uses the selected planner and filters and exports the displayed dates', async () => {
   const source=ui.slice(ui.indexOf('  function participationChart('),ui.indexOf('  async function click('));

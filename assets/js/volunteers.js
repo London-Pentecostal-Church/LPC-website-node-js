@@ -336,9 +336,9 @@ window.LPCVolunteers = (() => {
               ? history()
               : weekly();
   }
-  function weekControls() {
+  function weekControls(filters = '') {
     const end = addDays(weekStart, 6);
-    return `<div class="wp-weekbar"><div class="wp-week-nav">${btn('<span aria-hidden="true">←</span><span class="wp-week-word"> Previous week</span>', "week", 'data-step="-1" aria-label="Previous week"', true)}<div aria-live="polite"><strong>${shortDate(weekStart)} – ${shortDate(end)}</strong><small>${end.slice(0, 4)}</small></div>${btn('<span class="wp-week-word">Next week </span><span aria-hidden="true">→</span>', "week", 'data-step="1" aria-label="Next week"', true)}</div><div class="wp-date-tools">${btn("This week", "this-week", "", true)}<details class="wp-date-picker"><summary>Go to date</summary>${field("Choose date", `<input type="date" data-filter="week" value="${weekStart}" aria-label="Go to date">`)}</details></div></div>`;
+    return `<div class="wp-weekbar${filters?' wp-weekbar--filtered':''}"><div class="wp-week-nav">${btn('<span aria-hidden="true">←</span><span class="wp-week-word"> Previous week</span>', "week", 'data-step="-1" aria-label="Previous week"', true)}<div aria-live="polite"><strong>${shortDate(weekStart)} – ${shortDate(end)}</strong><small>${end.slice(0, 4)}</small></div>${btn('<span class="wp-week-word">Next week </span><span aria-hidden="true">→</span>', "week", 'data-step="1" aria-label="Next week"', true)}</div><div class="wp-date-tools">${btn("This week", "this-week", "", true)}<details class="wp-date-picker"><summary>Go to date</summary>${field("Choose date", `<input type="date" data-filter="week" value="${weekStart}" aria-label="Go to date">`)}</details></div>${filters}</div>`;
   }
   function selectedSessions() {
     return state.sessions
@@ -385,7 +385,7 @@ window.LPCVolunteers = (() => {
     };
     const [title, description] = titles[tab] || titles["my-week"];
     const filters = `<div class="wp-filters">${field("Branch", `<select data-filter="branch">${options(branches, branch, "All branches")}</select>`)}${field("Language / team", `<select data-filter="team">${options(teams(), team, "All teams")}</select>`)}</div>`;
-    return `<div class="wp-section-heading"><div><h2>${title}</h2><p>${description}</p></div>${['pastoral','choir'].includes(tab) && manager() ? btn("Participation & Excel", "participation-report", "", true) : tab === "meetings" && canMeetings() ? btn("+ Add meeting", "meeting") : ""}</div>${weekControls()}${tab === "my-week" ? personalProfileControl() : filters}
+    return `<div class="wp-section-heading"><div><h2>${title}</h2><p>${description}</p></div>${['pastoral','choir'].includes(tab) && manager() ? btn("Participation & Excel", "participation-report", "", true) : tab === "meetings" && canMeetings() ? btn("+ Add meeting", "meeting") : ""}</div>${weekControls(tab === "my-week" ? '' : filters)}${tab === "my-week" ? personalProfileControl() : ''}
     ${
       tab === "my-week"
         ? `<div class="wp-personal">${list.length ? list.map((s) => personalMeetingCard(s)).join("") : `<div class="wp-empty"><h3>${state.actor.admin && !personalId() ? "Choose your volunteer profile above" : "No duties assigned this week"}</h3><p>${state.actor.admin && !personalId() ? "Your website admin account is separate from the person on the rota. Choose your name once to see your weekly duties." : "This includes every branch and service team. Use Previous week or Next week to browse other weeks."}</p></div>`}</div>`
