@@ -7,6 +7,22 @@ const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls('));
 
+test('Role return navigation is restricted to admin screens during normal browsing', () => {
+  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+  const source=site.slice(site.indexOf('  // Public browsing stays public'),site.indexOf('  document.querySelectorAll(".primary-nav a")'));
+  let inserted=0,requests=0;
+  const app={querySelector:()=>null,querySelectorAll:()=>[],prepend:()=>inserted++};
+  const context={app,adminSession:{authenticated:true},window:{LPCTeamAuth:{navigation:()=>'<nav>Admin</nav>'}},
+    document:{createElement:()=>({contains:()=>false,querySelectorAll:()=>[],querySelector:()=>null})},
+    fetch:()=>{requests++;return Promise.resolve({ok:false});}};
+  for(const route of ['/home','/about','/ministries','/youth','/branches','/branches/chelmsford','/pastors','/watch','/contact','/plan-your-visit','/volunteers','/lpcadministrator']) {
+    runInNewContext(source,{...context,route});
+  }
+  assert.equal(inserted,0);assert.equal(requests,0);
+  for(const route of ['/lpcadmin','/lpcadmin/users','/lpcadmin/pastors'])runInNewContext(source,{...context,route});
+  assert.equal(inserted,3);assert.equal(requests,3);
+});
+
 test('Participation dialog uses the selected planner and filters and exports the displayed dates', async () => {
   const source=ui.slice(ui.indexOf('  function participationChart('),ui.indexOf('  async function click('));
   for (const kind of ['ministry','service']) {
@@ -143,10 +159,11 @@ test('Home reference sections collapse by default while the service stream stays
     renderHomeHeroMedia:()=>'<video></video>',renderCalendarSection:()=>'<section>Events</section>',renderBranchesSection:()=>'<section>Branches</section>',
     renderMediaSection:(_,featured)=>featured?'<section data-featured-stream>Service stream</section>':'',renderSocialSection:()=>'<section>Socials</section>',renderFooter:()=>'<footer>Contact and service times</footer>'};
   const html=runInNewContext(source+';renderHome()',context);
-  assert.equal((html.match(/<details class="home-disclosure">/g)||[]).length,4);
+  assert.equal((html.match(/<details class="home-disclosure">/g)||[]).length,3);
   assert(!html.includes('class="home-disclosure" open'));
   assert(html.indexOf('data-featured-stream')<html.indexOf('<details'));
-  for(const label of ['Upcoming events','Our branches','Stay connected','Our people']) {
+  assert(html.indexOf('Service stream</section><section>Events</section>')>=0 || /Service stream<\/section>\s*<section>Events<\/section>/.test(html));
+  for(const label of ['Our branches','Stay connected','Our people']) {
     assert(html.includes(label.replace('&amp;','&')));
   }
   assert(html.includes('<footer>Contact and service times</footer>'));

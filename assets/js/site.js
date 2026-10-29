@@ -2254,8 +2254,9 @@ function renderRoute() {
       ${renderFooter()}
     `;
 
-  // The planner owns its return navigation; all other routes share this one.
-  if (!app.querySelector('#volunteer-app')) {
+  // Public browsing stays public even when a planner account is signed in.
+  // The planner owns its navigation; only website-admin routes need this return link.
+  if (/^\/lpcadmin(?:\/|$)/.test(route) && !app.querySelector('#volunteer-app')) {
     const navigation = document.createElement('div');
     navigation.className = 'container route-return';
     const setReturnNavigation = actor => {
