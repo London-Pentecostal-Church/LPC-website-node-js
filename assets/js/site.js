@@ -889,6 +889,7 @@ function renderHome() {
       </section>
 
       ${renderMediaSection(mediaSources.home, true)}
+      ${renderCalendarSection()}
       <section class="quick-strip">
         <div class="container">
           <div class="quick-strip__grid">
@@ -899,7 +900,6 @@ function renderHome() {
       </section>
 
       <div class="container home-sections" aria-label="Explore LPC">
-      ${homeDisclosure('Upcoming events', 'Dates, times and places for church events', renderCalendarSection())}
       ${homeDisclosure('Our branches', branchCards.length + ' churches · Find your local community', renderBranchesSection())}
       ${homeDisclosure('Stay connected', 'YouTube, Facebook and social updates', renderSocialSection(mediaSources.home, "LPC"))}
       ${homeDisclosure('Our people', 'Leadership serving the LPC family', `

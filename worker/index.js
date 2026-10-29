@@ -211,7 +211,7 @@ function withDefaultThumbnail(video) {
 
 
 export default {async fetch(request,env){
- if(new URL(request.url).pathname==='/api/calendar/events'){try{return json(await calendarEvents(env.LPC_CALENDAR_ICS_URL));}catch{return json({error:'Calendar temporarily unavailable'},503);}}
+ if(new URL(request.url).pathname==='/api/calendar/events'){try{return json(await calendarEvents(env.LPC_CALENDAR_ICS_URL));}catch(error){console.error('Calendar load failed:',error.name,error.message);return json({error:'Calendar temporarily unavailable'},503);}}
 
  const url=new URL(request.url),path=url.pathname;
  try {
