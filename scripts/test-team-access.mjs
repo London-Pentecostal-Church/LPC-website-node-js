@@ -8,17 +8,29 @@ const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls()'));
 
 test('Participation dialog uses the selected planner and filters and exports the displayed dates', async () => {
-  const source=ui.slice(ui.indexOf('  async function participationReport('),ui.indexOf('  async function click('));
+  const source=ui.slice(ui.indexOf('  function participationChart('),ui.indexOf('  async function click('));
   for (const kind of ['ministry','service']) {
     let body,submit,requested;
-    const context={kind,branch:'Main Church',team:'English',manager:()=>true,today:()=> '2032-02-01',addDays:()=> '2032-01-01',URLSearchParams,esc:v=>String(v),field:(_label,html)=>html,input:(name,value)=>`<input name="${name}" value="${value}">`,
+    const context={root:{querySelector:()=>null},kind,branch:'Main Church',team:'English',manager:()=>true,today:()=> '2032-02-01',addDays:()=> '2032-01-01',URLSearchParams,esc:v=>String(v),field:(_label,html)=>html,input:(name,value)=>`<input name="${name}" value="${value}">`,
       api:async path=>{requested=path;const p=new URL('https://test'+path).searchParams;return {kind,start:p.get('start'),end:p.get('end'),meetings:2,participation:[{memberId:'person',name:'Example',role:'Pastor',eligible:2,confirmed:0,past:0,upcoming:0,draft:0,reserve:0,unknown:2,suggestion:'No confirmed opportunities'}],notes:['Example method']};},
       modal:(_title,html,_button,callback)=>{body=html;submit=callback;}};
     await runInNewContext(source+';participationReport({start:"2032-01-01",end:"2032-02-01"})',context);
-    assert(requested.includes('kind='+kind));assert(requested.includes('branch=Main+Church'));assert(body.includes('Download Excel (.xlsx)'));assert(body.includes('format=xlsx'));assert(body.includes('check availability'));
+    assert(requested.includes('kind='+kind));assert(requested.includes('branch=Main+Church'));assert(body.includes('Download Excel (.xlsx)'));assert(body.includes('format=xlsx'));assert(body.includes('Allocation balance'));assert(!body.includes('<table>'));
     await submit(new Map([['start','2032-02-01'],['end','2032-03-01']]));
     assert(requested.includes('start=2032-02-01'));assert(body.includes('end=2032-03-01'));
   }
+});
+
+test('Participation chart keeps role cohorts separate, shows real zero counts, and filters and pages people', () => {
+  const source=ui.slice(ui.indexOf('  function participationChart('),ui.indexOf('  function bindParticipationDashboard('));
+  const chart=runInNewContext(source+';participationChart',{esc:v=>String(v)});
+  const row=(i)=>({name:'Person '+String(i).padStart(2,'0'),role:'Pastor',eligible:10,rate:i/10,confirmed:i,past:i,upcoming:0,draft:1,reserve:2,unknown:3,suggestion:i<3?'Consider next':'In line with rotation'});
+  const report={participation:[...Array.from({length:11},(_,i)=>row(i)),{...row(3),name:'Choir person',role:'Singer'},{...row(0),name:'No meetings',eligible:0}]};
+  const first=chart(report,'Pastor');assert(first.includes('Person 00'));assert(first.includes('No allocations'));assert(first.includes('width:0%'));assert(!first.includes('Choir person'));assert(!first.includes('No meetings'));assert(first.includes('1–8 of 11'));
+  const second=chart(report,'Pastor',false,'',1);assert(second.includes('Person 10'));assert(!second.includes('Person 00'));assert(second.includes('9–11 of 11'));
+  const needs=chart(report,'Pastor',true);assert(needs.includes('Person 02'));assert(!needs.includes('Person 03'));
+  const search=chart(report,'Pastor',false,'person 10');assert(search.includes('Person 10'));assert(!search.includes('Person 09'));
+  assert(chart({participation:[]},'Pastor').includes('No matching people'));
 });
 
 test('Meeting form supports weekly, one-off and daily patterns with exact date payloads', () => {

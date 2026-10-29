@@ -1211,16 +1211,40 @@ window.LPCVolunteers = (() => {
         }),
     );
   }
+  function participationChart(report, role, needsOnly = false, search = '', page = 0) {
+    const cohort=report.participation.filter(r=>r.role===role && r.eligible>0);
+    const needs=r=>['No confirmed opportunities','Consider next'].includes(r.suggestion);
+    const matches=cohort.filter(r=>(!needsOnly || needs(r)) && r.name.toLowerCase().includes(search.trim().toLowerCase())).sort((a,b)=>a.rate-b.rate || a.confirmed-b.confirmed || a.name.localeCompare(b.name));
+    const max=Math.max(1,...cohort.map(r=>r.confirmed));
+    const totalPages=Math.max(1,Math.ceil(matches.length/8)); page=Math.min(Math.max(0,page),totalPages-1);
+    const metric=(value,label)=>`<div><strong>${value}</strong><span>${label}</span></div>`;
+    return `<div class="wp-report-metrics">${metric(cohort.length,'Eligible people')}${metric(cohort.reduce((n,r)=>n+r.confirmed,0),'Confirmed duties')}${metric(cohort.filter(needs).length,'Need opportunity')}</div><div class="wp-report-chart-head"><h3>Allocation balance</h3><span class="wp-report-legend"><span><i class="wp-report-past"></i>Past</span><span><i class="wp-report-future"></i>Upcoming</span></span></div><p class="wp-report-chart-hint">Primary allocations · fewest opportunities first · tap a name for detail</p><div class="wp-report-bars" role="group" aria-label="Confirmed allocations by person">${matches.slice(page*8,page*8+8).map(r=>{
+      const status=r.confirmed===0?'No allocations':needs(r)?'Below average':'';
+      return `<details class="wp-report-person${needs(r)?' needs-opportunity':''}"><summary><span class="wp-report-person-name">${esc(r.name)}${status?`<small>${status}</small>`:''}</span><span class="wp-report-bar" aria-hidden="true"><i class="wp-report-past" style="width:${100*r.past/max}%"></i><i class="wp-report-future" style="width:${100*r.upcoming/max}%"></i></span><strong class="wp-report-total" aria-label="${r.confirmed} confirmed allocations">${r.confirmed}<span aria-hidden="true">⌄</span></strong></summary><div class="wp-report-person-detail">${metric(r.past,'Past confirmed')}${metric(r.upcoming,'Upcoming')}${metric(r.draft,'Draft')}${metric(r.reserve,'Reserve')}${metric(r.eligible,'Eligible meetings')}${metric(r.unknown,'Availability to check')}<p>Last: ${esc(r.last || 'None in period')} · Next: ${esc(r.next || 'Not booked')}</p></div></details>`;
+    }).join('') || '<p class="wp-report-empty">No matching people for this view.</p>'}</div><div class="wp-report-pagination"><span>${matches.length?`${page*8+1}–${Math.min((page+1)*8,matches.length)} of ${matches.length}`:'0 people'}</span><button type="button" class="vs-btn vs-secondary" data-report-page="${page-1}" ${page===0?'disabled':''} aria-label="Previous people">←</button><button type="button" class="vs-btn vs-secondary" data-report-page="${page+1}" ${page>=totalPages-1?'disabled':''} aria-label="Next people">→</button></div>`;
+  }
+  function bindParticipationDashboard(report) {
+    const dialog=root.querySelector('dialog');
+    if (!dialog) return;
+    dialog.classList.add('wp-report-dialog');
+    const dashboard=dialog.querySelector('[data-participation-dashboard]');
+    let page=0;
+    const refresh=()=>{dashboard.querySelector('[data-report-chart]').innerHTML=participationChart(report,dashboard.querySelector('[data-report-role]').value,dashboard.querySelector('[data-report-needs]').checked,dashboard.querySelector('[data-report-search]').value,page);};
+    dashboard.onchange=()=>{page=0;refresh();};
+    dashboard.oninput=e=>{if(e.target.matches('[data-report-search]')){page=0;refresh();}};
+    dashboard.onclick=e=>{const button=e.target.closest('[data-report-page]');if(button&&!button.disabled){page=Number(button.dataset.reportPage);refresh();}};
+  }
   async function participationReport(range = {}) {
     if (!manager()) return;
     const params = new URLSearchParams({kind,start:range.start || addDays(today(),-84),end:range.end || addDays(today(),28),branch,team});
     const report = await api('/report?' + params);
     const rows = report.participation;
-    const suggested = rows.filter(r=>r.eligible && ['No confirmed opportunities','Consider next'].includes(r.suggestion));
-    const table = `<div class="wp-report-table" tabindex="0" role="region" aria-label="Participation by person and role"><table><thead><tr>${['Person / role','Past','Upcoming','Draft','Reserve','Eligible','Guidance'].map(h=>`<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr><th scope="row">${esc(r.name)}<small>${esc(r.role)}</small></th><td>${r.past}</td><td>${r.upcoming}</td><td>${r.draft}</td><td>${r.reserve}</td><td>${r.eligible}</td><td>${esc(r.suggestion)}</td></tr>`).join('') || '<tr><td colspan="7">No matching volunteers in this scope.</td></tr>'}</tbody></table></div>`;
+    const roles=[...new Set([...(report.roleNames || []),...rows.map(r=>r.role)])].filter(role=>rows.some(r=>r.role===role));
+    const role=roles.includes(range.role)?range.role:roles[0] || '';
     modal(kind==='ministry'?'Pastoral participation report':'Choir & media participation report',
-      `<p class="vs-help">${esc(branch || 'All branches')} · ${esc(team || 'All teams')} · Select dates for analysis and export.</p><div class="wp-report-dates">${field('From',input('start',report.start,'date','required'))}${field('To',input('end',report.end,'date','required'))}</div><p><a class="vs-btn" href="/api/volunteers/report?${esc(params.toString())}&amp;format=xlsx" download>Download Excel (.xlsx)</a></p><p class="vs-help">${report.meetings} meetings · ${new Set(rows.map(r=>r.memberId)).size} people · ${suggested.length} person/role entries to consider.</p><details class="wp-report-suggestions" open><summary>Consider for the next opportunity</summary><ul>${suggested.slice(0,6).map(r=>`<li><strong>${esc(r.name)}</strong> · ${esc(r.role)} — ${r.confirmed} confirmed / ${r.eligible} eligible meetings${r.unknown?' · check availability':''}</li>`).join('') || '<li>No lower-allocation entries in this scope.</li>'}</ul>${suggested.length>6?'<p>More suggestions are in the full report.</p>':''}</details><details><summary>View everyone’s counts</summary>${table}</details><details><summary>How the comparison works</summary><p class="vs-help">${report.notes.map(esc).join('</p><p class="vs-help">')}</p></details><p class="vs-help">Download uses the dates shown in the current report. After changing dates, choose Update report first.</p>`,
-      'Update report',async data=>{try{await participationReport({start:data.get('start'),end:data.get('end')});}catch(error){const errorBox=root.querySelector('[data-dialog-error]');if(errorBox)errorBox.textContent=error.message;}});
+      `<p class="vs-help">${esc(branch || 'All branches')} · ${esc(team || 'All teams')} · ${report.meetings} meetings</p><div class="wp-report-toolbar"><div class="wp-report-dates">${field('From',input('start',report.start,'date','required'))}${field('To',input('end',report.end,'date','required'))}</div><a class="vs-btn" href="/api/volunteers/report?${esc(params.toString())}&amp;format=xlsx" download>Download Excel (.xlsx)</a></div><section data-participation-dashboard class="wp-participation-dashboard"><div class="wp-report-filters">${field('Compare one role',`<select name="report-role" data-report-role>${roles.map(r=>`<option value="${esc(r)}" ${r===role?'selected':''}>${esc(r)}</option>`).join('') || '<option value="">No roles</option>'}</select>`)}<label class="wp-report-needs"><input type="checkbox" data-report-needs>Needs opportunity</label>${field('Find a person','<input type="search" data-report-search placeholder="Search name">')}</div><div data-report-chart>${participationChart(report,role)}</div></section><details class="wp-report-method"><summary>How the comparison works</summary><p class="vs-help">${report.notes.map(esc).join('</p><p class="vs-help">')}</p></details><p class="vs-help">Changed dates? Choose Update report. Excel includes all roles and detailed counts.</p>`,
+      'Update report',async data=>{try{await participationReport({start:data.get('start'),end:data.get('end'),role:data.get('report-role')});}catch(error){const errorBox=root.querySelector('[data-dialog-error]');if(errorBox)errorBox.textContent=error.message;}});
+    bindParticipationDashboard(report);
   }
   async function click(e) {
     const b = e.target.closest("[data-vs]");
