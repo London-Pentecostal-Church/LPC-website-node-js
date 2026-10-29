@@ -2702,6 +2702,7 @@ textarea {
   font-weight: 600;
   color: var(--navy-900);
 }
+.contact-form [hidden] { display: none !important; }
 
 .contact-form input,
 .contact-form textarea {

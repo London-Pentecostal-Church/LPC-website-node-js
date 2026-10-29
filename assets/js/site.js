@@ -4003,6 +4003,10 @@ function initContactForm() {
       status.textContent = "Your message has been sent to the church office.";
     } catch (error) {
       status.textContent = error.message;
+      const email = document.createElement('a');
+      email.href = 'mailto:office@londonpentecostalchurch.org?subject=' + encodeURIComponent('LPC website enquiry') + '&body=' + encodeURIComponent('Name: ' + form.elements.name.value + '\nEmail: ' + form.elements.email.value + '\n\n' + form.elements.message.value);
+      email.textContent = ' Open your email app';
+      status.append(email);
     } finally {
       button.disabled = false;
     }
