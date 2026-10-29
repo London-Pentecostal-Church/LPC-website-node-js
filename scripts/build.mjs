@@ -7,7 +7,7 @@ const CONFIG_NAMES = [
 ];
 const SERVER_FILES = [
   'account-mail.mjs', 'calendar.mjs', 'ical.js', 'ICAL-LICENSE.txt',
-  'volunteers.mjs', 'volunteer-store.mjs', 'demo-state.mjs',
+  'volunteers.mjs', 'planner-report.mjs', 'volunteer-store.mjs', 'demo-state.mjs',
 ];
 const MEDIA_FILE = /\.(jpe?g|png|webp|svg|mp4|webm|mov|m4v)$/i;
 const VIDEO_FILE = /\.(mp4|webm|mov|m4v)$/i;

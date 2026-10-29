@@ -7,6 +7,20 @@ const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls()'));
 
+test('Participation dialog uses the selected planner and filters and exports the displayed dates', async () => {
+  const source=ui.slice(ui.indexOf('  async function participationReport('),ui.indexOf('  async function click('));
+  for (const kind of ['ministry','service']) {
+    let body,submit,requested;
+    const context={kind,branch:'Main Church',team:'English',manager:()=>true,today:()=> '2032-02-01',addDays:()=> '2032-01-01',URLSearchParams,esc:v=>String(v),field:(_label,html)=>html,input:(name,value)=>`<input name="${name}" value="${value}">`,
+      api:async path=>{requested=path;const p=new URL('https://test'+path).searchParams;return {kind,start:p.get('start'),end:p.get('end'),meetings:2,participation:[{memberId:'person',name:'Example',role:'Pastor',eligible:2,confirmed:0,past:0,upcoming:0,draft:0,reserve:0,unknown:2,suggestion:'No confirmed opportunities'}],notes:['Example method']};},
+      modal:(_title,html,_button,callback)=>{body=html;submit=callback;}};
+    await runInNewContext(source+';participationReport({start:"2032-01-01",end:"2032-02-01"})',context);
+    assert(requested.includes('kind='+kind));assert(requested.includes('branch=Main+Church'));assert(body.includes('Download Excel (.xlsx)'));assert(body.includes('format=xlsx'));assert(body.includes('check availability'));
+    await submit(new Map([['start','2032-02-01'],['end','2032-03-01']]));
+    assert(requested.includes('start=2032-02-01'));assert(body.includes('end=2032-03-01'));
+  }
+});
+
 test('Meeting form supports weekly, one-off and daily patterns with exact date payloads', () => {
   const source=ui.slice(ui.indexOf('  function churchMeetingDialog('),ui.indexOf('  function swaps()'));
   let body,submit,payload,refreshed=0;

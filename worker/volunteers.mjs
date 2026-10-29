@@ -1,3 +1,4 @@
+import { plannerReport, reportWorkbook } from './planner-report.mjs';
 // Shared scheduling API: used by the Node server and Worker adapter.
 const roles = [
   "Lead singer",
@@ -696,6 +697,17 @@ export async function handleVolunteers(request, store, adminActor = null) {
     }
     if (route === "/session") return reply({ actor: actor || null, emailEnabled: !!store.emailReady, registrationEnabled: false });
     if (!actor) fail("Please sign in.", 401);
+    if (route === '/report' && request.method === 'GET') {
+      const kind = url.searchParams.get('kind');
+      if (!['ministry','service'].includes(kind)) fail('Choose a planner.');
+      if (!manager(actor, kind)) fail('Only the scheduler for this planner can download its report.', 403);
+      let report;
+      try { report = plannerReport({...state, sessions:state.sessions.filter(s=>existingSession(state,s))}, Object.fromEntries(url.searchParams)); }
+      catch(error) { fail(error.message); }
+      if (report.schedule.length > 100000) fail('This report is too large. Choose a shorter date range.');
+      if (url.searchParams.get('format') === 'xlsx') return new Response(reportWorkbook(report), {headers:{'content-type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','content-disposition':`attachment; filename="lpc-${kind}-${report.start}-${report.end}.xlsx"`,'cache-control':'no-store','x-content-type-options':'nosniff'}});
+      return reply(report);
+    }
     if (route === "/audit-export" && request.method === "GET") {
       if (!actor.admin) fail("Only the website administrator can archive audit history.", 403);
       return reply({ format: "lpc-audit-archive-v1", exportedAt: new Date().toISOString(), revision: state.revision, retentionDays: retentionDays(state), volunteers: state.members.map(m => ({ id: m.id, name: m.name })), history: state.history });
