@@ -580,19 +580,13 @@ const routes = {
           <div class="container grid-two">
             <div class="content-stack">
               ${card("Phone", "020 8690 0701")}
-              ${card("Email", "info@lpc.org.uk")}
               ${card("Main Address", "Oasis Centre, Essex Rd, Romford RM6 4JA")}
             </div>
             <article class="contact-card">
-              <h3>Send a message</h3>
-              <form class="contact-form">
-                <label>Name<input name="name" type="text" placeholder="Your name" maxlength="150" required></label>
-                <label>Email<input name="email" type="email" placeholder="Your email" maxlength="254" required></label>
-                <label>Message<textarea name="message" placeholder="How can we help?" maxlength="10000" required></textarea></label>
-                <label hidden>Website<input name="website" tabindex="-1" autocomplete="off"></label>
-                <button class="btn btn--gold" type="submit">Send Message</button>
-                <p data-contact-status role="status" aria-live="polite"></p>
-              </form>
+              <h3>Email the church office</h3>
+              <p>For questions, prayer requests or planning your visit, we’d love to hear from you.</p>
+              <p class="contact-email-address">office@londonpentecostalchurch.org</p>
+              <a class="btn btn--gold" href="mailto:office@londonpentecostalchurch.org?subject=lpc-website%20contact">Write an email</a>
             </article>
           </div>
         </section>
@@ -2299,7 +2293,6 @@ function renderRoute() {
   window.LPCVolunteers?.mount();
   applyPageImages(document.getElementById("app"), route);
   initPageImageAdmin();
-  initContactForm();
   hydrateCalendarEvents();
   hydrateYouTubePlayers();
   initPageMotion();
@@ -3976,37 +3969,6 @@ function initPageImageAdmin() {
       status.textContent = "Page images saved.";
     } catch (error) {
       status.textContent = error.message;
-    } finally {
-      button.disabled = false;
-    }
-  });
-}
-function initContactForm() {
-  const form = document.querySelector(".contact-form");
-  if (!form) return;
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const button = form.querySelector('[type="submit"]'),
-      status = form.querySelector("[data-contact-status]");
-    button.disabled = true;
-    status.textContent = "Sending your message…";
-    try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(Object.fromEntries(new FormData(form))),
-      });
-      const data = await response.json();
-      if (!response.ok || !data.sent)
-        throw Error(data.error || "Your message could not be sent.");
-      form.reset();
-      status.textContent = "Your message has been sent to the church office.";
-    } catch (error) {
-      status.textContent = error.message;
-      const email = document.createElement('a');
-      email.href = 'mailto:office@londonpentecostalchurch.org?subject=' + encodeURIComponent('LPC website enquiry') + '&body=' + encodeURIComponent('Name: ' + form.elements.name.value + '\nEmail: ' + form.elements.email.value + '\n\n' + form.elements.message.value);
-      email.textContent = ' Open your email app';
-      status.append(email);
     } finally {
       button.disabled = false;
     }
