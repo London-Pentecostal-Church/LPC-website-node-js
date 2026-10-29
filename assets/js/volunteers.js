@@ -539,6 +539,7 @@ window.LPCVolunteers = (() => {
       ${draft?.notice ? `<p class="vs-callout" role="status">${esc(draft.notice)}</p>` : ""}
       ${needsReview(s) ? '<p class="vs-callout">An assigned volunteer no longer meets the active, role, service team or branch requirements. Replace or clear the marked assignment before saving.</p>' : ""}
       ${!pastoral ? '<p class="vs-help">One volunteer may cover several roles here if they have the skills. Main and reserve for the same role must be different people.</p>' : ""}
+      ${edit ? '<p class="vs-help">Different branches need 1 hour between events, measured from finish to next start. Main duties cannot overlap. Overlapping reserve cover is allowed only at the same premises/branch.</p>' : ''}
       <div class="vs-table-wrap"><table class="wp-detail-table"><thead><tr>${singlePastor ? "" : `<th>${pastoral ? "Duty" : "Role"}</th>`}<th>${pastoral ? "Pastor" : "Main volunteer"}</th><th>${pastoral ? "Reserve (optional)" : "Backup"}</th></tr></thead><tbody>${s.slots.map((slot) => `<tr data-slot="${slot.id}">${singlePastor ? "" : `<th>${esc(roleLabel(slot.role))}</th>`}${["main", "backup"].map((position) => `<td data-label="${position === "main" ? (pastoral ? "Pastor" : "Main volunteer") : (pastoral ? "Reserve (optional)" : "Backup (optional)")}">${edit ? `<select data-position="${position}" data-last-value="${esc(slot[position])}" aria-label="${esc(roleLabel(slot.role))} ${position}">${memberOptions(s, slot, slot[position])}</select>` : `<strong>${slot[position] ? esc(name(slot[position])) : "Not assigned"}</strong>`}${slot[position] ? availabilityLabel(s, slot[position]) : ""}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
       ${
         edit && manager()
@@ -579,7 +580,28 @@ window.LPCVolunteers = (() => {
     if (a.meetingId && a.meetingId === b.meetingId && title(a.name) === title(b.name)) return true;
     return !!title(a.name) && title(a.name) === title(b.name);
   }
-  function refreshAssignmentChoices() {
+  function bookingRestriction(a, b, aPosition = 'main', bPosition = 'main') {
+    const start = session => {
+      const wall = Date.parse(session.date+'T'+session.time+':00Z');
+      const format = new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+      let utc=wall;
+      for(let i=0;i<3;i++) {
+        const parts=format.formatToParts(new Date(utc)), value=key=>Number(parts.find(p=>p.type===key).value);
+        const local=Date.UTC(value('year'),value('month')-1,value('day'),value('hour'),value('minute'));
+        utc+=wall-local;
+      }
+      return utc;
+    };
+    const aStart=start(a),bStart=start(b),aEnd=aStart+a.duration*60000,bEnd=bStart+b.duration*60000;
+    const branch=value=>String(value||'').trim().toLowerCase().replace(/\s+/g,' ');
+    const sameBranch=branch(a.branch)===branch(b.branch);
+    if(aStart<bEnd && bStart<aEnd)return sameBranch && (aPosition==='backup' || bPosition==='backup') ? null : {type:'overlap',gapMinutes:0,requiredMinutes:0};
+    if(sameBranch)return null;
+    const gap=aEnd<=bStart?bStart-aEnd:aStart-bEnd;
+    if(gap>=60*60000)return null;
+    return {type:'travel',gapMinutes:Math.round(gap/60000),requiredMinutes:60,earliestStart:new Date((aEnd<=bStart?aEnd:bEnd)+60*60000).toISOString()};
+  }
+    function refreshAssignmentChoices() {
     const selects = [...root.querySelectorAll('dialog [data-slot] select[data-position]')];
     const assigned = new Set(selects.map(select => select.value).filter(Boolean));
     const emergency = root.querySelector('[name="emergency-mode"]')?.checked && root.querySelector('[name="emergency-member"]')?.value;
@@ -587,6 +609,25 @@ window.LPCVolunteers = (() => {
     const emergencySelect = root.querySelector('[name="emergency-member"]');
     if (emergencySelect) for (const option of emergencySelect.options) option.disabled = !!option.value && option.value !== emergencySelect.value && assigned.has(option.value);
     const session = state.sessions.find(s => s.id === selected);
+    const showBookingWarning=select=>{
+      select.parentElement.querySelector('[data-overlap-warning]')?.remove();
+      if(!session || !select.value)return;
+      const position=select.dataset.position || 'main';
+      const restriction=other=>bookingRestriction(session,other,position,other.emergencyCover?.memberId===select.value || other.slots.some(slot=>slot.main===select.value)?'main':'backup');
+      const clashes=state.sessions.filter(other=>!sameMeetingOccurrence(other,session) && !other.cancelled && !other.deleted && !other.deletedAt && (other.emergencyCover?.memberId===select.value || other.slots.some(slot=>slot.main===select.value || slot.backup===select.value)) && restriction(other));
+      if(!clashes.length)return;
+      const warning=document.createElement('small');warning.dataset.overlapWarning='';warning.className='vs-warning';warning.setAttribute('role','status');
+      warning.append(document.createTextNode('Booking restriction: '));
+      for(const [index,other] of clashes.entries()) {
+        if(index)warning.append(document.createTextNode('; '));
+        const link=document.createElement('a');link.href='#/volunteers';link.dataset.vs='open-clash';link.dataset.id=other.id;
+        link.textContent=`${other.branch} · ${other.name} · ${other.date} ${other.time} (${other.duration} min)`;warning.append(link);
+        const rule=restriction(other);
+        warning.append(document.createTextNode(rule.type==='travel'?` — only ${rule.gapMinutes} min between events; 60 min travel time is required between branches.`:' — event times overlap.'));
+      }
+      warning.append(document.createTextNode(' Choose another person or change the event time. Reserve overlaps are allowed only at the same premises/branch.'));
+      select.parentElement.append(warning);
+    };
     for (const select of selects) {
       for (const option of select.options) {
         const paired = selects.find(other => other !== select && other.closest('[data-slot]') === select.closest('[data-slot]'));
@@ -595,27 +636,9 @@ window.LPCVolunteers = (() => {
         option.hidden = taken;
         option.disabled = taken || option.hasAttribute("data-ineligible");
       }
-      select.parentElement.querySelector('[data-overlap-warning]')?.remove();
-      if (session && select.value) {
-        const start = Date.parse(`${session.date}T${session.time}:00Z`);
-        const clashes = state.sessions.filter(other => !sameMeetingOccurrence(other, session) && !other.cancelled && Date.parse(`${other.date}T${other.time}:00Z`) < start + session.duration * 60000 && Date.parse(`${other.date}T${other.time}:00Z`) + other.duration * 60000 > start && (other.emergencyCover?.memberId === select.value || other.slots.some(slot => slot.main === select.value || slot.backup === select.value)));
-        if (clashes.length) {
-          const warning = document.createElement('small');
-          warning.dataset.overlapWarning = '';
-          warning.className = 'vs-warning';
-          warning.append(document.createTextNode("Also scheduled at "));
-          clashes.forEach((other, index) => {
-            if (index) warning.append(document.createTextNode("; "));
-            const link = document.createElement("a");
-            link.href = "#/volunteers"; link.dataset.vs = "open-clash"; link.dataset.id = other.id;
-            link.textContent = `${other.branch} · ${other.name} ${other.time}`;
-            warning.append(link);
-          });
-          warning.append(document.createTextNode(select.dataset.position === 'backup' ? '. Reserve overlap is allowed; check cover before calling them.' : '. Only overlapping primary duties are blocked.'));
-          select.parentElement.append(warning);
-        }
-      }
+      showBookingWarning(select);
     }
+    if(emergencySelect)showBookingWarning(emergencySelect);
   }
   async function openClash(id) {
     if (!clashDraft || selected === clashDraft.id) {

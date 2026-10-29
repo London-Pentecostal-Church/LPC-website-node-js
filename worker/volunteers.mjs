@@ -161,25 +161,57 @@ function sameMeetingOccurrence(a, b) {
   if (a.meetingId && a.meetingId === b.meetingId && title(a.name) === title(b.name)) return true;
   return !!title(a.name) && title(a.name) === title(b.name);
 }
-function conflicting(state, session, memberId, exclude = []) {
-  const start = Date.parse(`${session.date}T${session.time}:00Z`),
-    end = start + session.duration * 60000;
+function bookingRestriction(a, b, aPosition = 'main', bPosition = 'main') {
+  const start = session => {
+    const wall = Date.parse(session.date+'T'+session.time+':00Z');
+    const format = new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+    let utc=wall;
+    for(let i=0;i<3;i++) {
+      const parts=format.formatToParts(new Date(utc)), value=key=>Number(parts.find(p=>p.type===key).value);
+      const local=Date.UTC(value('year'),value('month')-1,value('day'),value('hour'),value('minute'));
+      utc+=wall-local;
+    }
+    return utc;
+  };
+  const aStart=start(a),bStart=start(b),aEnd=aStart+a.duration*60000,bEnd=bStart+b.duration*60000;
+  const branch=value=>String(value||'').trim().toLowerCase().replace(/\s+/g,' ');
+  const sameBranch=branch(a.branch)===branch(b.branch);
+  if(aStart<bEnd && bStart<aEnd)return sameBranch && (aPosition==='backup' || bPosition==='backup') ? null : {type:'overlap',gapMinutes:0,requiredMinutes:0};
+  if(sameBranch)return null;
+  const gap=aEnd<=bStart?bStart-aEnd:aStart-bEnd;
+  if(gap>=60*60000)return null;
+  return {type:'travel',gapMinutes:Math.round(gap/60000),requiredMinutes:60,earliestStart:new Date((aEnd<=bStart?aEnd:bEnd)+60*60000).toISOString()};
+}
+function conflicting(state, session, memberId, exclude = [], position = 'main') {
   return state.sessions.find(
     (s) =>
       !sameMeetingOccurrence(s, session) &&
       existingSession(state, s) &&
       !exclude.includes(s.id) &&
       !s.cancelled &&
-      Date.parse(`${s.date}T${s.time}:00Z`) < end &&
-      Date.parse(`${s.date}T${s.time}:00Z`) + s.duration * 60000 > start &&
       (s.emergencyCover?.memberId === memberId || s.slots.some(
-        (slot) => slot.main === memberId,
-      )),
+        (slot) => slot.main === memberId || slot.backup === memberId,
+      )) && bookingRestriction(session,s,position,s.emergencyCover?.memberId===memberId || s.slots.some(slot=>slot.main===memberId)?'main':'backup'),
   );
 }
-function releasedPrimaryExclusions(state, sessionId, slotId, position, memberId) {
+function validateBooking(state, session, memberId, exclude = [], position = 'main') {
+  if(!memberId)return;
+  const clash=conflicting(state,session,memberId,exclude,position);
+  if(!clash)return;
+  const restriction=bookingRestriction(session,clash,position,clash.emergencyCover?.memberId===memberId || clash.slots.some(slot=>slot.main===memberId)?'main':'backup');
+  const who=state.members.find(m=>m.id===memberId)?.name || 'This person';
+  const when=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',dateStyle:'medium',timeStyle:'short'});
+  const reason=restriction.type==='travel'
+    ? `Only ${restriction.gapMinutes} minutes separate these events. At least 60 minutes are required from the end of one event to the start of the next at a different branch. The later event must start at ${when.format(new Date(restriction.earliestStart))} (London) or later.`
+    : 'The event times overlap. Two main duties cannot overlap; reserve overlap is allowed only at the same premises/branch.';
+  fail(`${who} is already booked for ${clash.name} at ${clash.branch} on ${clash.date} at ${clash.time} (${clash.duration} minutes). ${reason} Choose another person or adjust the event time.`,400,{conflict:{sessionId:clash.id,...restriction}});
+}
+function validateSessionBookings(state, sessions) {
+  for(const session of sessions.filter(s=>!s.cancelled))for(const memberId of new Set([session.emergencyCover?.memberId,...session.slots.flatMap(slot=>[slot.main,slot.backup])].filter(Boolean)))validateBooking(state,session,memberId,[],session.emergencyCover?.memberId===memberId || session.slots.some(slot=>slot.main===memberId)?'main':'backup');
+}
+function releasedBookingExclusions(state, sessionId, slotId, position, memberId) {
   const session = state.sessions.find(s => s.id === sessionId);
-  if (!session || session.emergencyCover?.memberId === memberId || session.slots.some(slot => slot.main === memberId && !(slot.id === slotId && position === "main"))) return [];
+  if (!session || session.emergencyCover?.memberId === memberId || session.slots.some(slot => ['main','backup'].some(p=>slot[p]===memberId && !(slot.id===slotId && position===p)))) return [];
   return [sessionId];
 }
 function validateSelection(state, session, slot, memberId, exclude = [], position = "main") {
@@ -190,8 +222,7 @@ function validateSelection(state, session, slot, memberId, exclude = [], positio
     );
   if (available(state, session, memberId) === "unavailable")
     fail("This volunteer is unavailable for this service.");
-  const clash = position === "main" && conflicting(state, session, memberId, exclude);
-  if (clash) fail(`${currentMember(state, memberId).name} is already assigned as primary for ${clash.name} at ${clash.branch} on ${clash.date} at ${clash.time}. Choose another primary volunteer; reserve overlaps are allowed.`, 400, { conflict: { sessionId: clash.id } });
+  validateBooking(state,session,memberId,exclude,position);
 }
 function notify(state, recipient, message, sessionId) {
   state.notifications.push({
@@ -1024,7 +1055,10 @@ export async function handleVolunteers(request, store, adminActor = null) {
         } else if (input.start)
           createOccurrences(state, service, input.start, Number(input.weeks));
       }
-      if (previous) syncUpcomingSeries(state, meeting, actor);
+      if (previous) {
+        syncUpcomingSeries(state, meeting, actor);
+        validateSessionBookings(state,state.sessions.filter(s=>s.meetingId===meeting.id && upcoming(s)));
+      }
       audit(state, actor, "Church meeting settings updated", {
         meetingId: meeting.id,
       });
@@ -1190,7 +1224,8 @@ export async function handleVolunteers(request, store, adminActor = null) {
         session.status = "draft";
       }
       for (const { session, before } of changes) {
-        // Restore and date changes save drafts; validate assignments on confirmation.
+        // A move cannot create an impossible booking, even while the plan is a draft.
+        validateSessionBookings(state,[session]);
         updateStamp(session, actor);
         audit(state, actor, "Shared meeting changed", {
           sessionId: session.id,
@@ -1401,6 +1436,7 @@ export async function handleVolunteers(request, store, adminActor = null) {
           validateSelection(state, s, slot, slot.main);
           validateSelection(state, s, slot, slot.backup, [], "backup");
         }
+      validateSessionBookings(state,[s]);
       updateStamp(s, actor);
       audit(state, actor, "Service occurrence updated", {
         sessionId: s.id,
@@ -1440,7 +1476,7 @@ export async function handleVolunteers(request, store, adminActor = null) {
         s,
         slot,
         target,
-        input.exchangeSessionId ? releasedPrimaryExclusions(state, input.exchangeSessionId, input.exchangeSlotId, input.exchangePosition, target) : [],
+        input.exchangeSessionId ? releasedBookingExclusions(state, input.exchangeSessionId, input.exchangeSlotId, input.exchangePosition, target) : [],
         input.position,
       );
       if (slot[input.position === "main" ? "backup" : "main"] === target)
@@ -1461,7 +1497,7 @@ export async function handleVolunteers(request, store, adminActor = null) {
           other.id === s.id
         )
           fail("Choose a valid allocation to exchange.");
-        validateSelection(state, other, otherSlot, actor.id, releasedPrimaryExclusions(state, s.id, slot.id, input.position, actor.id), input.exchangePosition);
+        validateSelection(state, other, otherSlot, actor.id, releasedBookingExclusions(state, s.id, slot.id, input.position, actor.id), input.exchangePosition);
         if (
           otherSlot[input.exchangePosition === "main" ? "backup" : "main"] === actor.id
         )
@@ -1527,7 +1563,7 @@ export async function handleVolunteers(request, store, adminActor = null) {
             s,
             slot,
             swap.to,
-            swap.exchangeSessionId ? releasedPrimaryExclusions(state, swap.exchangeSessionId, swap.exchangeSlotId, swap.exchangePosition, swap.to) : [],
+            swap.exchangeSessionId ? releasedBookingExclusions(state, swap.exchangeSessionId, swap.exchangeSlotId, swap.exchangePosition, swap.to) : [],
             swap.position,
           );
           if (slot[swap.position === "main" ? "backup" : "main"] === swap.to)
@@ -1542,7 +1578,7 @@ export async function handleVolunteers(request, store, adminActor = null) {
               otherSlot?.[swap.exchangePosition] !== swap.to
             )
               fail("The other allocation has changed.", 409);
-            validateSelection(state, other, otherSlot, swap.from, releasedPrimaryExclusions(state, s.id, slot.id, swap.position, swap.from), swap.exchangePosition);
+            validateSelection(state, other, otherSlot, swap.from, releasedBookingExclusions(state, s.id, slot.id, swap.position, swap.from), swap.exchangePosition);
             if (
               otherSlot[swap.exchangePosition === "main" ? "backup" : "main"] === swap.from
             )
