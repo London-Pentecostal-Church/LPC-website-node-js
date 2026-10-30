@@ -64,6 +64,7 @@ const homeHeroStorageKey = "LPC_HOME_HERO_CONFIG";
 let serverHomeHeroConfig = null;
 let serverHeroImagesConfig = {};
 let adminSession = { authenticated: false };
+let closeSiteMenu = () => {};
 let newsletterConfig = null;
 let siteSettingsConfig = null;
 
@@ -2341,6 +2342,7 @@ function renderRoute() {
     link.classList.toggle("is-active", active);
   });
 
+  closeSiteMenu(false);
   document.getElementById("site-header").classList.remove("is-open");
   const toggle = document.getElementById("menu-toggle");
   toggle?.setAttribute("aria-expanded", "false");
@@ -3088,15 +3090,46 @@ function applyRouteTheme(route) {
   }
 }
 
-window.addEventListener("hashchange", renderRoute);
-window.addEventListener("DOMContentLoaded", async () => {
+function initSiteNavigation() {
   const toggle = document.getElementById("menu-toggle");
   const header = document.getElementById("site-header");
+  if (!toggle || !header) return;
+  let previousOverflow = '';
+  const mobile = window.matchMedia('(max-width: 1200px)');
+  closeSiteMenu = (restoreFocus = true) => {
+    if (!header.classList.contains('is-open')) return;
+    header.classList.remove('is-open');
+    document.body.style.overflow = previousOverflow;
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Open menu');
+    if (restoreFocus) toggle.focus({preventScroll:true});
+  };
   toggle?.addEventListener("click", () => {
-    const open = header.classList.toggle("is-open");
-    toggle.setAttribute("aria-expanded", String(open));
-    toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    if (header.classList.contains('is-open')) { closeSiteMenu(); return; }
+    previousOverflow = document.body.style.overflow;
+    header.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.setAttribute('aria-label', 'Close menu');
   });
+  header.addEventListener('click', event => { if (event.target.closest('a[href]')) closeSiteMenu(false); });
+  document.addEventListener('click', event => { if (!header.contains(event.target)) closeSiteMenu(false); });
+  header.addEventListener('keydown', event => {
+    if (!header.classList.contains('is-open')) return;
+    if (event.key === 'Escape') { event.preventDefault(); closeSiteMenu(); }
+    if (event.key === 'Tab') {
+      const links = [...header.querySelectorAll('a[href],button')].filter(el=>el.getClientRects().length);
+      const first = links[0], last = links[links.length-1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+  });
+  mobile.addEventListener('change', () => { if (!mobile.matches) closeSiteMenu(false); });
+}
+
+window.addEventListener("hashchange", renderRoute);
+window.addEventListener("DOMContentLoaded", async () => {
+  initSiteNavigation();
   await loadHomeHeroConfig();
   await loadHeroImagesConfig();
   await loadNewsletterConfig();

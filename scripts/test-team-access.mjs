@@ -7,6 +7,21 @@ const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls('));
 
+test('Mobile navigation opens on first click and closes on Escape, same-page links and desktop resize',()=>{
+ const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+ const source=site.slice(site.indexOf('function initSiteNavigation()'),site.indexOf('window.addEventListener("hashchange"'));
+ const classes=new Set(),events={},attributes={},body={style:{overflow:'auto'}};
+ const toggle={addEventListener:(type,fn)=>events.toggle=fn,setAttribute:(k,v)=>attributes[k]=v,focus:()=>events.focused=true};
+ const header={classList:{contains:c=>classes.has(c),add:c=>classes.add(c),remove:c=>classes.delete(c)},addEventListener:(type,fn)=>events[type]=fn,contains:()=>true};
+ const media={matches:true,addEventListener:(_,fn)=>events.resize=fn};
+ const context={window:{matchMedia:()=>media},document:{body,getElementById:id=>id==='menu-toggle'?toggle:header,addEventListener:()=>{}}};
+ runInNewContext(source+';initSiteNavigation()',context);
+ events.toggle();assert(classes.has('is-open'));assert.equal(attributes['aria-expanded'],'true');assert.equal(body.style.overflow,'hidden');
+ events.keydown({key:'Escape',preventDefault(){}});assert(!classes.has('is-open'));assert.equal(body.style.overflow,'auto');assert(events.focused);
+ events.toggle();events.click({target:{closest:()=>({})}});assert(!classes.has('is-open'));assert.equal(attributes['aria-expanded'],'false');
+ events.toggle();media.matches=false;events.resize();assert(!classes.has('is-open'));assert.equal(body.style.overflow,'auto');
+});
+
 test('First visit finder switches branch details and directions without inventing missing service times',()=>{
  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
  const source=site.slice(site.indexOf('function renderVisitDetails('),site.indexOf('function renderHome()'));
