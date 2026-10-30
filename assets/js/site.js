@@ -312,6 +312,7 @@ const mediaSources = {
 
 let pastors = [
   {
+    id: "senior-pastor",
     name: "Pr Sam John",
     role: "President & Senior Minister",
     image: "./assets/images/team/sam-john-hero.png",
@@ -379,41 +380,7 @@ applyPastorConfig(pastorConfig);
 const routes = {
   "/home": renderHome,
   "/": renderHome,
-  "/plan-your-visit": () =>
-    renderSubPage({
-      pageKey: "plan-your-visit",
-      label: "Plan Your Visit",
-      title: "Know what to expect when you visit LPC.",
-      copy: "Join us for prayer, worship, the Word, and church family across our branches. Whether this is your first Sunday or you are returning, we want your visit to feel clear, warm, and welcoming.",
-      image: "./assets/images/derived/plan-visit-hero.jpg",
-      actions: [
-        ["Find a Branch", "#/branches", "btn--gold"],
-        ["Watch Online", "#/watch", "btn--outline"],
-      ],
-      body: `
-        <section class="section section--tight section--swoosh">
-          <div class="container grid-two">
-            <article class="cards-banner">
-              <p class="section-label">What To Expect</p>
-              <h2 class="cards-banner__title">A Sunday centred on worship, prayer, and the Word.</h2>
-              <p class="cards-banner__copy">Expect worship, Bible teaching and a welcome for all ages. Choose your service from the times below.</p>
-              <ul class="feature-list" style="margin-top:20px">
-                <li>Friendly welcome team and clear arrival guidance</li>
-                <li>Prayer and ministry time during the service</li>
-                <li>Sunday School and youth connection across branches</li>
-                <li>Online sermon access if you cannot attend in person</li>
-              </ul>
-            </article>
-            <div class="content-stack">
-              <article class="content-card visit-service-times"><h3>Service Times</h3><ul class="footer__services">${renderServiceTimes()}</ul></article>
-              ${card("Need directions?", "Use the branch directory to choose the nearest LPC location and plan your route before Sunday.")}
-              ${card("First time at LPC", "If it helps, come a few minutes early. Our team can help with seating, children, and any questions about the service.")}
-            </div>
-          </div>
-        </section>
-        ${renderBranchesSection(true)}
-      `,
-    }),
+  "/plan-your-visit": () => renderVisitPlan(),
   "/ministries": () =>
     renderSubPage({
       pageKey: "ministries",
@@ -801,6 +768,35 @@ async function hydrateCalendarEvents() {
 function homeDisclosure(title, preview, content) {
   return `<details class="home-disclosure"><summary><span><strong>${escapeHtml(title)}</strong><small>${escapeHtml(preview)}</small></span><span class="home-disclosure__chevron" aria-hidden="true">⌄</span></summary><div class="home-disclosure__body">${content}</div></details>`;
 }
+function renderVisitPlanDetails(branch) {
+  if (!branch) return '<p>No church information is available yet.</p>';
+  const address = String(branch.address || '').trim();
+  const services = String(branch.services || '').trim();
+  return `<div class="visit-plan__destination" aria-live="polite"><p class="section-label">Your destination</p><h2>${escapeHtml(branch.churchName || branch.name)}</h2>
+    <div class="visit-plan__facts"><div><strong>Where</strong><p>${escapeHtml(address || 'Find the latest location details on the church page.')}</p></div><div><strong>When</strong><p>${services ? escapeHtml(services).replace(/\n/g,'<br>') : 'Check with the church for current service times before travelling.'}</p></div></div>
+    <div class="visit-plan__actions">${address ? `<a class="btn btn--gold" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}" target="_blank" rel="noopener noreferrer">Get directions <span aria-hidden="true">↗</span></a>` : ''}<a class="btn btn--outline" href="#/branches/${encodeURIComponent(branch.slug)}">Explore this church <span aria-hidden="true">→</span></a></div></div>`;
+}
+
+function renderVisitPlan() {
+  const image = getHeroImageConfig('plan-your-visit','./assets/images/derived/plan-visit-hero.jpg').desktopImage;
+  return `<article class="page page-visit-plan"><section class="visit-plan container" aria-labelledby="visit-plan-title"><header class="visit-plan__heading"><p class="section-label">Your first visit</p><h1 id="visit-plan-title">You belong here.</h1><p>A church family, a warm welcome. Let’s make your first visit simple.</p></header>
+    <div class="visit-plan__board"><div class="visit-plan__welcome">${image ? `<img src="${escapeAttribute(image)}" alt="Welcome to the LPC church family">` : ''}<div><span>Worship · Prayer · Community</span><h2>Come as you are.</h2><p>Whether it’s your first Sunday or you’re returning, we look forward to welcoming you.</p></div></div>
+    <div class="visit-plan__panel"><label for="visit-plan-church"><span>01</span> Choose your church</label><select id="visit-plan-church">${branchCards.map(b=>`<option value="${escapeAttribute(b.slug)}">${escapeHtml(b.name)}</option>`).join('')}</select><div data-visit-plan-details>${renderVisitPlanDetails(branchCards[0])}</div></div></div>
+    <section class="visit-plan__prepare" aria-labelledby="visit-prepare-title"><div><p class="section-label">Feel at home</p><h2 id="visit-prepare-title">A little help before you arrive.</h2><a href="mailto:office@londonpentecostalchurch.org?subject=lpc-website%20contact">Ask the church office <span aria-hidden="true">↗</span></a></div><div class="visit-plan__answers">
+    <details><summary>What happens at a service?</summary><p>Expect worship, Bible teaching, prayer and ministry time, with a welcome for all ages. You can also <a href="#/watch">watch a service online</a> before your visit.</p></details>
+    <details><summary>It’s my first time. What should I do?</summary><p>If it helps, come a few minutes early. Our welcome team can help with seating, children and questions about the service.</p></details>
+    <details><summary>Can I bring my children?</summary><p>Families are welcome. Sunday School and youth connections are available across our branches; check with your chosen church for the local arrangements.</p></details>
+    <details><summary>Main church service guide</summary><ul class="footer__services">${renderServiceTimes()}</ul><p>These are the main church’s published service times. Confirm local arrangements with your chosen branch.</p></details>
+    </div></section></section>${renderFooter()}</article>`;
+}
+
+function initVisitPlan() {
+  const select = document.getElementById('visit-plan-church');
+  const details = document.querySelector('[data-visit-plan-details]');
+  if (!select || !details) return;
+  select.addEventListener('change',()=>{ details.innerHTML = renderVisitPlanDetails(branchCards.find(b=>b.slug===select.value)); });
+}
+
 function renderVisitDetails(branch) {
   if (!branch) return '';
   const address = String(branch.address || '').trim(), services = String(branch.services || '').trim();
@@ -2363,6 +2359,7 @@ function renderRoute() {
   initAssetManager();
   initNewsletterViewer();
   initVisitFinder();
+  initVisitPlan();
   initBranchDirectory();
   applyImageFraming();
   initBranchAdmin();

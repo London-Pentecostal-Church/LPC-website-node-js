@@ -7,6 +7,19 @@ const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls('));
 
+test('Visit planner updates the selected destination without borrowing another church address or times',()=>{
+ const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+ const source=site.slice(site.indexOf('function renderVisitPlanDetails('),site.indexOf('function renderVisitDetails('));
+ const events={},select={value:'second',addEventListener:(type,fn)=>events[type]=fn},details={};
+ const branchCards=[{slug:'first',name:'First',address:'12 Church Road',services:'Sunday 10:00'},{slug:'second',name:'Second'}];
+ const context={branchCards,escapeHtml:v=>String(v),escapeAttribute:v=>String(v),document:{getElementById:()=>select,querySelector:()=>details}};
+ const html=runInNewContext(source+';renderVisitPlanDetails(branchCards[0])',context);
+ assert(html.includes('Sunday 10:00'));assert(html.includes('query=12%20Church%20Road'));
+ runInNewContext(source+';initVisitPlan()',context);events.change();
+ assert(details.innerHTML.includes('#/branches/second'));assert(!details.innerHTML.includes('google.com'));assert(!details.innerHTML.includes('Sunday 10:00'));
+ assert(details.innerHTML.includes('current service times before travelling'));
+});
+
 test('Church directory filters by multiple words, announces no matches, and restores every church',()=>{
  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
  const source=site.slice(site.indexOf('function initBranchDirectory()'),site.indexOf('function renderBranchesSection('));

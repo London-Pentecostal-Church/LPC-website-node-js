@@ -2984,3 +2984,35 @@ body.is-red-header-sample .menu-toggle {
 @media(max-width:1000px) { .people-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
 @media(max-width:600px) { .people-gallery__heading { display:block; margin-bottom:24px; } .people-contact { margin-top:12px; font-size:.85rem; } .people-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px 14px; } .people-portrait { border-radius:12px; } .people-profile__layout { grid-template-columns:1fr; gap:24px; } .people-profile__photo { max-width:260px; max-height:300px; margin-inline:auto; } .people-profile__copy h1 { font-size:2rem; } }
 @media(prefers-reduced-motion:reduce) { .people-portrait img { transition:none; } }
+/* A first-visit planner, with practical decisions brought into one place. */
+.page-visit-plan { background:#f3f6f6; }
+.visit-plan { padding-block:clamp(28px,4vw,56px); }
+.visit-plan__heading { margin-bottom:28px; }
+.visit-plan__heading h1 { margin:10px 0 14px; font-size:clamp(2.4rem,5vw,4.6rem); line-height:1; letter-spacing:-.045em; }
+.visit-plan__heading p { margin:0; }
+.visit-plan__board { display:grid; grid-template-columns:1fr 1fr; border-radius:24px; overflow:hidden; background:white; box-shadow:0 14px 45px #153b4610; border:1px solid #d8e3e6; }
+.visit-plan__welcome { position:relative; min-height:430px; display:flex; align-items:end; background:#102e3e; color:white; }
+.visit-plan__welcome > img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.visit-plan__welcome::after { content:''; position:absolute; inset:0; background:linear-gradient(0deg,#082332f2,transparent 100%); }
+.visit-plan__welcome > div { position:relative; z-index:1; padding:32px; }
+.visit-plan__welcome span { font-size:.8rem; color:#f2cd70; }
+.visit-plan__welcome h2 { color:white; font-size:clamp(1.7rem,3vw,2.6rem); line-height:1.1; margin:12px 0; }
+.visit-plan__welcome p { color:#e4edf0; margin:0; max-width:36ch; }
+.visit-plan__panel { min-width:0; padding:clamp(20px,3vw,40px); }
+.visit-plan__panel > label { display:flex; align-items:center; gap:12px; font-weight:700; margin-bottom:12px; }
+.visit-plan__panel > label span { display:grid; place-items:center; border-radius:50%; width:30px; height:30px; background:#e5f1ef; color:#146f73; font-size:.8rem; }
+.visit-plan__panel select { width:100%; min-height:48px; box-sizing:border-box; border:1px solid #a7bdc8; border-radius:10px; background:#f6f9fa; padding:10px; font:inherit; color:#18394b; }
+.visit-plan__destination { margin-top:24px; }
+.visit-plan__destination h2 { font-size:clamp(1.35rem,2vw,1.8rem); line-height:1.2; margin:8px 0 20px; }
+.visit-plan__facts { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.visit-plan__facts strong { color:#12757b; font-size:.8rem; }
+.visit-plan__facts p { font-size:.85rem; line-height:1.6; white-space:pre-line; overflow-wrap:anywhere; margin:6px 0 0; }
+.visit-plan__actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:24px; }
+.visit-plan__actions .btn { min-height:44px; padding:10px 16px; font-size:.85rem; }
+.visit-plan__prepare { display:grid; grid-template-columns:.8fr 1.2fr; gap:40px; padding-block:36px 12px; }
+.visit-plan__prepare h2 { font-size:1.7rem; line-height:1.2; margin:10px 0 16px; }
+.visit-plan__prepare > div > a { display:inline-flex; min-height:44px; align-items:center; gap:12px; color:#096f75; font-weight:700; }
+.visit-plan__answers details { border-bottom:1px solid #ccdade; }
+.visit-plan__answers summary { padding:18px 0; cursor:pointer; font-weight:700; }
+.visit-plan__answers details p { font-size:.9rem; line-height:1.7; padding-bottom:16px; }
+@media(max-width:700px) { .visit-plan__board { grid-template-columns:1fr; } .visit-plan__welcome { min-height:150px; } .visit-plan__welcome > div { padding:20px; } .visit-plan__welcome p { display:none; } .visit-plan__welcome h2 { margin-bottom:0; } .visit-plan__panel { padding:20px; } .visit-plan__prepare { grid-template-columns:1fr; gap:12px; padding-top:28px; } .visit-plan__facts { gap:12px; } .visit-plan__actions .btn { flex:1 1 120px; } }
