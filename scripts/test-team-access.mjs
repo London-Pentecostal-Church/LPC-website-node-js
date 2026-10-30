@@ -7,6 +7,17 @@ const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls('));
 
+test('Church directory filters by multiple words, announces no matches, and restores every church',()=>{
+ const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+ const source=site.slice(site.indexOf('function initBranchDirectory()'),site.indexOf('function renderBranchesSection('));
+ const events={},input={value:'',addEventListener:(type,fn)=>events[type]=fn};
+ const cards=[{dataset:{churchSearch:'london chadwell heath romford'}},{dataset:{churchSearch:'chelmsford pentecostal church'}}], count={},empty={};
+ runInNewContext(source+';initBranchDirectory()',{document:{getElementById:()=>input,querySelectorAll:()=>cards,querySelector:s=>s.includes('count')?count:empty}});
+ input.value='LONDON romford';events.input();assert.equal(cards[0].hidden,false);assert.equal(cards[1].hidden,true);assert.equal(count.textContent,'1 church found');
+ input.value='no match';events.input();assert.equal(empty.hidden,false);assert.equal(count.textContent,'0 churches found');
+ input.value='  ';events.input();assert(cards.every(c=>!c.hidden));assert.equal(empty.hidden,true);assert.equal(count.textContent,'2 churches to explore');
+});
+
 test('Watch stage selects one church, stops the previous iframe and supports keyboard switching',()=>{
  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
  const source=site.slice(site.indexOf('function initWatchStage()'),site.indexOf('function prioritiseWatchPlayer('));

@@ -468,16 +468,7 @@ const routes = {
         </section>
       `,
     }),
-  "/branches": () =>
-    renderSubPage({
-      pageKey: "branches",
-      label: "Branches",
-      title: "A church family across London and Essex.",
-      copy: "Every LPC branch shares the same worship heartbeat, biblical teaching, and family culture while serving its local community faithfully.",
-      image: "./assets/images/derived/branches-hero.jpg",
-      actions: [["Plan Your Visit", "#/plan-your-visit", "btn--gold"]],
-      body: renderBranchesSection(true),
-    }),
+  "/branches": () => renderBranchDirectory(),
   "/about": () =>
     renderSubPage({
       pageKey: "about",
@@ -2070,6 +2061,39 @@ function socialIcon(name) {
   return icons[name] || icons.YouTube;
 }
 
+function renderBranchDirectory() {
+  return `<article class="page page-directory"><section class="church-finder container" aria-labelledby="church-finder-title">
+    <header class="church-finder__heading"><div><p class="section-label">One family · London & Essex</p><h1 id="church-finder-title">Find your church.</h1><p>Different places. The same warm welcome.</p></div>
+    <div class="church-finder__search"><label for="church-search">Search by church or town</label><input id="church-search" type="search" placeholder="Try Chelmsford or Southend" autocomplete="off" aria-controls="church-results"><p data-church-count role="status" aria-live="polite">${branchCards.length} churches to explore</p></div></header>
+    <div class="church-directory" id="church-results">${branchCards.map(branch => {
+      const address = String(branch.address || '').trim();
+      const services = String(branch.services || '').trim();
+      const image = getHeroImageConfig(branch.slug, branch.image).desktopImage;
+      return `<article class="church-place" data-church-search="${escapeAttribute([branch.name,branch.churchName,address,branch.summary].filter(Boolean).join(' ').toLowerCase())}" style="--place-color:${escapeAttribute(branch.color)}">
+        <a class="church-place__image" href="#/branches/${encodeURIComponent(branch.slug)}" aria-label="Explore ${escapeAttribute(branch.churchName || branch.name)}">${image ? `<img src="${escapeAttribute(image)}" alt="${escapeAttribute(branch.churchName || branch.name)}" loading="lazy">` : ''}<span>Explore church <span aria-hidden="true">↗</span></span></a>
+        <div class="church-place__body"><div class="church-place__identity">${branch.logo ? `<img src="${escapeAttribute(branch.logo)}" alt="" loading="lazy">` : ''}<div><h2>${escapeHtml(branch.name)}</h2><p>${escapeHtml(branch.subtitle || 'Pentecostal Church')}</p></div></div>
+        ${address ? `<p class="church-place__address">${escapeHtml(address)}</p>` : `<p class="church-place__address">${escapeHtml(branch.summary || 'Discover our local church family.')}</p>`}
+        <div class="church-place__visit">${services ? `<p><strong>When we meet</strong><span>${escapeHtml(services).replace(/\n/g,'<br>')}</span></p>` : `<p>Visit the church page for service information.</p>`}
+        ${address ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}" target="_blank" rel="noopener noreferrer">Directions <span aria-hidden="true">↗</span></a>` : ''}</div></div></article>`;
+    }).join('')}</div><p class="church-finder__empty" data-church-empty hidden>No churches match your search. Try another town or clear the search.</p>
+    </section>${renderFooter()}</article>`;
+}
+
+function initBranchDirectory() {
+  const input = document.getElementById('church-search');
+  if (!input) return;
+  const cards = [...document.querySelectorAll('[data-church-search]')];
+  const count = document.querySelector('[data-church-count]');
+  const empty = document.querySelector('[data-church-empty]');
+  input.addEventListener('input', () => {
+    const terms = input.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    let visible = 0;
+    cards.forEach(card => { card.hidden = !terms.every(term => card.dataset.churchSearch.includes(term)); if (!card.hidden) visible++; });
+    count.textContent = `${visible} ${visible === 1 ? 'church' : 'churches'} ${terms.length ? 'found' : 'to explore'}`;
+    empty.hidden = visible > 0;
+  });
+}
+
 function renderBranchesSection(includePadding = false) {
   return (
     '<section class="section section--branches"><div class="container"><div class="section-heading"><p class="section-label">Our Branches</p><h2 class="section-title">One family. Many places to belong.</h2><p class="section-copy">Find a community near you for worship, friendship and a shared life of faith.</p></div><div class="branch-grid">' +
@@ -2375,6 +2399,7 @@ function renderRoute() {
   initAssetManager();
   initNewsletterViewer();
   initVisitFinder();
+  initBranchDirectory();
   applyImageFraming();
   initBranchAdmin();
   window.LPCVolunteers?.mount();
