@@ -854,6 +854,31 @@ async function hydrateCalendarEvents() {
 function homeDisclosure(title, preview, content) {
   return `<details class="home-disclosure"><summary><span><strong>${escapeHtml(title)}</strong><small>${escapeHtml(preview)}</small></span><span class="home-disclosure__chevron" aria-hidden="true">⌄</span></summary><div class="home-disclosure__body">${content}</div></details>`;
 }
+function renderVisitDetails(branch) {
+  if (!branch) return '';
+  const address = String(branch.address || '').trim(), services = String(branch.services || '').trim();
+  return `<div class="visit-finder-info" aria-live="polite">
+    ${services ? `<div><span class="visit-finder-label">When we meet</span><p>${escapeHtml(services)}</p></div>` : ''}
+    ${address ? `<div><span class="visit-finder-label">Where to find us</span><p>${escapeHtml(address)}</p></div>` : ''}
+    ${!services ? '<p class="visit-finder-note">Find current service times and local information on this church’s page.</p>' : ''}
+    <div class="visit-finder-actions"><a class="btn btn--gold" href="#/branches/${encodeURIComponent(branch.slug)}">Explore this church <span aria-hidden="true">→</span></a>
+    ${address ? `<a class="visit-finder-directions" href="https://www.google.com/maps/search/?api=1&amp;query=${escapeAttribute(encodeURIComponent(address))}" target="_blank" rel="noopener">Get directions ↗</a>` : ''}</div>
+  </div>`;
+}
+function renderVisitFinder() {
+  if (!branchCards.length) return '';
+  return `<aside class="visit-finder" aria-labelledby="visit-finder-title">
+    <div class="visit-finder-top"><span class="visit-finder-symbol" aria-hidden="true">✦</span><span>${branchCards.length} churches. One family.</span></div>
+    <h2 id="visit-finder-title">Find your place.</h2><p class="visit-finder-intro">A local church. A warm welcome. Start your first visit here.</p>
+    <label for="visit-branch">Choose your church</label><select id="visit-branch">${branchCards.map(b=>`<option value="${escapeAttribute(b.slug)}">${escapeHtml(b.name)}</option>`).join('')}</select>
+    <div data-visit-details>${renderVisitDetails(branchCards[0])}</div>
+  </aside>`;
+}
+function initVisitFinder() {
+  const select = document.getElementById('visit-branch'), details = document.querySelector('[data-visit-details]');
+  if (!select || !details) return;
+  select.addEventListener('change', () => { details.innerHTML = renderVisitDetails(branchCards.find(branch=>branch.slug===select.value)); });
+}
 function renderHome() {
   return `
     <article class="page page-home">
@@ -865,12 +890,12 @@ function renderHome() {
             <p class="hero__quote">for spiritual sacrifices</p>
             <p class="hero__copy">We’re a multicultural church family growing in faith and doing life together. Wherever you are on your journey, you’re welcome here.</p>
             <div class="hero__actions">
-              <a class="btn btn--gold" href="#/plan-your-visit">Plan Your Visit</a>
               <a class="btn btn--hero-glass" href="#/watch"><span class="play-mark" aria-hidden="true">▶</span> Watch Sermons</a>
             </div>
 
           </div>
           ${renderHomeHeroMedia()}
+          ${renderVisitFinder()}
         </div>
         <div class="hero-caption"><span>Worship. Community. Purpose.</span><button class="hero-motion" type="button" aria-label="Pause background video">Pause video</button></div>
         <svg class="hero-sweep" viewBox="0 0 1440 220" preserveAspectRatio="none" aria-hidden="true"><path class="sweep-gold" d="M0 180C380 290 680 40 1060 65C1230 76 1350 109 1440 0V220H0Z" fill="#efc45b"/><path d="M0 193C370 284 745 91 1090 100C1250 104 1370 114 1440 45V220H0Z" fill="#fff"/><path class="swoosh-edge" d="M0 193C370 284 745 91 1090 100C1250 104 1370 114 1440 45" fill="none"/></svg>
@@ -2326,6 +2351,7 @@ function renderRoute() {
   initPastorAdmin();
   initAssetManager();
   initNewsletterViewer();
+  initVisitFinder();
   applyImageFraming();
   initBranchAdmin();
   window.LPCVolunteers?.mount();

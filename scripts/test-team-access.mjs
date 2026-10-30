@@ -7,6 +7,19 @@ const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls('));
 
+test('First visit finder switches branch details and directions without inventing missing service times',()=>{
+ const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+ const source=site.slice(site.indexOf('function renderVisitDetails('),site.indexOf('function renderHome()'));
+ const events={},details={},select={value:'second',addEventListener:(type,fn)=>events[type]=fn};
+ const branchCards=[{slug:'first',name:'First church',services:'Sunday 10:00',address:'12 Church Road'},{slug:'second',name:'Second church'}];
+ const context={branchCards,escapeHtml:v=>String(v),escapeAttribute:v=>String(v),document:{getElementById:()=>select,querySelector:()=>details}};
+ const html=runInNewContext(source+';renderVisitFinder()',context);
+ assert(html.includes('Sunday 10:00'));assert(html.includes('query=12%20Church%20Road'));assert(html.includes('#/branches/first'));
+ runInNewContext(source+';initVisitFinder()',context);events.change();
+ assert(details.innerHTML.includes('#/branches/second'));assert(!details.innerHTML.includes('google.com'));assert(!details.innerHTML.includes('Sunday 10:00'));
+ assert(details.innerHTML.includes('current service times'));
+});
+
 test('Role return navigation is restricted to admin screens during normal browsing', () => {
   const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
   const source=site.slice(site.indexOf('  // Public browsing stays public'),site.indexOf('  document.querySelectorAll(".primary-nav a")'));
@@ -155,7 +168,7 @@ test('Resolving a live stream promotes only its placeholder and leaves existing 
 test('Home reference sections collapse by default while the service stream stays visible', () => {
   const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
   const source=site.slice(site.indexOf('function homeDisclosure('),site.indexOf('function renderHomeHeroMedia()'));
-  const context={escapeHtml:v=>String(v),branchCards:[{},{}],pastors:[],mediaSources:{home:{}},quickItem:()=>'<a>Quick action</a>',
+  const context={escapeHtml:v=>String(v),escapeAttribute:v=>String(v),branchCards:[{},{}],pastors:[],mediaSources:{home:{}},quickItem:()=>'<a>Quick action</a>',
     renderHomeHeroMedia:()=>'<video></video>',renderCalendarSection:()=>'<section>Events</section>',renderNewsletterSection:()=>'<section>Newsletter</section>',renderBranchesSection:()=>'<section>Branches</section>',
     renderMediaSection:(_,featured)=>featured?'<section data-featured-stream>Service stream</section>':'',renderSocialSection:()=>'<section>Socials</section>',renderFooter:()=>'<footer>Contact and service times</footer>'};
   const html=runInNewContext(source+';renderHome()',context);

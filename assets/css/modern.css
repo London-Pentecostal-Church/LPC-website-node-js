@@ -2815,3 +2815,50 @@ body.is-red-header-sample .menu-toggle {
  .home-highlights .media-section .media-section__body { padding: 0 20px 20px; }
 }
 .home-highlights .section--media .media-section { gap: 0; }
+
+/* First-visit finder turns the home hero into a useful starting point. */
+.page-home .hero .hero__inner { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(320px,.85fr); align-items: center; gap: clamp(32px,5vw,80px); width: calc(100% - 80px); max-width: 1240px; margin-inline: auto; min-height: 730px; padding: 140px 0 100px; box-sizing: border-box; }
+.page-home .hero .hero__content { min-height: 0; max-width: none; margin: 0; padding: 0; width: auto; }
+.page-home .hero .hero__title { font-size: clamp(48px,5.4vw,76px); }
+.page-home .hero .hero__copy { max-width: 48ch; }
+.page-home .hero .hero__actions { display: flex; }
+.visit-finder { position: relative; z-index: 3; padding: clamp(24px,3vw,36px); border: 1px solid #ffffffb3; border-radius: 28px; background: linear-gradient(145deg,#fff,#f2f7f8); box-shadow: 0 24px 70px #0004; color: #102539; }
+.visit-finder-top { display: flex; gap: 10px; align-items: center; color: #94691b; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.visit-finder-symbol { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; color: #80590e; background: #f7e6b5; font-size: 22px; }
+.visit-finder h2 { margin: 18px 0 10px; font-size: clamp(30px,3vw,42px); line-height: 1.05; letter-spacing: -.04em; }
+.visit-finder-intro { margin: 0 0 24px; color: #536575; line-height: 1.5; font-size: 15px; }
+.visit-finder label { display: block; margin-bottom: 8px; font-weight: 700; font-size: 13px; }
+.visit-finder select { display: block; width: 100%; min-height: 50px; padding: 12px; border: 1px solid #a9becb; border-radius: 10px; background: #fff; color: #102539; font: inherit; font-size: 16px; }
+.visit-finder-info { display: grid; gap: 16px; padding-top: 20px; }
+.visit-finder-label { display: block; margin-bottom: 5px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #007c83; font-weight: 700; }
+.visit-finder-info p { margin: 0; white-space: pre-line; overflow-wrap: anywhere; font-size: 14px; line-height: 1.5; }
+.visit-finder-info .visit-finder-note { font-size: 13px; color: #617585; }
+.visit-finder-actions { display: grid; gap: 10px; }
+.visit-finder-actions .btn { width: 100%; display: flex; justify-content: space-between; min-height: 48px; font-size: 14px; }
+.visit-finder-directions { padding: 8px; text-align: center; font-size: 13px; font-weight: 700; color: #007c83; }
+@media (max-width: 900px) {
+ .page-home .hero .hero__inner { width: calc(100% - 40px); grid-template-columns: minmax(0,1fr); gap: 24px; padding: 110px 0 110px; min-height: 0; }
+ .page-home .hero .hero__content { max-width: 620px; }
+ .page-home .hero .hero__title { font-size: clamp(40px,8vw,62px); }
+ .page-home .hero .hero__quote { margin-top: 16px; font-size: 20px; }
+ .visit-finder { max-width: 620px; width: 100%; box-sizing: border-box; padding: 22px; border-radius: 22px; }
+ .visit-finder-top { font-size: 11px; }
+ .visit-finder h2 { font-size: 32px; margin-top: 14px; }
+ .visit-finder-intro { margin-bottom: 18px; }
+ .page-home .hero .hero__copy { font-size: 14px; }
+}
+.page-home.page .hero { min-height: 0; }
+@media (max-width: 600px) {
+ .page-home .hero .hero__inner { padding-top: 105px; gap: 20px; }
+ .page-home .hero .hero__copy, .page-home .hero .hero__actions { display: none; }
+ .page-home .hero .hero__quote { margin-bottom: 0; }
+}
+.page-home.page .hero .hero__content { padding: 0; min-height: 0; }
+.page-home.page .hero .hero__inner { position: relative; z-index: 4; }
+.page-home.page .hero .hero-orbit { z-index: 1; }
+@media (max-width: 600px) {
+ .page-home.page .hero .hero__content > .eyebrow, .visit-finder-intro { display: none; }
+ .visit-finder-symbol { width: 26px; height: 26px; font-size: 18px; }
+ .visit-finder h2 { font-size: 28px; margin: 12px 0 18px; }
+ .visit-finder-info { gap: 12px; padding-top: 16px; }
+}
