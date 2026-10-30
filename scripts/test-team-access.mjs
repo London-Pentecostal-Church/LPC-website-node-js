@@ -20,6 +20,14 @@ test('Watch stage selects one church, stops the previous iframe and supports key
  tabs[1].events.keydown({key:'Home',preventDefault(){}});assert(tabs[0].focused);assert.equal(rows[0].hidden,false);assert.equal(tabs[0]['aria-selected'],'true');
 });
 
+test('A late YouTube response cannot create a player in a deselected church',()=>{
+ const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+ const source=site.slice(site.indexOf('function renderYouTubeVideoPreview('),site.indexOf('function renderYouTubeChannelPreview('));
+ const player={dataset:{youtubeRequested:'true'},closest:()=>({hidden:true})};
+ runInNewContext(source+';renderYouTubeVideoPreview(player,{video:{id:"test"}})',{player});
+ assert.equal(player.dataset.youtubeRequested,undefined);
+});
+
 test('Mobile navigation opens on first click and closes on Escape, same-page links and desktop resize',()=>{
  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
  const source=site.slice(site.indexOf('function initSiteNavigation()'),site.indexOf('window.addEventListener("hashchange"'));

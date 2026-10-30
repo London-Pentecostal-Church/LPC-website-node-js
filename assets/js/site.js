@@ -1952,6 +1952,10 @@ function initWatchStage() {
     rows.forEach(row=>{
       const active=row.dataset.watchOrder===String(index);
       row.hidden=!active;row.setAttribute('role','tabpanel');row.setAttribute('aria-labelledby','watch-tab-'+row.dataset.watchOrder);
+      if(!active) row.querySelectorAll('.youtube-preview[data-youtube-handle]').forEach(player=>{
+        delete player.dataset.youtubeRequested;
+        player.innerHTML='<p class="youtube-player__status">Choose this church to load its service.</p>';
+      });
       row.querySelectorAll('iframe').forEach(frame=>{
         if(!active && frame.hasAttribute('src')){frame.dataset.watchSrc=frame.getAttribute('src');frame.removeAttribute('src');}
         if(active && !frame.hasAttribute('src') && frame.dataset.watchSrc)frame.setAttribute('src',frame.dataset.watchSrc);
@@ -3466,6 +3470,7 @@ function renderYouTubeVideoPreview(
   player,
   { title, channelUrl, video, mode, autoplaySilent = false },
 ) {
+  if (player.closest('.watch-row[hidden]')) { delete player.dataset.youtubeRequested; return; }
   const watchUrl =
     "https://www.youtube.com/watch?v=" + encodeURIComponent(video.id);
   player.innerHTML = '<div class="youtube-video-mount"></div>';
@@ -3496,7 +3501,7 @@ function renderYouTubeVideoPreview(
   const timeout = setTimeout(fallback, 15000);
   loadYouTubePlayerApi()
     .then((YT) => {
-      if (failed || !mount.isConnected) return;
+      if (failed || !mount.isConnected || player.closest('.watch-row[hidden]')) { clearTimeout(timeout); delete player.dataset.youtubeRequested; return; }
       embeddedPlayer = new YT.Player(mount, {
         videoId: video.id,
         playerVars: {
