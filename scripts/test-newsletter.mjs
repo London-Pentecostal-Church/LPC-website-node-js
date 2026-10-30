@@ -28,3 +28,15 @@ test('Newsletter editor saves and removes images, keeps optional fields empty an
  fields.set('image','');await submit({preventDefault(){}});assert.equal(saved.image,'');
  fail=true;await submit({preventDefault(){}});assert.equal(status.textContent,'Save failed');assert.equal(button.disabled,false);
 });
+
+test('Image viewer opens modally, locks scrolling, closes and restores focus and scroll state',()=>{
+ const init=source.slice(source.indexOf('function initNewsletterViewer()'),source.indexOf('function videoType('));
+ const events={},closeButton={},opener={isConnected:true,addEventListener:(_,fn)=>events.open=fn,focus:()=>events.focused=true};
+ const viewer={open:false,showModal(){this.open=true},close(){this.open=false;events.close()},querySelector:()=>closeButton,addEventListener:(type,fn)=>events[type]=fn};
+ closeButton.addEventListener=(_,fn)=>events.closeButton=fn;
+ const document={body:{style:{overflow:'auto'}},querySelector:key=>key==='.newsletter-image-button'?opener:viewer};
+ runInNewContext(init+';initNewsletterViewer()', {document});
+ events.open();assert(viewer.open);assert.equal(document.body.style.overflow,'hidden');
+ events.closeButton();assert(!viewer.open);assert.equal(document.body.style.overflow,'auto');assert(events.focused);
+ events.open();events.click({target:viewer});assert(!viewer.open);
+});

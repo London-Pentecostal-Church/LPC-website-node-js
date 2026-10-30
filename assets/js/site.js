@@ -1029,13 +1029,33 @@ function renderNewsletterSection() {
   const meta = [news.author, news.date].filter(Boolean).join(" · ");
   return `<section class="section section--tight section--newsletter" aria-labelledby="newsletter-title"><div class="container">
     <article class="newsletter-card${news.image ? ' newsletter-card--image' : ''}">
-      ${news.image ? `<img class="newsletter-image" src="${escapeAttribute(news.image)}" alt="${escapeAttribute(news.imageAlt || news.title)}" loading="lazy">` : ''}
+      ${news.image ? `<button class="newsletter-image-button" type="button" aria-label="Enlarge newsletter image" aria-haspopup="dialog"><img class="newsletter-image" src="${escapeAttribute(news.image)}" alt="${escapeAttribute(news.imageAlt || news.title)}" loading="lazy"><span class="newsletter-image-hint">Tap to enlarge ↗</span></button>` : ''}
       <div class="newsletter-content"><p class="section-label">${escapeHtml(news.kicker)}</p>
       <h2 class="section-title" id="newsletter-title">${escapeHtml(news.title)}</h2>
       ${meta ? `<p class="newsletter-meta">${escapeHtml(meta)}</p>` : ''}
       ${news.body ? `<div class="newsletter-body">${escapeHtml(news.body)}</div>` : ''}
       ${news.ctaText && news.ctaHref ? `<a class="btn btn--outline" href="${escapeAttribute(news.ctaHref)}">${escapeHtml(news.ctaText)}</a>` : ''}
-      </div></article></div></section>`;
+      </div></article>
+      ${news.image ? `<dialog class="newsletter-viewer" aria-label="Newsletter image"><button class="newsletter-viewer-close" type="button" autofocus aria-label="Close image viewer">Close ✕</button><img src="${escapeAttribute(news.image)}" alt="${escapeAttribute(news.imageAlt || news.title)}"></dialog>` : ''}
+      </div></section>`;
+}
+
+function initNewsletterViewer() {
+  const opener = document.querySelector('.newsletter-image-button'), viewer = document.querySelector('.newsletter-viewer');
+  if (!opener || !viewer) return;
+  let previousOverflow;
+  opener.addEventListener('click', () => {
+    if (viewer.open) return;
+    previousOverflow = document.body.style.overflow;
+    viewer.showModal();
+    document.body.style.overflow = 'hidden';
+  });
+  viewer.querySelector('.newsletter-viewer-close').addEventListener('click', () => viewer.close());
+  viewer.addEventListener('click', event => { if (event.target === viewer) viewer.close(); });
+  viewer.addEventListener('close', () => {
+    document.body.style.overflow = previousOverflow ?? '';
+    if (opener.isConnected) opener.focus({preventScroll:true});
+  });
 }
 
 function videoType(url) {
@@ -2247,6 +2267,7 @@ function renderRoute() {
   const render = routes[route] || getDynamicRouteRenderer(route);
   const app = document.getElementById("app");
   applyRouteTheme(route);
+  document.querySelector('.newsletter-viewer[open]')?.close();
   app.innerHTML = render
     ? render()
     : `
@@ -2301,6 +2322,7 @@ function renderRoute() {
   initHomeHeroAdmin();
   initPastorAdmin();
   initAssetManager();
+  initNewsletterViewer();
   applyImageFraming();
   initBranchAdmin();
   window.LPCVolunteers?.mount();
