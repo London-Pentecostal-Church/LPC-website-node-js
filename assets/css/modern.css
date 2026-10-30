@@ -3070,3 +3070,36 @@ body.is-red-header-sample .menu-toggle {
 .newsletter-publish-bar .btn { flex-shrink:0; }
 .newsletter-studio-switch { display:none; }
 @media(max-width:800px) { .newsletter-studio-layout { grid-template-columns:1fr; } .newsletter-studio-switch { display:flex; gap:4px; padding:4px; background:#dfe9ed; border-radius:12px; margin-bottom:18px; } .newsletter-studio-switch button { flex:1; padding:12px; background:transparent; border:0; border-radius:9px; color:#173b4c; font:inherit; font-weight:700; } .newsletter-studio-switch button[aria-pressed=true] { background:white; box-shadow:0 2px 5px #18384b15; } .newsletter-studio[data-newsletter-mode=edit] .newsletter-studio-preview,.newsletter-studio[data-newsletter-mode=preview] .newsletter-studio-fields { display:none; } .newsletter-studio-fields { padding:16px; } .newsletter-studio-preview { position:static; } .newsletter-publish-bar { bottom:8px; gap:10px; padding:12px; } .newsletter-publish-bar .btn { padding:10px 14px; font-size:.8rem; min-height:44px; } .newsletter-draft-card > div { padding:20px; } }
+/* Action-first contact hub: no banner between a visitor and the church. */
+.page-connect { background:#f4f6f4; }
+.connect-hub { padding-block:clamp(28px,5vw,64px); }
+.connect-heading { max-width:850px; margin-bottom:32px; }
+.connect-heading .section-label { margin:0; }
+.connect-heading h1 { font-size:clamp(2.2rem,5vw,4.5rem); letter-spacing:-.045em; line-height:1.05; margin:12px 0 18px; }
+.connect-heading > p:last-child { font-size:1.05rem; line-height:1.6; margin:0; color:#466272; }
+.connect-actions { display:grid; grid-template-columns:1.2fr 1fr; gap:20px; }
+.connect-action { display:flex; gap:20px; align-items:start; position:relative; padding:30px; border-radius:22px; text-decoration:none; min-width:0; border:1px solid transparent; transition:transform .18s ease,box-shadow .18s ease; }
+.connect-action:hover { transform:translateY(-3px); box-shadow:0 12px 26px #102f431a; }
+.connect-action--email { background:#102e40; color:white; }
+.connect-action--phone { background:#edf3ee; border-color:#c8dacf; color:#163b37; }
+.connect-action__icon { display:grid; place-items:center; width:48px; height:48px; border-radius:14px; background:#ffffff18; color:#efc65d; flex-shrink:0; }
+.connect-action--phone .connect-action__icon { background:#d8e9dd; color:#286550; }
+.connect-action__icon svg { width:25px; height:25px; }
+.connect-action__copy { min-width:0; display:block; }
+.connect-action__label { display:block; font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; opacity:.8; margin-bottom:12px; }
+.connect-action h2 { color:inherit; font-size:clamp(1.2rem,2vw,1.7rem); line-height:1.2; margin:0 0 14px; }
+.connect-action__detail { display:block; font-size:clamp(.85rem,1.25vw,1rem); overflow-wrap:anywhere; }
+.connect-action__hint { display:block; font-size:.75rem; margin-top:20px; opacity:.75; }
+.connect-action__arrow { position:absolute; top:24px; right:20px; font-size:1.3rem; }
+.connect-visit { display:grid; grid-template-columns:1.2fr 1fr; gap:20px; margin-top:20px; }
+.connect-address,.connect-local { padding:26px 30px; border:1px solid #d5e2e4; background:white; border-radius:20px; }
+.connect-visit h2 { font-size:1.2rem; line-height:1.3; margin:8px 0 10px; }
+.connect-visit p { font-size:.9rem; line-height:1.6; margin:0; }
+.connect-visit a { display:inline-flex; align-items:center; min-height:44px; gap:18px; margin-top:12px; font-weight:700; color:#08747a; }
+.connect-local { display:flex; gap:20px; align-items:start; }
+.connect-local > span { font-size:2.1rem; color:#b09037; }
+.connect-artwork { border-top:1px solid #d2dfe1; margin-top:28px; }
+.connect-artwork summary { cursor:pointer; padding:16px 0; font-size:.85rem; color:#4c6673; }
+.connect-artwork img { display:block; width:100%; max-width:760px; height:auto; margin:0 auto 20px; border-radius:16px; }
+@media(max-width:700px) { .connect-heading { margin-bottom:22px; } .connect-heading h1 { font-size:2.25rem; } .connect-heading > p:last-child { font-size:.95rem; } .connect-actions,.connect-visit { grid-template-columns:1fr; gap:14px; } .connect-action { padding:20px; gap:14px; border-radius:18px; } .connect-action__icon { width:36px; height:36px; border-radius:10px; } .connect-action__icon svg { width:21px; height:21px; } .connect-action__label { font-size:.65rem; margin-bottom:8px; } .connect-action h2 { font-size:1.15rem; margin-bottom:10px; } .connect-action__hint { margin-top:12px; font-size:.7rem; } .connect-action__arrow { font-size:1.1rem; } .connect-address,.connect-local { padding:20px; } }
+@media(prefers-reduced-motion:reduce) { .connect-action { transition:none; } .connect-action:hover { transform:none; } }

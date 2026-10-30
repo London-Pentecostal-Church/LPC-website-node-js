@@ -477,32 +477,22 @@ const routes = {
   "/admin": renderAdminPanel,
   "/admin/home-hero": renderAdminPanel,
   "/lpcadmin": renderAdminPanel,
-  "/contact": () =>
-    renderSubPage({
-      pageKey: "contact",
-      label: "Contact",
-      title: "Reach out to the LPC family.",
-      copy: "Whether you have a question, prayer request, or you're planning your first visit, we'd be glad to hear from you.",
-      image: "./assets/images/derived/contact-hero.jpg",
-      body: `
-        <section class="section section--tight">
-          <div class="container grid-two">
-            <div class="content-stack">
-              ${card("Phone", "020 8690 0701")}
-              ${card("Main Address", "Oasis Centre, Essex Rd, Romford RM6 4JA")}
-            </div>
-            <article class="contact-card">
-              <h3>Email the church office</h3>
-              <p>For questions, prayer requests or planning your visit, we’d love to hear from you.</p>
-              <p class="contact-email-address">office@londonpentecostalchurch.org</p>
-              <a class="btn btn--gold" href="mailto:office@londonpentecostalchurch.org?subject=lpc-website%20contact">Write an email</a>
-            </article>
-          </div>
-        </section>
-      `,
-    }),
+  "/contact": () => renderContactHub(),
   "/branches/chadwell-heath": renderHome,
 };
+
+function renderContactHub() {
+  const main = branchCards.find(branch=>branch.slug==='chadwell-heath');
+  const address = String(main?.address || 'Oasis Centre, Essex Rd, Romford RM6 4JA').trim();
+  const artwork = getHeroImageConfig('contact','./assets/images/derived/contact-hero.jpg').desktopImage;
+  return `<article class="page page-connect"><section class="connect-hub container" aria-labelledby="connect-title">
+    <header class="connect-heading"><p class="section-label">Contact LPC</p><h1 id="connect-title">Let’s start a conversation.</h1><p>A question, a prayer request, or your first visit—we’re here to listen.</p></header>
+    <div class="connect-actions"><a class="connect-action connect-action--email" href="mailto:office@londonpentecostalchurch.org?subject=lpc-website%20contact"><span class="connect-action__icon" aria-hidden="true">${icon('mail')}</span><span class="connect-action__copy"><span class="connect-action__label">Write to us</span><h2>Email the church office</h2><span class="connect-action__detail">office@<wbr>londonpentecostalchurch.org</span><span class="connect-action__hint">Opens your email app · Subject ready to go</span></span><span class="connect-action__arrow" aria-hidden="true">↗</span></a>
+    <a class="connect-action connect-action--phone" href="tel:+442086900701"><span class="connect-action__icon" aria-hidden="true">${icon('phone')}</span><span class="connect-action__copy"><span class="connect-action__label">Speak to us</span><h2>Call the church</h2><span class="connect-action__detail">020 8690 0701</span><span class="connect-action__hint">Tap to open your phone dialler</span></span><span class="connect-action__arrow" aria-hidden="true">↗</span></a></div>
+    <div class="connect-visit"><div class="connect-address"><p class="section-label">Find us</p><h2>Main church · Chadwell Heath</h2><p>${escapeHtml(address)}</p><a class="connect-directions" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}" target="_blank" rel="noopener noreferrer">Get directions <span aria-hidden="true">↗</span></a></div><div class="connect-local"><span aria-hidden="true">⌂</span><div><h2>Looking for your local church?</h2><p>Find our churches across London and Essex.</p><a href="#/branches">Explore all churches <span aria-hidden="true">→</span></a></div></div></div>
+    ${artwork ? `<details class="connect-artwork"><summary>More about contacting LPC</summary><img src="${escapeAttribute(artwork)}" alt="LPC contact and branch enquiry information" loading="lazy"></details>` : ''}
+    </section>${renderFooter()}</article>`;
+}
 
 function matchCalendarBranch(location) {
   const normalize = (value) =>
@@ -2287,6 +2277,8 @@ function card(title, html) {
 function icon(name) {
   const stroke = "currentColor";
   const map = {
+    mail: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3" stroke="${stroke}" stroke-width="1.8"/><path d="m4 7 8 6 8-6" stroke="${stroke}" stroke-width="1.8" stroke-linejoin="round"/></svg>`,
+    phone: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 3 3 4-2 3c1 3 3 5 6 6l3-2 4 3-1 4C10 22 2 14 3 4l4-1Z" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
     calendar: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3" stroke="${stroke}" stroke-width="1.8"/><path d="M8 3v4M16 3v4M3 10h18" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round"/></svg>`,
     marker: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-5.4 7-11a7 7 0 1 0-14 0c0 5.6 7 11 7 11Z" stroke="${stroke}" stroke-width="1.8"/><circle cx="12" cy="10" r="2.6" stroke="${stroke}" stroke-width="1.8"/></svg>`,
     users: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M17 20v-1.2A3.8 3.8 0 0 0 13.2 15H10.8A3.8 3.8 0 0 0 7 18.8V20" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="8" r="3.2" stroke="${stroke}" stroke-width="1.8"/><path d="M4 19.5v-.8A3.2 3.2 0 0 1 7 15.5M20 19.5v-.8A3.2 3.2 0 0 0 17 15.5" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round"/></svg>`,
