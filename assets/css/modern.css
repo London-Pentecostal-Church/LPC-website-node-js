@@ -2778,3 +2778,40 @@ body.is-red-header-sample .menu-toggle {
 .newsletter-viewer::backdrop { background: #07131f; }
 .newsletter-viewer img { display: block; width: 100%; height: 100%; min-height: 0; object-fit: contain; }
 .newsletter-viewer-close { position: absolute; right: max(16px, env(safe-area-inset-right)); top: max(12px, env(safe-area-inset-top)); min-height: 44px; padding: 10px 18px; border: 1px solid #ffffff80; border-radius: 24px; background: #fff; color: #102539; cursor: pointer; font: inherit; font-weight: 700; }
+
+/* Balanced home highlights: news first, live media beside it. */
+.home-highlights { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: stretch; margin-block: 28px; }
+.home-highlights > .section { min-width: 0; padding: 0; margin: 0; border-radius: 24px; border: 1px solid #dbe4ea; overflow: hidden; box-shadow: 0 12px 30px #1025390a; }
+.home-highlights > .section > .container { width: 100%; max-width: none; margin: 0; padding: 0; }
+.home-highlights .newsletter-card { border: 0; border-radius: 0; min-height: 100%; display: flex; flex-direction: column; background: linear-gradient(145deg,#fff,#eef5f6); }
+.home-highlights .newsletter-heading, .home-highlights .media-section__header { padding: 24px; margin: 0; min-height: 138px; box-sizing: border-box; display: grid; align-content: start; gap: 10px; }
+.home-highlights .section-label, .home-highlights .section-title, .home-highlights .section-copy, .home-highlights .newsletter-meta { margin: 0; }
+.home-highlights .section-title { font-size: clamp(23px,2.25vw,30px); line-height: 1.15; }
+.home-highlights .section-copy, .home-highlights .newsletter-meta { font-size: 14px; line-height: 1.5; }
+.home-highlights .newsletter-image-button { width: calc(100% - 48px); margin-inline: 24px; border-radius: 14px; overflow: hidden; aspect-ratio: 16/9; }
+.home-highlights .newsletter-image { width: 100%; height: 100%; max-height: none; object-fit: contain; }
+.home-highlights .newsletter-content { padding: 20px 24px 24px; gap: 12px; flex: 1; }
+.newsletter-article summary { list-style: none; cursor: pointer; }
+.newsletter-article summary::-webkit-details-marker { display: none; }
+.newsletter-excerpt { display: block; line-height: 1.6; font-size: 14px; color: #506375; }
+.newsletter-read { display: flex; justify-content: space-between; align-items: center; min-height: 44px; margin-top: 8px; color: #007c83; font-weight: 700; }
+.newsletter-read-close, .newsletter-article[open] .newsletter-excerpt, .newsletter-article[open] .newsletter-read-open { display: none; }
+.newsletter-article[open] .newsletter-read-close { display: inline; }
+.home-highlights .newsletter-body { font-size: 14px; }
+.home-highlights .section--media { background: radial-gradient(ellipse at 100% 0,#204965,transparent 70%),#071b2e; border: 1px solid #18384d; }
+.home-highlights .section--media .media-section { height: 100%; display: flex; flex-direction: column; }
+.home-highlights .media-section .media-section__body { display: flex; flex-direction: column; gap: 0; padding: 0 24px 24px; flex: 1; }
+.home-highlights .media-section__body .youtube-preview { width: 100%; aspect-ratio: 16/9; min-height: 0; border-radius: 14px; flex-shrink: 0; }
+.home-highlights .media-socials { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; width: 100%; margin-top: auto; padding: 20px 0 0; }
+.home-highlights .media-socials > h3, .home-highlights .media-socials > p { display: none; }
+.home-highlights .media-socials > .btn { grid-column: auto; grid-row: auto; min-height: 44px; }
+.home-highlights .media-socials > .footer__socials { margin: 0; }
+.home-highlights > :only-child { grid-column: 1/-1; }
+@media (max-width: 760px) {
+ .home-highlights { grid-template-columns: minmax(0,1fr); gap: 18px; margin-block: 20px; }
+ .home-highlights .newsletter-heading, .home-highlights .media-section__header { min-height: 0; padding: 20px; }
+ .home-highlights .newsletter-image-button { width: calc(100% - 40px); margin-inline: 20px; }
+ .home-highlights .newsletter-content { padding: 16px 20px 20px; }
+ .home-highlights .media-section .media-section__body { padding: 0 20px 20px; }
+}
+.home-highlights .section--media .media-section { gap: 0; }

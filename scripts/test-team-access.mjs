@@ -162,7 +162,9 @@ test('Home reference sections collapse by default while the service stream stays
   assert.equal((html.match(/<details class="home-disclosure">/g)||[]).length,3);
   assert(!html.includes('class="home-disclosure" open'));
   assert(html.indexOf('data-featured-stream')<html.indexOf('<details'));
-  assert(html.indexOf('Service stream</section><section>Events</section>')>=0 || /Service stream<\/section>\s*<section>Events<\/section>/.test(html));
+  assert(html.indexOf('<section>Newsletter</section>')<html.indexOf('data-featured-stream'));
+  assert(html.indexOf('data-featured-stream')<html.indexOf('<section>Events</section>'));
+  assert(html.includes('class="container home-highlights"'));
   for(const label of ['Our branches','Stay connected','Our people']) {
     assert(html.includes(label.replace('&amp;','&')));
   }

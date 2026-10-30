@@ -877,9 +877,11 @@ function renderHome() {
         <svg class="hero-orbit" viewBox="0 0 700 700" fill="none" aria-hidden="true"><path d="M35 650C620 730 805 31 420 45C250 49 150 177 212 288" stroke="#efc45b" stroke-width="2"/></svg>
       </section>
 
-      ${renderMediaSection(mediaSources.home, true)}
+      <div class="container home-highlights" aria-label="News and services">
+        ${renderNewsletterSection(true)}
+        ${renderMediaSection(mediaSources.home, true)}
+      </div>
       ${renderCalendarSection()}
-      ${renderNewsletterSection()}
       <section class="quick-strip">
         <div class="container">
           <div class="quick-strip__grid">
@@ -1023,17 +1025,18 @@ function getSiteSettingsConfig() {
   return { ...defaultSiteSettingsConfig, ...(siteSettingsConfig || {}) };
 }
 
-function renderNewsletterSection() {
+function renderNewsletterSection(compact = false) {
   const news = getNewsletterConfig();
   if (!news.body.trim() && !news.image.trim()) return "";
   const meta = [news.author, news.date].filter(Boolean).join(" · ");
+  const heading = `<p class="section-label">${escapeHtml(news.kicker)}</p><h2 class="section-title" id="newsletter-title">${escapeHtml(news.title)}</h2>${meta ? `<p class="newsletter-meta">${escapeHtml(meta)}</p>` : ''}`;
+  const body = news.body ? `<div class="newsletter-body">${escapeHtml(news.body)}</div>` : '';
   return `<section class="section section--tight section--newsletter" aria-labelledby="newsletter-title"><div class="container">
     <article class="newsletter-card${news.image ? ' newsletter-card--image' : ''}">
+      ${compact ? `<header class="newsletter-heading">${heading}</header>` : ''}
       ${news.image ? `<button class="newsletter-image-button" type="button" aria-label="Enlarge newsletter image" aria-haspopup="dialog"><img class="newsletter-image" src="${escapeAttribute(news.image)}" alt="${escapeAttribute(news.imageAlt || news.title)}" loading="lazy"><span class="newsletter-image-hint">Tap to enlarge ↗</span></button>` : ''}
-      <div class="newsletter-content"><p class="section-label">${escapeHtml(news.kicker)}</p>
-      <h2 class="section-title" id="newsletter-title">${escapeHtml(news.title)}</h2>
-      ${meta ? `<p class="newsletter-meta">${escapeHtml(meta)}</p>` : ''}
-      ${news.body ? `<div class="newsletter-body">${escapeHtml(news.body)}</div>` : ''}
+      <div class="newsletter-content">${compact ? '' : heading}
+      ${compact && news.body.length > 180 ? `<details class="newsletter-article"><summary><span class="newsletter-excerpt">${escapeHtml(news.body.slice(0,160).trim())}…</span><span class="newsletter-read"><span class="newsletter-read-open">Read news</span><span class="newsletter-read-close">Close article</span> <span aria-hidden="true">↗</span></span></summary>${body}</details>` : body}
       ${news.ctaText && news.ctaHref ? `<a class="btn btn--outline" href="${escapeAttribute(news.ctaHref)}">${escapeHtml(news.ctaText)}</a>` : ''}
       </div></article>
       ${news.image ? `<dialog class="newsletter-viewer" aria-label="Newsletter image"><button class="newsletter-viewer-close" type="button" autofocus aria-label="Close image viewer">Close ✕</button><img src="${escapeAttribute(news.image)}" alt="${escapeAttribute(news.imageAlt || news.title)}"></dialog>` : ''}

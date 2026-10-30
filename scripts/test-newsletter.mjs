@@ -6,7 +6,7 @@ const source=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8'
 const defaults={kicker:'Newsletter',title:'News & updates from LPC',body:'',author:'',date:'',image:'',imageAlt:'',ctaText:'',ctaHref:''};
 const escape=v=>String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
 const getter=source.slice(source.indexOf('function getNewsletterConfig()'),source.indexOf('function getSiteSettingsConfig()'));
-const render=source.slice(source.indexOf('function renderNewsletterSection()'),source.indexOf('function videoType('));
+const render=source.slice(source.indexOf('function renderNewsletterSection('),source.indexOf('function videoType('));
 const context=config=>({newsletterConfig:config,defaultNewsletterConfig:defaults,escapeHtml:escape,escapeAttribute:escape});
 test('Newsletter preserves legacy content and renders a text broadcast without an empty image',()=>{
  const html=runInNewContext(getter+render+';renderNewsletterSection()',context({kicker:"Pastor's Thought",title:'A word of encouragement for this week.',body:'Existing news\nSecond line',ctaText:'Watch Sermons',ctaHref:'#/watch'}));
