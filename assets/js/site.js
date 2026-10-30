@@ -1319,47 +1319,46 @@ function renderSiteSettingsAdminFields() {
   `;
 }
 
+function renderNewsletterDraftPreview(draft) {
+  return `<article class="newsletter-draft-card">${draft.image ? `<img src="${escapeAttribute(draft.image)}" alt="${escapeAttribute(draft.imageAlt || draft.title)}">` : ''}<div><p class="section-label">${escapeHtml(draft.kicker || 'Newsletter')}</p><h3>${escapeHtml(draft.title || 'Your headline')}</h3>${draft.author || draft.date ? `<p class="newsletter-draft-meta">${escapeHtml([draft.author,draft.date].filter(Boolean).join(' · '))}</p>` : ''}<p class="newsletter-draft-body">${escapeHtml(draft.body || 'Your news will appear here as you write.')}</p>${draft.ctaText ? `<span class="newsletter-draft-link">${escapeHtml(draft.ctaText)} →</span>` : ''}</div></article>`;
+}
+
 function renderNewsletterAdminFields() {
   const thought = getNewsletterConfig();
-  return `
-    <form class="admin-form" id="newsletter-form">
-      <label>Section label
-        <input name="kicker" type="text" value="${escapeAttribute(thought.kicker)}" placeholder="Newsletter">
-      </label>
-      <label>Headline
-        <input name="title" type="text" required value="${escapeAttribute(thought.title)}" placeholder="News &amp; updates from LPC">
-      </label>
-      <label>News
-        <textarea name="body" rows="6" maxlength="15000" placeholder="Share news and announcements for the church family">${escapeHtml(thought.body)}</textarea>
-      </label>
-      <label>Image (optional)
-        ${renderAssetPickerInput({name:'image',value:thought.image,placeholder:'Choose an image, or leave blank for a text announcement'})}
-        <span>Shown above the news. Leave blank for a text-only broadcast.</span>
-      </label>
-      <label>Image description<input name="imageAlt" value="${escapeAttribute(thought.imageAlt)}" placeholder="Describe the image for people using a screen reader"></label>
-      <div class="admin-hero-card__grid">
-        <label>Published by (optional)
-          <input name="author" type="text" value="${escapeAttribute(thought.author)}" placeholder="LPC office">
-        </label>
-        <label>Date / edition (optional)
-          <input name="date" type="text" value="${escapeAttribute(thought.date)}" placeholder="November 2026">
-        </label>
-      </div>
-      <div class="admin-hero-card__grid">
-        <label>Link text (optional)
-          <input name="ctaText" type="text" value="${escapeAttribute(thought.ctaText)}" placeholder="Find out more">
-        </label>
-        <label>Link destination (optional)
-          <input name="ctaHref" type="text" value="${escapeAttribute(thought.ctaHref)}" placeholder="#/contact or https://...">
-        </label>
-      </div>
-      <div class="admin-form__actions">
-        <button class="btn btn--gold" type="submit">Publish newsletter</button>
-        <a class="btn btn--light" href="#/home">View home page</a>
-      </div>
-      <p data-newsletter-status role="status" aria-live="polite"></p>
-    </form>
-  `;
+  return `<form class="admin-form newsletter-studio" id="newsletter-form" data-newsletter-mode="edit">
+    <div class="newsletter-studio-switch" role="group" aria-label="Newsletter view"><button type="button" data-newsletter-view="edit" aria-pressed="true">Edit news</button><button type="button" data-newsletter-view="preview" aria-pressed="false">Preview</button></div>
+    <div class="newsletter-studio-layout"><div class="newsletter-studio-fields">
+      <label>Headline<input name="title" required value="${escapeAttribute(thought.title)}" placeholder="News &amp; updates from LPC"></label>
+      <label>News<textarea name="body" rows="8" maxlength="15000" placeholder="Share news and announcements for the church family">${escapeHtml(thought.body)}</textarea></label>
+      <label>Image (optional)${renderAssetPickerInput({name:'image',value:thought.image,placeholder:'Choose an image or keep this a text announcement'})}<span>Leave blank for a text announcement.</span></label>
+      <label>Image description<input name="imageAlt" value="${escapeAttribute(thought.imageAlt)}" placeholder="Describe the image for screen readers"></label>
+      <details class="newsletter-studio-options"><summary>Byline, edition &amp; optional link</summary>
+      <label>Section label<input name="kicker" value="${escapeAttribute(thought.kicker)}" placeholder="Newsletter"></label>
+      <div class="admin-hero-card__grid"><label>Published by (optional)<input name="author" value="${escapeAttribute(thought.author)}" placeholder="LPC office"></label><label>Date / edition (optional)<input name="date" value="${escapeAttribute(thought.date)}" placeholder="November 2026"></label></div>
+      <label>Link text (optional)<input name="ctaText" value="${escapeAttribute(thought.ctaText)}" placeholder="Find out more"></label><label>Link destination (optional)<input name="ctaHref" value="${escapeAttribute(thought.ctaHref)}" placeholder="#/contact or https://..."></label></details>
+    </div><aside class="newsletter-studio-preview" aria-label="Newsletter preview"><div class="newsletter-preview-heading"><h2>Reader preview</h2><span>Updates as you type</span></div><div data-newsletter-preview>${renderNewsletterDraftPreview(thought)}</div><p class="newsletter-preview-note">Preview of your news content. The home page adapts the layout to the screen.</p></aside></div>
+    <div class="newsletter-publish-bar"><div><strong data-newsletter-dirty>Saved version</strong><p data-newsletter-status role="status" aria-live="polite"></p></div><button class="btn btn--gold" type="submit">Publish newsletter</button></div>
+  </form>`;
+}
+
+function initNewsletterStudio() {
+  const form = document.getElementById('newsletter-form');
+  const preview = form?.querySelector('[data-newsletter-preview]');
+  if (!preview) return;
+  const dirty = form.querySelector('[data-newsletter-dirty]');
+  const keys = ['kicker','title','body','image','imageAlt','author','date','ctaText','ctaHref'];
+  const read = () => {const values = new FormData(form);return Object.fromEntries(keys.map(key=>[key,String(values.get(key)||'').trim() || (['image','imageAlt','date'].includes(key) ? '' : defaultNewsletterConfig[key] || '')]));};
+  let saved = JSON.stringify(read());
+  const update = () => {const draft=read();preview.innerHTML=renderNewsletterDraftPreview(draft);dirty.textContent=JSON.stringify(draft)===saved ? 'Saved version' : 'Unpublished changes';};
+  form.addEventListener('input',update);
+  form.addEventListener('change',update);
+  form.addEventListener('newsletter-published',event=>{saved=JSON.stringify(Object.fromEntries(keys.map(key=>[key,event.detail[key]])));update();});
+  const setMode = mode => {
+    form.dataset.newsletterMode=mode;
+    form.querySelectorAll('[data-newsletter-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.newsletterView===mode)));
+  };
+  form.querySelectorAll('[data-newsletter-view]').forEach(button=>button.addEventListener('click',()=>setMode(button.dataset.newsletterView)));
+  form.addEventListener('invalid',()=>setMode('edit'),true);
 }
 
 function renderAdminLogin() {
@@ -2366,6 +2365,7 @@ function renderRoute() {
   applySiteSettings();
   window.scrollTo({ top: 0, behavior: "instant" });
   initHomeHeroAdmin();
+  initNewsletterStudio();
   initAdminWorkspace();
   initPastorAdmin();
   initAssetManager();
@@ -2931,7 +2931,7 @@ function initNewsletterAdmin() {
     if (!!config.ctaText !== !!config.ctaHref) { status.textContent = 'Enter both link text and a destination, or leave both blank.'; return; }
     button.disabled = true;
     status.textContent = 'Publishing newsletter…';
-    try { await saveNewsletterConfig(config); status.textContent = 'Newsletter published on the home page.'; }
+    try { await saveNewsletterConfig(config); status.textContent = 'Newsletter published on the home page.'; if (form.dispatchEvent) form.dispatchEvent(new CustomEvent('newsletter-published',{detail:config})); }
     catch(error) { status.textContent = error.message; }
     finally { button.disabled = false; }
   });

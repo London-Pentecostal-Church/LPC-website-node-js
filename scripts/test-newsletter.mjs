@@ -8,6 +8,26 @@ const escape=v=>String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replace
 const getter=source.slice(source.indexOf('function getNewsletterConfig()'),source.indexOf('function getSiteSettingsConfig()'));
 const render=source.slice(source.indexOf('function renderNewsletterSection('),source.indexOf('function videoType('));
 const context=config=>({newsletterConfig:config,defaultNewsletterConfig:defaults,escapeHtml:escape,escapeAttribute:escape});
+
+test('Newsletter studio preview escapes text and supports image and text announcements',()=>{
+ const renderer=source.slice(source.indexOf('function renderNewsletterDraftPreview('),source.indexOf('function renderNewsletterAdminFields('));
+ const html=runInNewContext(renderer+';renderNewsletterDraftPreview(draft)',{draft:{title:'<script>title</script>',body:'<img src=x onerror=bad>',image:'./assets/images/news.jpg',imageAlt:'News poster'},escapeHtml:escape,escapeAttribute:escape});
+ assert(html.includes('&lt;script>title'));assert(html.includes('&lt;img src=x'));assert(html.includes('alt="News poster"'));assert(!html.includes('<script>'));
+ const text=runInNewContext(renderer+';renderNewsletterDraftPreview(draft)',{draft:{title:'News',body:'Text only'},escapeHtml:escape,escapeAttribute:escape});assert(!text.includes('<img'));
+});
+
+test('Newsletter studio tracks unpublished edits, switches phone views and preserves edits made while publishing',()=>{
+ const init=source.slice(source.indexOf('function initNewsletterStudio()'),source.indexOf('function renderAdminLogin()'));
+ const fields={...defaults,title:'Original'},events={},preview={},dirty={};
+ const buttons=['edit','preview'].map(view=>({dataset:{newsletterView:view},addEventListener:(type,fn)=>events[view]=fn,setAttribute(k,v){this[k]=v}}));
+ const form={dataset:{},querySelector:s=>s.includes('preview')?preview:dirty,querySelectorAll:()=>buttons,addEventListener:(type,fn)=>events[type]=fn};
+ runInNewContext(init+';initNewsletterStudio()',{document:{getElementById:()=>form},FormData:class{get(k){return fields[k]}},defaultNewsletterConfig:defaults,renderNewsletterDraftPreview:d=>d.title});
+ fields.title='Updated';events.input();assert.equal(preview.innerHTML,'Updated');assert.equal(dirty.textContent,'Unpublished changes');
+ events.preview();assert.equal(form.dataset.newsletterMode,'preview');assert.equal(buttons[1]['aria-pressed'],'true');
+ events.invalid();assert.equal(form.dataset.newsletterMode,'edit');assert.equal(buttons[0]['aria-pressed'],'true');
+ const submitted={...fields};fields.title='Changed during save';events['newsletter-published']({detail:submitted});assert.equal(dirty.textContent,'Unpublished changes');
+ fields.title='Updated';events.input();assert.equal(dirty.textContent,'Saved version');
+});
 test('Newsletter preserves legacy content and renders a text broadcast without an empty image',()=>{
  const html=runInNewContext(getter+render+';renderNewsletterSection()',context({kicker:"Pastor's Thought",title:'A word of encouragement for this week.',body:'Existing news\nSecond line',ctaText:'Watch Sermons',ctaHref:'#/watch'}));
  assert(html.includes('Newsletter'));assert(html.includes('News &amp; updates from LPC'));assert(html.includes('Existing news\nSecond line'));assert(!html.includes('<img'));assert(!html.includes('Watch Sermons'));assert(!html.includes("Pastor's Thought"));
