@@ -3016,3 +3016,33 @@ body.is-red-header-sample .menu-toggle {
 .visit-plan__answers summary { padding:18px 0; cursor:pointer; font-weight:700; }
 .visit-plan__answers details p { font-size:.9rem; line-height:1.7; padding-bottom:16px; }
 @media(max-width:700px) { .visit-plan__board { grid-template-columns:1fr; } .visit-plan__welcome { min-height:150px; } .visit-plan__welcome > div { padding:20px; } .visit-plan__welcome p { display:none; } .visit-plan__welcome h2 { margin-bottom:0; } .visit-plan__panel { padding:20px; } .visit-plan__prepare { grid-template-columns:1fr; gap:12px; padding-top:28px; } .visit-plan__facts { gap:12px; } .visit-plan__actions .btn { flex:1 1 120px; } }
+/* Admin workspace: compact, task-led navigation instead of nested forms. */
+.page-admin-workspace { background:#f3f6f7; }
+.admin-workspace { padding-block:clamp(24px,4vw,52px); }
+.admin-workspace__heading { display:flex; align-items:start; justify-content:space-between; gap:20px; margin-bottom:24px; }
+.admin-workspace__heading h1 { font-size:clamp(1.8rem,3.4vw,3rem); line-height:1.1; letter-spacing:-.035em; margin:8px 0 12px; }
+.admin-workspace__heading p { margin:0; max-width:64ch; }
+.admin-workspace__heading > .btn { flex-shrink:0; min-height:44px; padding:10px 16px; }
+.admin-task-search { display:block; font-weight:700; max-width:680px; margin-bottom:22px; }
+.admin-task-search input { display:block; box-sizing:border-box; width:100%; min-height:50px; margin-top:8px; border:1px solid #b8ccd6; border-radius:12px; padding:12px 14px; font:inherit; background:white; color:#133447; }
+.admin-attention { display:flex; align-items:center; gap:14px; padding:16px 20px; background:#fff8e6; border:1px solid #e8d291; border-radius:14px; text-decoration:none; color:#624b11; margin-bottom:28px; }
+.admin-attention > span:first-child { display:grid; place-items:center; background:#f1d478; border-radius:50%; width:28px; height:28px; flex-shrink:0; font-weight:700; }
+.admin-attention > span:last-child { margin-left:auto; }
+.admin-attention p { margin:4px 0 0; font-size:.85rem; }
+.admin-workspace .admin-maintenance-links { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; }
+.admin-task-group { margin-top:28px; }
+.admin-task-group h2 { font-size:1.15rem; margin:0 0 12px; }
+.admin-task-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.admin-workspace .admin-task { display:flex; gap:12px; justify-content:space-between; align-items:center; min-width:0; padding:20px; border:1px solid #d6e2e7; border-radius:14px; background:white; text-decoration:none; color:#15364a; box-shadow:0 3px 9px #12344505; transition:box-shadow .15s ease,border-color .15s ease; }
+.admin-workspace .admin-task:hover { border-color:#66a7aa; box-shadow:0 5px 18px #12344512; }
+.admin-task strong { display:block; line-height:1.3; }
+.admin-task small { display:block; font-size:.8rem; color:#536e7c; margin-top:6px; line-height:1.4; }
+.admin-task > span { color:#117e83; font-size:1.25rem; }
+.admin-task-empty { padding:24px; border:1px dashed #b9cbd2; border-radius:12px; }
+.admin-workspace [hidden] { display:none !important; }
+.admin-workspace-editor > .admin-back-link { display:inline-flex; align-items:center; min-height:44px; margin-bottom:16px; }
+.admin-workspace-editor > .admin-form { max-width:900px; margin:0; background:white; padding:24px; border:1px solid #d6e2e7; border-radius:16px; }
+.admin-workspace-editor .admin-hero-tiles { margin-top:20px; }
+@media(max-width:950px) { .admin-workspace .admin-maintenance-links { grid-template-columns:1fr; gap:0; } }
+@media(max-width:700px) { .admin-workspace__heading { gap:12px; margin-bottom:20px; } .admin-workspace__heading h1 { font-size:1.75rem; } .admin-workspace__heading .section-label { font-size:.65rem; } .admin-task-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } .admin-workspace .admin-task { padding:14px 12px; align-items:start; } .admin-task strong { font-size:.9rem; } .admin-task small { font-size:.75rem; } .admin-task > span { font-size:1rem; } .admin-attention { padding:14px; font-size:.85rem; gap:10px; } .admin-attention p { font-size:.78rem; } .admin-workspace-editor > .admin-form { padding:16px; } }
+@media(prefers-reduced-motion:reduce) { .admin-workspace .admin-task { transition:none; } }

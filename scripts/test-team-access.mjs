@@ -7,6 +7,26 @@ const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls('));
 
+test('Admin workspace searches task keywords and restores groups when cleared',()=>{
+ const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+ const source=site.slice(site.indexOf('function initAdminWorkspace()'),site.indexOf('function renderAdminWorkspaceEditor('));
+ const events={},input={value:'',addEventListener:(type,fn)=>events[type]=fn},empty={};
+ const tasks=[{dataset:{adminTask:'users accounts permissions'}},{dataset:{adminTask:'newsletter news publishing'}}];
+ const groups=tasks.map(task=>({querySelectorAll:()=>[task]}));
+ runInNewContext(source+';initAdminWorkspace()',{document:{getElementById:()=>input,querySelectorAll:s=>s==='[data-admin-task]'?tasks:groups,querySelector:()=>empty}});
+ input.value='NEWS publishing';events.input();assert(tasks[0].hidden);assert(!tasks[1].hidden);assert(groups[0].hidden);assert(empty.hidden);
+ input.value='no match';events.input();assert(!empty.hidden);assert(groups.every(g=>g.hidden));
+ input.value='';events.input();assert(tasks.every(t=>!t.hidden));assert(groups.every(g=>!g.hidden));assert(empty.hidden);
+});
+
+test('Every new admin workspace editor keeps the website-admin authentication gate',()=>{
+ const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+ const source=site.slice(site.indexOf('function renderAdminWorkspaceEditor('),site.indexOf('function renderAdminHeroEditor('));
+ for(const section of ['newsletter','header','appearance']) {
+  assert.equal(runInNewContext(source+';renderAdminWorkspaceEditor(section)',{section,adminSession:{authenticated:false},renderAdminLogin:()=> 'sign-in'}),'sign-in');
+ }
+});
+
 test('Visit planner updates the selected destination without borrowing another church address or times',()=>{
  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
  const source=site.slice(site.indexOf('function renderVisitPlanDetails('),site.indexOf('function renderVisitDetails('));
@@ -362,7 +382,10 @@ test('Failed logout or a retained session never switches to another account', as
 
 test('Main admin opens a dedicated, administrator-only user management route', () => {
   const site = readFileSync(new URL('../assets/js/site.js', import.meta.url), 'utf8');
-  assert(site.indexOf('href="#/lpcadmin/users"') < site.indexOf('href="#/lpcadmin/volunteers"'));
+  const dashboardSource = site.slice(site.indexOf('function renderAdminPanel()'),site.indexOf('function initAdminWorkspace()'));
+  const dashboard = runInNewContext(dashboardSource+';renderAdminPanel()', {adminSession:{authenticated:true},branchCards:[],escapeAttribute:v=>String(v),renderFooter:()=>''});
+  assert(dashboard.indexOf('href="#/lpcadmin/users"') >= 0);
+  assert(dashboard.indexOf('href="#/lpcadmin/users"') < dashboard.indexOf('href="#/lpcadmin/volunteers"'));
   const routeStart = site.indexOf('function getDynamicRouteRenderer(route)');
   const routeEnd = site.indexOf('\nfunction ', routeStart + 1);
   const routeSource = site.slice(routeStart, routeEnd);

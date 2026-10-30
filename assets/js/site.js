@@ -1191,41 +1191,52 @@ function renderHomeHeroAdminFields() {
 
 function renderAdminPanel() {
   if (!adminSession.authenticated) return renderAdminLogin();
-  return `
-    <article class="page">
-      <section class="section section--tight section--admin-hero">
-        <div class="container admin-panel admin-dashboard">
-          <div class="admin-panel__header">
-            <div>
-              <p class="section-label">Admin Control Panel</p>
-              <h1 class="section-title">Manage your church website</h1>
-              <p class="section-copy">Manage user access, weekly schedules, pastors, branches, and website content.</p>
-            </div>
-            <button class="btn btn--outline" type="button" data-admin-logout>Sign out</button>
-          </div>
-          <nav class="admin-maintenance-links admin-shortcut-grid" aria-label="Website maintenance">
-            <a href="#/lpcadmin/users"><span class="admin-shortcut-icon" aria-hidden="true">01</span><strong>Users &amp; access</strong><small>User profiles, accounts, serving roles and scheduler permissions</small><span class="admin-shortcut-open">Manage users →</span></a>
-            <a href="#/lpcadmin/volunteers"><span class="admin-shortcut-icon" aria-hidden="true">02</span><strong>Weekly planner</strong><small>Meetings, pastors and volunteer duties</small><span class="admin-shortcut-open">Open planner →</span></a>
-            <a href="#/lpcadmin/pastors"><span class="admin-shortcut-icon" aria-hidden="true">03</span><strong>Pastor profiles</strong><small>Photos, names and introductions</small><span class="admin-shortcut-open">Manage pastors →</span></a>
-            <a href="#/lpcadmin/branches"><span class="admin-shortcut-icon" aria-hidden="true">04</span><strong>Church branches</strong><small>Colours, service times and contact details</small><span class="admin-shortcut-open">Manage branches →</span></a>
-            <a href="#/lpcadmin/assets"><span class="admin-shortcut-icon" aria-hidden="true">05</span><strong>Photos & videos</strong><small>Find, upload and reuse website media</small><span class="admin-shortcut-open">Open media library →</span></a>
-          </nav>
-          <details class="admin-section-fold"><summary><strong>Newsletter</strong><span>Share home page news, with an optional image</span></summary>${renderNewsletterAdminFields()}</details>
-          <details class="admin-section-fold"><summary><strong>Website header message</strong><span>Edit the announcement at the top of the website</span></summary>${renderSiteSettingsAdminFields()}</details>
-          <details class="admin-section-fold admin-images-fold"><summary><strong>Page images and heroes</strong><span>Open image, video and crop settings</span></summary><section class="admin-panel__section">
-            <div class="admin-panel__section-heading">
-              <h2>Page images and heroes</h2><a class="btn btn--gold" href="#/lpcadmin/page-images">Edit images within pages</a>
-              <p>Open a tile to edit the active video/image, desktop crop, and mobile crop. After saving, you return here and the preview updates.</p>
-            </div>
-            <div class="admin-hero-tiles">
-              ${renderHeroPreviewTiles()}
-            </div>
-          </section></details>
-        </div>
-      </section>
-      ${renderFooter()}
-    </article>
-  `;
+  const groups = [
+    {name:'People & schedules',tasks:[
+      ['users','Users & access','Profiles, accounts and permissions','users members roles login account permissions'],
+      ['volunteers','Weekly planner','Meetings and serving duties','pastoral choir media schedule rota meetings reports excel'],
+      ['pastors','Pastor profiles','Photos and introductions','pastors ministers biographies'],
+      ['branches','Church branches','Locations, service times and contacts','church branches location address service times contacts']
+    ]},
+    {name:'Website & publishing',tasks:[
+      ['newsletter','Newsletter','Share news with the church family','news announcement newsletter home'],
+      ['header','Header message','The announcement above navigation','header slogan celebration top bar'],
+      ['appearance','Page appearance','Hero images, video and framing','hero background appearance video crop desktop mobile'],
+      ['page-images','Images within pages','Choose images for page content','page pictures images content'],
+      ['assets','Media library','Upload and reuse photos and videos','assets media library upload photos videos']
+    ]}
+  ];
+  const incomplete = branchCards.filter(b=>!String(b.address || '').trim() || !String(b.services || '').trim()).length;
+  return `<article class="page page-admin-workspace"><section class="container admin-workspace"><header class="admin-workspace__heading"><div><p class="section-label">Website administrator</p><h1>What would you like to do?</h1></div><button class="btn btn--outline" type="button" data-admin-logout>Sign out</button></header>
+    <label class="admin-task-search" for="admin-task-search">Find an admin tool<input id="admin-task-search" type="search" placeholder="Try users, newsletter or service times" autocomplete="off" aria-controls="admin-task-groups"></label>
+    ${incomplete ? `<a class="admin-attention" href="#/lpcadmin/branches"><span aria-hidden="true">!</span><div><strong>Help visitors find your churches</strong><p>${incomplete} ${incomplete === 1 ? 'church needs' : 'churches need'} an address or service times completed.</p></div><span aria-hidden="true">→</span></a>` : ''}
+    <nav id="admin-task-groups" class="admin-maintenance-links" aria-label="Admin tools">${groups.map(group=>`<section class="admin-task-group" data-admin-task-group><h2>${group.name}</h2><div class="admin-task-grid">${group.tasks.map(([path,title,copy,keywords])=>`<a class="admin-task" href="#/lpcadmin/${path}" data-admin-task="${escapeAttribute((title+' '+copy+' '+keywords).toLowerCase())}"><div><strong>${title}</strong><small>${copy}</small></div><span aria-hidden="true">↗</span></a>`).join('')}</div></section>`).join('')}</nav><p class="admin-task-empty" data-admin-task-empty role="status" hidden>No matching tools. Try another word or clear the search.</p>
+    </section>${renderFooter()}</article>`;
+}
+
+function initAdminWorkspace() {
+  const input = document.getElementById('admin-task-search');
+  if (!input) return;
+  const tasks = [...document.querySelectorAll('[data-admin-task]')];
+  const groups = [...document.querySelectorAll('[data-admin-task-group]')];
+  const empty = document.querySelector('[data-admin-task-empty]');
+  input.addEventListener('input',()=>{
+    const terms = input.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    tasks.forEach(task=>{ task.hidden = !terms.every(term=>task.dataset.adminTask.includes(term)); });
+    groups.forEach(group=>{ group.hidden = ![...group.querySelectorAll('[data-admin-task]')].some(task=>!task.hidden); });
+    empty.hidden = tasks.some(task=>!task.hidden);
+  });
+}
+
+function renderAdminWorkspaceEditor(section) {
+  if (!adminSession.authenticated) return renderAdminLogin();
+  const pages = {
+    newsletter:['Newsletter','Share news and an optional image on the home page.',renderNewsletterAdminFields],
+    header:['Website header message','Update the announcement above the main navigation.',renderSiteSettingsAdminFields],
+    appearance:['Page appearance','Choose a page to edit its hero image, video or desktop and mobile framing.',()=>`<div class="admin-hero-tiles">${renderHeroPreviewTiles()}</div>`]
+  };
+  const [title,copy,body] = pages[section];
+  return `<article class="page page-admin-workspace"><section class="container admin-workspace admin-workspace-editor"><a class="admin-back-link" href="#/lpcadmin">← Admin workspace</a><header class="admin-workspace__heading"><div><p class="section-label">Website editing</p><h1>${title}</h1><p>${copy}</p></div></header>${body()}</section>${renderFooter()}</article>`;
 }
 
 function renderAdminHeroEditor(key) {
@@ -1256,7 +1267,7 @@ function renderAdminHeroEditor(key) {
               <h1 class="section-title">${heroLabel(key)} hero</h1>
               <p class="section-copy">Update the video or image for this page. Leave video blank to use image mode.</p>
             </div>
-            <a class="btn btn--outline" href="#/lpcadmin">Back to previews</a>
+            <a class="btn btn--outline" href="#/lpcadmin/appearance">Back to page appearance</a>
           </div>
           <div class="admin-editor-layout">
             ${renderHeroPreviewTile(key, true)}
@@ -1280,7 +1291,7 @@ function renderAdminHomeHeroEditor() {
               <h1 class="section-title">Home page video hero</h1>
               <p class="section-copy">Use a controlled video for the main homepage hero, with poster and focal settings.</p>
             </div>
-            <a class="btn btn--outline" href="#/lpcadmin">Back to previews</a>
+            <a class="btn btn--outline" href="#/lpcadmin/appearance">Back to page appearance</a>
           </div>
           <div class="admin-editor-layout">
             ${renderHomeHeroPreviewTile(true)}
@@ -2355,6 +2366,7 @@ function renderRoute() {
   applySiteSettings();
   window.scrollTo({ top: 0, behavior: "instant" });
   initHomeHeroAdmin();
+  initAdminWorkspace();
   initPastorAdmin();
   initAssetManager();
   initNewsletterViewer();
@@ -2397,6 +2409,7 @@ function renderRoute() {
 }
 
 function getDynamicRouteRenderer(route) {
+  if (['/lpcadmin/newsletter','/lpcadmin/header','/lpcadmin/appearance'].includes(route)) return () => renderAdminWorkspaceEditor(route.split('/').pop());
   if (route === '/lpcadmin/users') return () => adminSession.authenticated ? '<section class="section vs-section"><div id="volunteer-app" data-users-page="true" class="container"><p>Loading users &amp; access…</p></div></section>' + renderFooter() : renderAdminLogin();
   if (route === '/volunteers' || route === '/lpcadmin/volunteers') return () => '<section class="section vs-section"><div id="volunteer-app" class="container"><p>Loading volunteer schedules…</p></div></section>' + renderFooter();
 
@@ -3023,7 +3036,7 @@ function refreshAfterAdminSave() {
     return;
   }
   if (normalizeRoute().startsWith("/lpcadmin/hero/")) {
-    window.location.hash = "#/lpcadmin";
+    window.location.hash = "#/lpcadmin/appearance";
     return;
   }
   if (normalizeRoute().startsWith("/lpcadmin")) {
