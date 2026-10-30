@@ -551,16 +551,7 @@ const routes = {
         </section>
       `,
     }),
-  "/watch": () =>
-    renderSubPage({
-      pageKey: "watch",
-      label: "Watch",
-      title: "Worship with us online.",
-      copy: "Join a live service or catch up on the latest messages from our church family.",
-      image: "./assets/images/derived/watch-hero.jpg",
-      actions: [],
-      body: renderWatchHub(),
-    }),
+  "/watch": () => `<article class="page page-watch"><header class="watch-stage-heading"><div class="container"><p class="section-label">LPC online</p><h1>One family. Worship wherever you are.</h1><p>Choose a church, then press play. Live services and recent messages, together in one place.</p></div></header>${renderWatchHub()}${renderFooter()}</article>`,
   "/admin": renderAdminPanel,
   "/admin/home-hero": renderAdminPanel,
   "/lpcadmin": renderAdminPanel,
@@ -1858,19 +1849,19 @@ function mediaCollections() {
   return branchCards.map((branch) => ({
     key: branch.slug,
     label: branch.churchName,
+    tabLabel: branch.name,
     branchHref: "#/branches/" + branch.slug,
     source: getBranchMedia(branch),
   }));
 }
 function renderWatchHub() {
   const rows = mediaCollections()
-    .map(({ key, label, branchHref, source }, index) => {
+    .map(({ key, label, tabLabel = label, branchHref, source }, index) => {
       const id = youtubeVideoId(source.videoUrl);
       const player = id
-        ? '<div class="youtube-preview youtube-preview--compact"><iframe src="https://www.youtube.com/embed/' +
+        ? '<div class="youtube-preview youtube-preview--compact"><iframe data-watch-src="https://www.youtube.com/embed/' +
           id +
           "?playsinline=1&rel=0&controls=1" +
-          (source.autoplay === "silent" ? "&autoplay=1&mute=1" : "") +
           '" title="' +
           escapeAttribute(label) +
           ' video" loading="eager" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>'
@@ -1882,7 +1873,7 @@ function renderWatchHub() {
             '" data-youtube-title="' +
             escapeAttribute(label) +
             '" data-youtube-autoplay="' +
-            escapeAttribute(source.autoplay || "silent") +
+            'off' +
             '"><p class="youtube-player__status">Loading latest service...</p></div>'
           : '<div class="watch-collection__empty"><h3>' +
             (source.youtubeUrl ? "Watch on YouTube" : "Videos coming soon") +
@@ -1892,7 +1883,7 @@ function renderWatchHub() {
               : "Visit this branch for service times and contact details.") +
             "</p></div>";
       const row = (
-        '<article class="watch-row" data-watch-priority="' + (id ? '2' : '1') + '" data-watch-order="' + index + '" style="' +
+        '<article class="watch-row" id="watch-panel-' + index + '" data-watch-priority="' + (id ? '2' : '1') + '" data-watch-order="' + index + '" style="' +
         collectionThemeStyle(key) +
         '"><div class="watch-collection"><div class="watch-collection__meta"><p class="section-label">' +
         escapeHtml(label) +
@@ -1940,16 +1931,42 @@ function renderWatchHub() {
         "</div></aside></article>"
       );
       const available = !!(id || source.youtubeUrl);
-      return { available, priority: id ? 2 : 1, html: available ? row : '<details class="watch-coming-soon" style="' + collectionThemeStyle(key) + '"><summary><span><strong>' + escapeHtml(label) + '</strong><small>Videos coming soon · Open for branch details</small></span><span aria-hidden="true">⌄</span></summary><div class="watch-coming-soon__body">' + row + '</div></details>' };
+      return { available, index, label: tabLabel, priority: id ? 2 : 1, html: available ? row : '<details class="watch-coming-soon" style="' + collectionThemeStyle(key) + '"><summary><span><strong>' + escapeHtml(label) + '</strong><small>Videos coming soon · Open for branch details</small></span><span aria-hidden="true">⌄</span></summary><div class="watch-coming-soon__body">' + row + '</div></details>' };
     })
     .sort((a,b) => b.priority - a.priority);
   const availableRows = rows.filter(row => row.available).map(row => row.html).join('');
   const upcomingRows = rows.filter(row => !row.available).map(row => row.html).join('');
+  const tabs = rows.filter(row=>row.available).map((row,i)=>'<button type="button" role="tab" id="watch-tab-'+row.index+'" aria-controls="watch-panel-'+row.index+'" aria-selected="'+(i===0)+'" tabindex="'+(i===0?'0':'-1')+'" data-watch-select="'+row.index+'">'+escapeHtml(row.label)+'</button>').join('');
   return (
-    '<section class="section section--watch-hub"><div class="container watch-hub"><h2 class="section-title">Watch services</h2><p>Live streams and available videos appear first. Open other branches below for updates.</p><div class="watch-hub__rows" data-watch-available>' +
+    '<section class="section section--watch-hub"><div class="container watch-hub"><h2 class="sr-only">Watch services</h2>'+(tabs?'<div class="watch-church-tabs" role="tablist" aria-label="Choose a church to watch">'+tabs+'</div>':'')+'<div class="watch-hub__rows" data-watch-available>' +
     (availableRows || '<p>No videos are available yet. Open a branch below for updates.</p>') +
     '</div>' + (upcomingRows ? '<section class="watch-upcoming"><h3>More branches · Videos coming soon</h3><div class="watch-upcoming__rows">' + upcomingRows + '</div></section>' : '') + '</div></section>'
   );
+}
+
+function initWatchStage() {
+  const list=document.querySelector('[data-watch-available]'), tabs=[...document.querySelectorAll('[data-watch-select]')];
+  if(!list || !tabs.length)return;
+  const rows=[...list.querySelectorAll('.watch-row')];
+  const select=index=>{
+    rows.forEach(row=>{
+      const active=row.dataset.watchOrder===String(index);
+      row.hidden=!active;row.setAttribute('role','tabpanel');row.setAttribute('aria-labelledby','watch-tab-'+row.dataset.watchOrder);
+      row.querySelectorAll('iframe').forEach(frame=>{
+        if(!active && frame.hasAttribute('src')){frame.dataset.watchSrc=frame.getAttribute('src');frame.removeAttribute('src');}
+        if(active && !frame.hasAttribute('src') && frame.dataset.watchSrc)frame.setAttribute('src',frame.dataset.watchSrc);
+      });
+    });
+    tabs.forEach(tab=>{const active=tab.dataset.watchSelect===String(index);tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;});
+  };
+  tabs.forEach((tab,i)=>{
+    tab.addEventListener('click',()=>{select(tab.dataset.watchSelect);hydrateYouTubePlayers();});
+    tab.addEventListener('keydown',event=>{
+      let next=event.key==='ArrowRight'?(i+1)%tabs.length:event.key==='ArrowLeft'?(i+tabs.length-1)%tabs.length:event.key==='Home'?0:event.key==='End'?tabs.length-1:-1;
+      if(next<0)return;event.preventDefault();tabs[next].focus();tabs[next].click();
+    });
+  });
+  select(tabs[0].dataset.watchSelect);
 }
 
 function prioritiseWatchPlayer(player, mode) {
@@ -2360,6 +2377,7 @@ function renderRoute() {
   applyPageImages(document.getElementById("app"), route);
   initPageImageAdmin();
   hydrateCalendarEvents();
+  initWatchStage();
   hydrateYouTubePlayers();
   initPageMotion();
   const motion = document.querySelector(".hero-motion");
@@ -3273,8 +3291,9 @@ async function saveSiteSettingsConfig(config) {
 async function hydrateYouTubePlayers() {
   const players = [
     ...document.querySelectorAll(".youtube-preview[data-youtube-handle]"),
-  ];
+  ].filter(player=>!player.closest('.watch-row[hidden]') && !player.dataset.youtubeRequested);
   if (!players.length) return;
+  players.forEach(player=>{player.dataset.youtubeRequested='true';});
 
   const apiKey =
     window.LPC_YOUTUBE_API_KEY ||

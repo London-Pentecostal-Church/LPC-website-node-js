@@ -2889,3 +2889,35 @@ body.is-red-header-sample .menu-toggle {
  #site-header.is-open .primary-nav a { min-height: 60px; }
  #site-header.is-open .site-header__inner { gap: 12px; padding: 14px; }
 }
+
+/* Watch cinema: one selected church, one focused viewing stage. */
+.page-watch { background: #f3f6f8; }
+.watch-stage-heading { padding: 44px 0 32px; background: radial-gradient(ellipse at 90% 0,#204d68,transparent 70%),#071b2e; color: #fff; }
+.watch-stage-heading h1 { max-width: 22ch; font-size: clamp(30px,4vw,48px); line-height: 1.08; letter-spacing: -.035em; margin: 12px 0; }
+.watch-stage-heading .section-label { color: #efc45b; }
+.watch-stage-heading p:last-child { color: #c6d7e3; max-width: 65ch; line-height: 1.6; font-size: 15px; }
+.page-watch .section--watch-hub { padding: 24px 0 44px; }
+.watch-church-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 14px; scrollbar-width: thin; }
+.watch-church-tabs button { flex-shrink: 0; padding: 12px 18px; min-height: 48px; max-width: 260px; border: 1px solid #c9d8e2; border-radius: 30px; background: #fff; color: #17354c; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.watch-church-tabs button[aria-selected="true"] { color: #102539; background: #efc45b; border-color: #bd922f; }
+.watch-church-tabs button:focus-visible { outline: 3px solid #00878d; outline-offset: 2px; }
+[data-watch-available] > .watch-row[hidden] { display: none; }
+.page-watch [data-watch-available] > .watch-row { display: grid; grid-template-columns: minmax(0,2.3fr) minmax(230px,1fr); padding: 20px; gap: 20px; border-radius: 24px; background: #fff; box-shadow: 0 16px 42px #1025390d; }
+.page-watch [data-watch-available] .watch-collection { display: flex; flex-direction: column; min-width: 0; gap: 14px; padding: 0; border: 0; background: transparent; box-shadow: none; }
+.page-watch [data-watch-available] .watch-collection__meta .section-label { display: none; }
+.page-watch [data-watch-available] .watch-collection__meta h3 { font-size: 20px; margin: 0; }
+.page-watch [data-watch-available] .youtube-preview { width: 100%; aspect-ratio: 16/9; min-height: 0; height: auto; border-radius: 16px; margin: 0; box-shadow: 0 8px 24px #0002; }
+.page-watch [data-watch-available] .watch-collection__actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
+.page-watch [data-watch-available] .watch-row__follow { background: #f2f6f8; border: 0; border-radius: 16px; box-shadow: none; align-self: stretch; }
+.page-watch [data-watch-available] .watch-follow-grid { grid-template-columns: minmax(0,1fr); }
+.page-watch .watch-upcoming { margin-top: 24px; }
+.page-watch .watch-upcoming > h3 { font-size: 18px; }
+@media (max-width: 760px) {
+ .watch-stage-heading { padding: 28px 0 22px; }
+ .page-watch [data-watch-available] > .watch-row { grid-template-columns: minmax(0,1fr); padding: 14px; gap: 16px; border-radius: 18px; }
+ .watch-church-tabs button { max-width: 220px; font-size: 13px; padding: 10px 14px; }
+ .page-watch [data-watch-available] .watch-row__follow h3 { font-size: 16px; }
+ .page-watch [data-watch-available] .watch-follow-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+.page-watch [data-watch-available] > .watch-row[hidden] { display: none; }
+.page-watch .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }

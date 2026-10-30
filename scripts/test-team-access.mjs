@@ -7,6 +7,19 @@ const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls('));
 
+test('Watch stage selects one church, stops the previous iframe and supports keyboard switching',()=>{
+ const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+ const source=site.slice(site.indexOf('function initWatchStage()'),site.indexOf('function prioritiseWatchPlayer('));
+ const frame=()=>({dataset:{watchSrc:'https://youtube.com/embed/test'},attrs:{},hasAttribute(k){return k in this.attrs},getAttribute(k){return this.attrs[k]},setAttribute(k,v){this.attrs[k]=v},removeAttribute(k){delete this.attrs[k]}});
+ const frames=[frame(),frame()],rows=frames.map((f,i)=>({dataset:{watchOrder:String(i)},setAttribute(){},querySelectorAll:()=>[f]}));
+ const tabs=[0,1].map(i=>({dataset:{watchSelect:String(i)},events:{},setAttribute(k,v){this[k]=v},addEventListener(k,v){this.events[k]=v},focus(){this.focused=true},click(){this.events.click()}}));
+ const document={querySelector:()=>({querySelectorAll:()=>rows}),querySelectorAll:()=>tabs};
+ runInNewContext(source+';initWatchStage()',{document,hydrateYouTubePlayers:()=>{}});
+ assert.equal(rows[0].hidden,false);assert.equal(rows[1].hidden,true);assert(frames[0].hasAttribute('src'));assert(!frames[1].hasAttribute('src'));
+ tabs[1].click();assert.equal(rows[0].hidden,true);assert(!frames[0].hasAttribute('src'));assert(frames[1].hasAttribute('src'));
+ tabs[1].events.keydown({key:'Home',preventDefault(){}});assert(tabs[0].focused);assert.equal(rows[0].hidden,false);assert.equal(tabs[0]['aria-selected'],'true');
+});
+
 test('Mobile navigation opens on first click and closes on Escape, same-page links and desktop resize',()=>{
  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
  const source=site.slice(site.indexOf('function initSiteNavigation()'),site.indexOf('window.addEventListener("hashchange"'));
