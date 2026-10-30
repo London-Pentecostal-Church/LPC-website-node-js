@@ -505,43 +505,7 @@ const routes = {
         </section>
       `,
     }),
-  "/pastors": () =>
-    renderSubPage({
-      pageKey: "pastors",
-      label: "Meet Our Team",
-      title: "Pastors and ministers serving LPC.",
-      copy: "Meet the pastors and ministers serving the LPC family across every branch.",
-      image: "./assets/images/derived/pastors-hero.jpg",
-      actions: [
-        ["About LPC", "#/about", "btn--gold"],
-        ["Contact Us", "#/contact", "btn--outline"],
-      ],
-      body: `
-        <section class="section section--tight section--team">
-          <div class="container">
-            <div class="section-heading">
-              <p class="section-label">Our Leadership Team</p>
-              <h2 class="section-title">Meet Our Team</h2>
-            </div>
-            <div class="team-grid">
-            ${pastors
-              .map(
-                (pastor) => `
-                  <article class="team-card">
-                    ${pastor.id ? `<a href="#/pastors/${encodeURIComponent(pastor.id)}" aria-label="Read about ${escapeAttribute(pastor.name)}">` : ""}${pastor.image ? `<img src="${escapeAttribute(pastor.image)}" alt="${escapeAttribute(pastor.name)}">` : `<div class="pastor-photo-empty">${icon("users")}</div>`}${pastor.id ? "</a>" : ""}
-                    <div>
-                      <h3>${pastor.id ? `<a href="#/pastors/${encodeURIComponent(pastor.id)}">${escapeHtml(pastor.name)}</a>` : escapeHtml(pastor.name)}</h3>
-                      <p>${escapeHtml(pastor.role)}</p>${pastor.id ? `<a href="#/pastors/${encodeURIComponent(pastor.id)}">Read introduction</a>` : ""}
-                    </div>
-                  </article>
-                `,
-              )
-              .join("")}
-            </div>
-          </div>
-        </section>
-      `,
-    }),
+  "/pastors": () => renderPastoralGallery(),
   "/watch": () => `<article class="page page-watch"><header class="watch-stage-heading"><div class="container"><p class="section-label">LPC online</p><h1>One family. Worship wherever you are.</h1><p>Choose a church, then press play. Live services and recent messages, together in one place.</p></div></header>${renderWatchHub()}${renderFooter()}</article>`,
   "/admin": renderAdminPanel,
   "/admin/home-hero": renderAdminPanel,
@@ -3654,6 +3618,19 @@ async function loadPastors() {
     if (response.ok) applyPastorConfig(await response.json());
   } catch {}
 }
+function renderPastoralGallery() {
+  const poster = getHeroImageConfig('pastors', './assets/images/derived/pastors-hero.jpg').desktopImage;
+  return `<article class="page page-people"><section class="people-gallery container" aria-labelledby="people-title">
+    <header class="people-gallery__heading"><div><p class="section-label">Our pastoral family</p><h1 id="people-title">People here for you.</h1><p>Meet the pastors and ministers serving our church family.</p></div><a class="people-contact" href="#/contact">Connect with LPC <span aria-hidden="true">↗</span></a></header>
+    <div class="people-grid">${pastors.map(p => {
+      const portrait = p.image ? `<img src="${escapeAttribute(p.image)}" alt="" loading="lazy">` : `<span class="people-initials" aria-hidden="true">${escapeHtml((p.name || '').split(/\s+/).filter(Boolean).slice(-2).map(s=>s[0]).join(''))}</span>`;
+      const content = `<div class="people-portrait">${portrait}${p.id ? '<span class="people-arrow" aria-hidden="true">↗</span>' : ''}</div><div class="people-caption"><h2>${escapeHtml(p.name)}</h2><p>${escapeHtml(p.role)}</p></div>`;
+      return p.id ? `<a class="people-card" href="#/pastors/${encodeURIComponent(p.id)}" aria-label="Meet ${escapeAttribute(p.name)}">${content}</a>` : `<article class="people-card">${content}</article>`;
+    }).join('')}</div>
+    ${poster ? `<details class="people-poster"><summary>View our pastoral family <span aria-hidden="true">+</span></summary><img src="${escapeAttribute(poster)}" alt="LPC pastoral team" loading="lazy"></details>` : ''}
+    </section>${renderFooter()}</article>`;
+}
+
 function renderPastorProfile(id) {
   const pastor = pastors.find((p) => p.id === id);
   if (!pastor)
@@ -3661,25 +3638,10 @@ function renderPastorProfile(id) {
       '<section class="section"><div class="container"><h1>Pastor profile unavailable</h1><a href="#/pastors">Back to pastors</a></div></section>' +
       renderFooter()
     );
-  return (
-    '<article class="page"><section class="section"><div class="container pastor-profile"><a href="#/pastors">Back to pastors</a><h1 class="section-title">' +
-    escapeHtml(pastor.name) +
-    "</h1><p>" +
-    escapeHtml(pastor.role) +
-    "</p>" +
-    (pastor.image
-      ? '<img class="pastor-profile__photo" src="' +
-        escapeAttribute(pastor.image) +
-        '" alt="' +
-        escapeAttribute(pastor.name) +
-        '">'
-      : "") +
-    '<p class="pastor-introduction">' +
-    escapeHtml(pastor.intro || "An introduction will be added soon.") +
-    "</p></div></section>" +
-    renderFooter() +
-    "</article>"
-  );
+  return `<article class="page page-people"><section class="people-profile container"><a class="people-back" href="#/pastors">← Our pastoral family</a><div class="people-profile__layout">
+    ${pastor.image ? `<img class="people-profile__photo" src="${escapeAttribute(pastor.image)}" alt="${escapeAttribute(pastor.name)}">` : ''}
+    <div class="people-profile__copy"><p class="section-label">${escapeHtml(pastor.role)}</p><h1>${escapeHtml(pastor.name)}</h1><p class="pastor-introduction">${escapeHtml(pastor.intro || 'An introduction will be added soon.')}</p><a class="btn btn--gold" href="#/contact">Contact the church</a></div>
+    </div></section>${renderFooter()}</article>`;
 }
 function renderPastorAdmin() {
   if (!adminSession.authenticated) return renderAdminLogin();

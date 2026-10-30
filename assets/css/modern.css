@@ -2952,3 +2952,35 @@ body.is-red-header-sample .menu-toggle {
 @media(max-width:1000px) { .church-directory { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:600px) { .church-finder__heading { grid-template-columns:1fr; gap:20px; margin-bottom:20px; } .church-finder__search { padding:14px; } .church-directory { grid-template-columns:1fr; gap:16px; } .church-place__image { aspect-ratio:3; } .church-place__body { padding:14px; } }
 @media(prefers-reduced-motion:reduce) { .church-place__image img { transition:none; } }
+/* People first: a compact portrait wall with quiet, readable profile pages. */
+.page-people { background:#f5f4f0; }
+.people-gallery { padding-block:clamp(28px,5vw,64px); }
+.people-gallery__heading { display:flex; align-items:end; justify-content:space-between; gap:24px; margin-bottom:30px; }
+.people-gallery__heading h1,.people-profile__copy h1 { margin:10px 0 14px; font-size:clamp(2rem,4.5vw,4rem); line-height:1.05; letter-spacing:-.04em; }
+.people-gallery__heading p { margin:0; }
+.people-contact { display:inline-flex; align-items:center; gap:24px; padding:12px 0; color:#173447; font-weight:700; white-space:nowrap; border-bottom:2px solid #d4ab43; }
+.people-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:26px 20px; }
+.people-card { display:block; min-width:0; color:#152f41; text-decoration:none; }
+.people-portrait { position:relative; aspect-ratio:4/4.3; overflow:hidden; border-radius:16px; background:#e2e7e7; }
+.people-portrait img { width:100%; height:100%; object-fit:cover; object-position:50% 20%; transition:transform .25s ease; }
+.people-card:hover .people-portrait img { transform:scale(1.035); }
+.people-card:focus-visible { outline:3px solid #ad8017; outline-offset:6px; border-radius:16px; }
+.people-arrow { position:absolute; right:10px; bottom:10px; display:grid; place-items:center; width:32px; height:32px; border-radius:50%; background:white; color:#18384a; }
+.people-caption { padding:12px 2px 0; }
+.people-caption h2 { font-size:clamp(.95rem,1.4vw,1.25rem); margin:0 0 5px; line-height:1.25; }
+.people-caption p { margin:0; font-size:.8rem; line-height:1.4; color:#516675; }
+.people-initials { display:grid; place-items:center; height:100%; font-size:2.5rem; color:#355564; }
+.people-poster { margin-top:32px; border-top:1px solid #ccd6d9; border-bottom:1px solid #ccd6d9; }
+.people-poster summary { display:flex; justify-content:space-between; padding:18px 0; font-weight:700; cursor:pointer; list-style:none; }
+.people-poster summary::-webkit-details-marker { display:none; }
+.people-poster[open] summary span { transform:rotate(45deg); }
+.people-poster img { display:block; width:100%; max-width:760px; height:auto; margin:0 auto 24px; border-radius:16px; }
+.people-profile { padding-block:32px 64px; }
+.people-back { display:inline-flex; min-height:44px; align-items:center; margin-bottom:20px; font-weight:700; color:#254d60; }
+.people-profile__layout { display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr); gap:clamp(24px,5vw,72px); align-items:center; }
+.people-profile__photo { width:100%; max-height:620px; aspect-ratio:4/5; object-fit:cover; object-position:50% 20%; border-radius:24px; }
+.people-profile__copy { min-width:0; }
+.people-profile__copy .pastor-introduction { white-space:pre-line; overflow-wrap:anywhere; line-height:1.8; margin-block:24px; max-width:60ch; }
+@media(max-width:1000px) { .people-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media(max-width:600px) { .people-gallery__heading { display:block; margin-bottom:24px; } .people-contact { margin-top:12px; font-size:.85rem; } .people-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px 14px; } .people-portrait { border-radius:12px; } .people-profile__layout { grid-template-columns:1fr; gap:24px; } .people-profile__photo { max-width:260px; max-height:300px; margin-inline:auto; } .people-profile__copy h1 { font-size:2rem; } }
+@media(prefers-reduced-motion:reduce) { .people-portrait img { transition:none; } }
