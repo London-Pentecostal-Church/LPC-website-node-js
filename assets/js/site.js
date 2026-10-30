@@ -64,21 +64,23 @@ const homeHeroStorageKey = "LPC_HOME_HERO_CONFIG";
 let serverHomeHeroConfig = null;
 let serverHeroImagesConfig = {};
 let adminSession = { authenticated: false };
-let pastorThoughtConfig = null;
+let newsletterConfig = null;
 let siteSettingsConfig = null;
 
 const defaultSiteSettingsConfig = {
   topbarSlogan: "Celebrating 25 Years of God's Faithfulness",
 };
 
-const defaultPastorThoughtConfig = {
-  kicker: "Pastor's Thought",
-  title: "A word of encouragement for this week.",
-  author: "LPC Pastoral Team",
+const defaultNewsletterConfig = {
+  kicker: "Newsletter",
+  title: "News & updates from LPC",
+  author: "",
   date: "",
-  body: "Use this space to share a short pastoral reflection, Scripture encouragement, or thought connected to the messages and worship life of the church.",
-  ctaText: "Watch Sermons",
-  ctaHref: "#/watch",
+  body: "",
+  image: "",
+  imageAlt: "",
+  ctaText: "",
+  ctaHref: "",
 };
 
 const heroImageDefaults = {
@@ -551,18 +553,11 @@ const routes = {
   "/watch": () =>
     renderSubPage({
       pageKey: "watch",
-      label: getPastorThoughtConfig().kicker,
-      title: getPastorThoughtConfig().title,
-      copy: renderPastorThoughtCopy(),
+      label: "Watch",
+      title: "Worship with us online.",
+      copy: "Join a live service or catch up on the latest messages from our church family.",
       image: "./assets/images/derived/watch-hero.jpg",
-      actions: [
-        [
-          getPastorThoughtConfig().ctaText,
-          getPastorThoughtConfig().ctaHref,
-          "btn--gold",
-        ],
-        ["Plan Your Visit", "#/plan-your-visit", "btn--outline"],
-      ],
+      actions: [],
       body: renderWatchHub(),
     }),
   "/admin": renderAdminPanel,
@@ -884,6 +879,7 @@ function renderHome() {
 
       ${renderMediaSection(mediaSources.home, true)}
       ${renderCalendarSection()}
+      ${renderNewsletterSection()}
       <section class="quick-strip">
         <div class="container">
           <div class="quick-strip__grid">
@@ -1014,21 +1010,32 @@ function getHeroImageConfig(key, fallbackImage) {
   };
 }
 
-function getPastorThoughtConfig() {
-  return { ...defaultPastorThoughtConfig, ...(pastorThoughtConfig || {}) };
+function getNewsletterConfig() {
+  // Retain the existing storage record so published content survives the refactor.
+  const news = { ...defaultNewsletterConfig, ...(newsletterConfig || {}) };
+  if (["Pastor's Thought", "Pastor’s thought"].includes(news.kicker)) news.kicker = "Newsletter";
+  if (news.title === "A word of encouragement for this week.") news.title = defaultNewsletterConfig.title;
+  if (news.ctaText === "Watch Sermons" && news.ctaHref === "#/watch") news.ctaText = news.ctaHref = "";
+  return news;
 }
 
 function getSiteSettingsConfig() {
   return { ...defaultSiteSettingsConfig, ...(siteSettingsConfig || {}) };
 }
 
-function renderPastorThoughtCopy() {
-  const thought = getPastorThoughtConfig();
-  const meta = [thought.author, thought.date].filter(Boolean).join(" - ");
-  return `
-    <span class="pastor-thought__body">${escapeHtml(thought.body)}</span>
-    ${meta ? `<span class="pastor-thought__meta">${escapeHtml(meta)}</span>` : ""}
-  `;
+function renderNewsletterSection() {
+  const news = getNewsletterConfig();
+  if (!news.body.trim() && !news.image.trim()) return "";
+  const meta = [news.author, news.date].filter(Boolean).join(" · ");
+  return `<section class="section section--tight section--newsletter" aria-labelledby="newsletter-title"><div class="container">
+    <article class="newsletter-card${news.image ? ' newsletter-card--image' : ''}">
+      ${news.image ? `<img class="newsletter-image" src="${escapeAttribute(news.image)}" alt="${escapeAttribute(news.imageAlt || news.title)}" loading="lazy">` : ''}
+      <div class="newsletter-content"><p class="section-label">${escapeHtml(news.kicker)}</p>
+      <h2 class="section-title" id="newsletter-title">${escapeHtml(news.title)}</h2>
+      ${meta ? `<p class="newsletter-meta">${escapeHtml(meta)}</p>` : ''}
+      ${news.body ? `<div class="newsletter-body">${escapeHtml(news.body)}</div>` : ''}
+      ${news.ctaText && news.ctaHref ? `<a class="btn btn--outline" href="${escapeAttribute(news.ctaHref)}">${escapeHtml(news.ctaText)}</a>` : ''}
+      </div></article></div></section>`;
 }
 
 function videoType(url) {
@@ -1212,7 +1219,7 @@ function renderAdminPanel() {
             <a href="#/lpcadmin/branches"><span class="admin-shortcut-icon" aria-hidden="true">04</span><strong>Church branches</strong><small>Colours, service times and contact details</small><span class="admin-shortcut-open">Manage branches →</span></a>
             <a href="#/lpcadmin/assets"><span class="admin-shortcut-icon" aria-hidden="true">05</span><strong>Photos & videos</strong><small>Find, upload and reuse website media</small><span class="admin-shortcut-open">Open media library →</span></a>
           </nav>
-          <details class="admin-section-fold"><summary><strong>Pastor’s thought</strong><span>Edit the message on the Watch page</span></summary>${renderPastorThoughtAdminFields()}</details>
+          <details class="admin-section-fold"><summary><strong>Newsletter</strong><span>Share home page news, with an optional image</span></summary>${renderNewsletterAdminFields()}</details>
           <details class="admin-section-fold"><summary><strong>Website header message</strong><span>Edit the announcement at the top of the website</span></summary>${renderSiteSettingsAdminFields()}</details>
           <details class="admin-section-fold admin-images-fold"><summary><strong>Page images and heroes</strong><span>Open image, video and crop settings</span></summary><section class="admin-panel__section">
             <div class="admin-panel__section-heading">
@@ -1310,39 +1317,45 @@ function renderSiteSettingsAdminFields() {
   `;
 }
 
-function renderPastorThoughtAdminFields() {
-  const thought = getPastorThoughtConfig();
+function renderNewsletterAdminFields() {
+  const thought = getNewsletterConfig();
   return `
-    <form class="admin-form" id="pastor-thought-form">
-      <label>Kicker
-        <input name="kicker" type="text" value="${escapeAttribute(thought.kicker)}" placeholder="Pastor's Thought">
+    <form class="admin-form" id="newsletter-form">
+      <label>Section label
+        <input name="kicker" type="text" value="${escapeAttribute(thought.kicker)}" placeholder="Newsletter">
       </label>
-      <label>Title
-        <input name="title" type="text" value="${escapeAttribute(thought.title)}" placeholder="A word of encouragement for this week">
+      <label>Headline
+        <input name="title" type="text" required value="${escapeAttribute(thought.title)}" placeholder="News &amp; updates from LPC">
       </label>
-      <label>Thought / Encouragement
-        <textarea name="body" rows="6" placeholder="Write the pastoral thought here...">${escapeHtml(thought.body)}</textarea>
+      <label>News
+        <textarea name="body" rows="6" maxlength="15000" placeholder="Share news and announcements for the church family">${escapeHtml(thought.body)}</textarea>
       </label>
+      <label>Image (optional)
+        ${renderAssetPickerInput({name:'image',value:thought.image,placeholder:'Choose an image, or leave blank for a text announcement'})}
+        <span>Shown above the news. Leave blank for a text-only broadcast.</span>
+      </label>
+      <label>Image description<input name="imageAlt" value="${escapeAttribute(thought.imageAlt)}" placeholder="Describe the image for people using a screen reader"></label>
       <div class="admin-hero-card__grid">
-        <label>Author
-          <input name="author" type="text" value="${escapeAttribute(thought.author)}" placeholder="Pr Sam John">
+        <label>Published by (optional)
+          <input name="author" type="text" value="${escapeAttribute(thought.author)}" placeholder="LPC office">
         </label>
-        <label>Date / Season
-          <input name="date" type="text" value="${escapeAttribute(thought.date)}" placeholder="Sunday 16 June">
+        <label>Date / edition (optional)
+          <input name="date" type="text" value="${escapeAttribute(thought.date)}" placeholder="November 2026">
         </label>
       </div>
       <div class="admin-hero-card__grid">
-        <label>Button Text
-          <input name="ctaText" type="text" value="${escapeAttribute(thought.ctaText)}" placeholder="Watch Sermons">
+        <label>Link text (optional)
+          <input name="ctaText" type="text" value="${escapeAttribute(thought.ctaText)}" placeholder="Find out more">
         </label>
-        <label>Button Link
-          <input name="ctaHref" type="text" value="${escapeAttribute(thought.ctaHref)}" placeholder="#/watch">
+        <label>Link destination (optional)
+          <input name="ctaHref" type="text" value="${escapeAttribute(thought.ctaHref)}" placeholder="#/contact or https://...">
         </label>
       </div>
       <div class="admin-form__actions">
-        <button class="btn btn--gold" type="submit">Publish Thought</button>
-        <a class="btn btn--light" href="#/watch">View Watch Page</a>
+        <button class="btn btn--gold" type="submit">Publish newsletter</button>
+        <a class="btn btn--light" href="#/home">View home page</a>
       </div>
+      <p data-newsletter-status role="status" aria-live="polite"></p>
     </form>
   `;
 }
@@ -2406,7 +2419,7 @@ function initHomeHeroAdmin() {
   const form = document.getElementById("home-hero-form");
   if (!form) {
     initSiteSettingsAdmin();
-    initPastorThoughtAdmin();
+    initNewsletterAdmin();
     initHeroImagesAdmin();
     initHeroImageEditorAdmin();
     return;
@@ -2448,7 +2461,7 @@ function initHomeHeroAdmin() {
 
   initHeroImagesAdmin();
   initHeroImageEditorAdmin();
-  initPastorThoughtAdmin();
+  initNewsletterAdmin();
   initSiteSettingsAdmin();
 }
 
@@ -2810,8 +2823,8 @@ function initSiteSettingsAdmin() {
   });
 }
 
-function initPastorThoughtAdmin() {
-  const form = document.getElementById("pastor-thought-form");
+function initNewsletterAdmin() {
+  const form = document.getElementById("newsletter-form");
   if (!form) return;
 
   form.addEventListener("submit", async (event) => {
@@ -2820,26 +2833,33 @@ function initPastorThoughtAdmin() {
     const config = {
       kicker:
         String(data.get("kicker") || "").trim() ||
-        defaultPastorThoughtConfig.kicker,
+        defaultNewsletterConfig.kicker,
       title:
         String(data.get("title") || "").trim() ||
-        defaultPastorThoughtConfig.title,
+        defaultNewsletterConfig.title,
       body:
         String(data.get("body") || "").trim() ||
-        defaultPastorThoughtConfig.body,
+        defaultNewsletterConfig.body,
+      image: String(data.get("image") || "").trim(),
+      imageAlt: String(data.get("imageAlt") || "").trim(),
       author:
         String(data.get("author") || "").trim() ||
-        defaultPastorThoughtConfig.author,
+        defaultNewsletterConfig.author,
       date: String(data.get("date") || "").trim(),
       ctaText:
         String(data.get("ctaText") || "").trim() ||
-        defaultPastorThoughtConfig.ctaText,
+        defaultNewsletterConfig.ctaText,
       ctaHref:
         String(data.get("ctaHref") || "").trim() ||
-        defaultPastorThoughtConfig.ctaHref,
+        defaultNewsletterConfig.ctaHref,
     };
-    await savePastorThoughtConfig(config);
-    renderRoute();
+    const status = form.querySelector('[data-newsletter-status]'), button = form.querySelector('[type="submit"]');
+    if (!!config.ctaText !== !!config.ctaHref) { status.textContent = 'Enter both link text and a destination, or leave both blank.'; return; }
+    button.disabled = true;
+    status.textContent = 'Publishing newsletter…';
+    try { await saveNewsletterConfig(config); status.textContent = 'Newsletter published on the home page.'; }
+    catch(error) { status.textContent = error.message; }
+    finally { button.disabled = false; }
   });
 }
 
@@ -3028,7 +3048,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
   await loadHomeHeroConfig();
   await loadHeroImagesConfig();
-  await loadPastorThoughtConfig();
+  await loadNewsletterConfig();
   await loadSiteSettingsConfig();
   await loadAdminSession();
   await loadPastors();
@@ -3088,13 +3108,13 @@ async function loadHeroImagesConfig() {
   }
 }
 
-async function loadPastorThoughtConfig() {
+async function loadNewsletterConfig() {
   try {
     const response = await loadConfiguration("pastor-thought");
     if (!response.ok) return;
-    pastorThoughtConfig = await response.json();
+    newsletterConfig = await response.json();
   } catch {
-    pastorThoughtConfig = null;
+    newsletterConfig = null;
   }
 }
 
@@ -3144,15 +3164,14 @@ async function saveHeroImagesConfig(config) {
   serverHeroImagesConfig = await response.json();
 }
 
-async function savePastorThoughtConfig(config) {
-  pastorThoughtConfig = config;
+async function saveNewsletterConfig(config) {
   const response = await fetch("/api/pastor-thought", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(config),
   });
-  if (!response.ok) throw new Error("Could not publish pastor thought");
-  pastorThoughtConfig = await response.json();
+  if (!response.ok) throw new Error("Could not publish newsletter. Please try again.");
+  newsletterConfig = await response.json();
 }
 
 async function saveSiteSettingsConfig(config) {

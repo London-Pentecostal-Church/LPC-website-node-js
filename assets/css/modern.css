@@ -2759,3 +2759,13 @@ body.is-red-header-sample .menu-toggle {
   .footer .footer__inner > section:last-child ul { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
   .footer .footer__bottom { font-size: 11px; line-height: 1.6; margin-top: 20px; padding-block: 16px; }
 }
+
+/* Home newsletter: image above copy, or a compact text broadcast. */
+.newsletter-card { overflow: hidden; border: 1px solid var(--border, #d9e3e9); border-radius: 20px; background: #f5f8fa; }
+.newsletter-image { display: block; width: 100%; height: auto; max-height: 480px; object-fit: contain; background: #e8eef2; }
+.newsletter-content { padding: clamp(20px, 3vw, 40px); display: grid; gap: 16px; }
+.newsletter-content .section-label, .newsletter-content .section-title, .newsletter-meta { margin: 0; }
+.newsletter-body { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; max-width: 80ch; }
+.newsletter-meta { color: #607286; font-size: .9rem; }
+.newsletter-content .btn { justify-self: start; }
+@media (max-width: 600px) { .newsletter-content { gap: 12px; } .newsletter-image { max-height: 360px; } }

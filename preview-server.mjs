@@ -883,16 +883,15 @@ function summarizeConfigBackup(type, config) {
 
 function normalizePastorThoughtConfig(config) {
   return {
-    kicker: String(config?.kicker || "Pastor's Thought").trim(),
-    title: String(config?.title || "A word of encouragement for this week.").trim(),
-    author: String(config?.author || "LPC Pastoral Team").trim(),
+    kicker: String(config?.kicker || "Newsletter").trim(),
+    title: String(config?.title || "News & updates from LPC").trim(),
+    author: String(config?.author || "").trim(),
     date: String(config?.date || "").trim(),
-    body: String(
-      config?.body ||
-        "Use this space to share a short pastoral reflection, Scripture encouragement, or thought connected to the messages and worship life of the church.",
-    ).trim(),
-    ctaText: String(config?.ctaText || "Watch Sermons").trim(),
-    ctaHref: String(config?.ctaHref || "#/watch").trim(),
+    body: String(config?.body || "").trim(),
+    image: String(config?.image || "").trim(),
+    imageAlt: String(config?.imageAlt || "").trim(),
+    ctaText: String(config?.ctaText || "").trim(),
+    ctaHref: String(config?.ctaHref || "").trim(),
   };
 }
 
