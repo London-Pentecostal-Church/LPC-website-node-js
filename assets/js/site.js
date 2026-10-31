@@ -3947,74 +3947,39 @@ function applyPageImages(root, route) {
 }
 function renderPageImageAdmin() {
   if (!adminSession.authenticated) return renderAdminLogin();
-  const pages = [
-    "home",
-    "about",
-    "ministries",
-    "youth",
-    "plan-your-visit",
-    "watch",
-    "contact",
-  ];
-  return (
-    '<section class="section"><div class="container"><a href="#/lpcadmin">Back to admin</a><h1>Images within pages</h1><p>Edit page images here. Hero images use the hero editor; pastors and branches use their own editors. Choose an image from the library, then save.</p><form id="page-images-form" class="admin-form">' +
-    pages
-      .map((page) => {
-        const route = "/" + page,
-          root = document.createElement("div");
-        root.innerHTML = routes[route]();
-        const images = [
-          ...new Map(
-            pageBodyImages(root).map((image) => [
-              image.getAttribute("src"),
-              image,
-            ]),
-          ).values(),
-        ];
-        return (
-          '<details class="branch-editor-card"><summary><strong>' +
-          escapeHtml(heroLabel(page)) +
-          '</strong><span class="branch-editor-chevron">⌄</span></summary><div class="branch-editor-fields"><a class="btn btn--outline" href="#/lpcadmin/hero/' +
-          page +
-          '">Edit hero image / video</a>' +
-          images
-            .map((image) => {
-              const original = image.getAttribute("src"),
-                current = pageImages[route]?.[original] || original;
-              return (
-                '<div class="page-image-slot" data-page="' +
-                route +
-                '" data-original="' +
-                escapeAttribute(original) +
-                '"><img src="' +
-                escapeAttribute(current) +
-                '" alt="' +
-                escapeAttribute(image.alt) +
-                '"><label>' +
-                escapeHtml(image.alt || "Page image") +
-                renderAssetPickerInput({ name: "image", value: current }) +
-                "</label></div>"
-              );
-            })
-            .join("") +
-          (images.length
-            ? ""
-            : "<p>No additional page images. Use the hero editor above.</p>") +
-          "</div></details>"
-        );
-      })
-      .join("") +
-    '<button class="btn btn--gold" type="submit">Save page images</button><p role="status" id="page-images-status"></p></form></div></section>' +
-    renderFooter()
-  );
+  const pages=['home','about','ministries','youth','plan-your-visit','watch','contact'].map(page=>{
+    const route='/'+page,root=document.createElement('div');root.innerHTML=routes[route]();
+    const images=[...new Map(pageBodyImages(root).map(image=>[image.getAttribute('src'),image])).values()];
+    const preview=images[0]?.getAttribute('src');
+    return {page,route,images,preview:preview ? pageImages[route]?.[preview] || preview : (page==='home'?getHomeHeroConfig().poster:getHeroImageConfig(page).desktopImage)};
+  });
+  const initial=Math.max(0,pages.findIndex(page=>page.images.length));
+  return `<section class="section page-image-studio"><div class="container"><a class="admin-back-link" href="#/lpcadmin">← Admin workspace</a><header><p class="section-label">Website editing</p><h1>Give each page its picture.</h1><p>Choose a page, then change its images. Your edits stay here as you switch pages.</p></header>
+    <form id="page-images-form" class="admin-form"><div class="page-image-desk"><div class="page-image-tabs" role="tablist" aria-label="Choose a page to edit">${pages.map(({page,images,preview},i)=>`<button type="button" role="tab" id="image-tab-${page}" aria-controls="image-panel-${page}" aria-selected="${i===initial}" tabindex="${i===initial?'0':'-1'}" data-image-page="${page}"><span class="page-image-tab-photo">${preview ? `<img src="${escapeAttribute(preview)}" alt="" loading="lazy">` : '<span aria-hidden="true">▧</span>'}</span><span><strong>${escapeHtml(heroLabel(page))}</strong><small>${images.length ? images.length+' '+(images.length===1?'image':'images') : 'Hero only'}</small></span></button>`).join('')}</div>
+    <div class="page-image-panels">${pages.map(({page,route,images},i)=>`<section id="image-panel-${page}" role="tabpanel" aria-labelledby="image-tab-${page}" data-image-panel="${page}" ${i!==initial?'hidden':''}><div class="page-image-panel-heading"><div><h2>${escapeHtml(heroLabel(page))}</h2><p>Images within this page</p></div><a href="#/lpcadmin/hero/${page}">Edit hero image / video ↗</a></div><div class="page-image-slot-grid">${images.map(image=>{
+      const original=image.getAttribute('src'),current=pageImages[route]?.[original] || original;
+      return `<div class="page-image-slot" data-page="${route}" data-original="${escapeAttribute(original)}"><div class="page-image-preview"><img src="${escapeAttribute(current)}" alt="${escapeAttribute(image.alt)}" loading="lazy"></div><label>${escapeHtml(image.alt || 'Page image')}${renderAssetPickerInput({name:'image',value:current})}</label></div>`;
+    }).join('')}</div>${images.length?'':'<div class="page-image-empty"><span aria-hidden="true">▧</span><h3>This page has no additional images.</h3><p>Use the hero editor to change its main image or video.</p></div>'}</section>`).join('')}</div></div>
+    <div class="page-image-savebar"><span data-image-dirty role="status">All changes saved</span><button class="btn btn--gold" type="submit">Save page images</button></div><p role="status" id="page-images-status"></p></form></div></section>${renderFooter()}`;
+}
+
+function initPageImageTabs(form) {
+  const tabs=[...form.querySelectorAll('[data-image-page]')],panels=[...form.querySelectorAll('[data-image-panel]')];
+  const select=page=>{tabs.forEach(tab=>{const active=tab.dataset.imagePage===page;tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;});panels.forEach(panel=>{panel.hidden=panel.dataset.imagePanel!==page;});};
+  tabs.forEach((tab,i)=>{
+    tab.addEventListener('click',()=>select(tab.dataset.imagePage));
+    tab.addEventListener('keydown',event=>{const next=event.key==='ArrowRight'||event.key==='ArrowDown'?(i+1)%tabs.length:event.key==='ArrowLeft'||event.key==='ArrowUp'?(i+tabs.length-1)%tabs.length:event.key==='Home'?0:event.key==='End'?tabs.length-1:-1;if(next<0)return;event.preventDefault();tabs[next].focus();select(tabs[next].dataset.imagePage);});
+  });
 }
 function initPageImageAdmin() {
   const form = document.getElementById("page-images-form");
   if (!form) return;
+  initPageImageTabs(form);
   initAssetPicker();
+  let editRevision=0;
   form.addEventListener("input", (event) => {
     const slot = event.target.closest(".page-image-slot");
-    if (slot) slot.querySelector("img").src = event.target.value;
+    if (slot) { slot.querySelector("img").src = event.target.value;editRevision++;form.querySelector('[data-image-dirty]').textContent='Unpublished changes'; }
   });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -4028,6 +3993,8 @@ function initPageImageAdmin() {
         .value.trim();
     });
     button.disabled = true;
+    const submittedRevision=editRevision;
+    status.textContent='Saving page images…';
     try {
       const response = await fetch("/api/page-images", {
         method: "POST",
@@ -4039,6 +4006,7 @@ function initPageImageAdmin() {
       const data = await response.json();
       if (!response.ok) throw Error(data.error || "Save failed");
       pageImages = data;
+      form.querySelector('[data-image-dirty]').textContent=editRevision===submittedRevision?'All changes saved':'Unpublished changes';
       status.textContent = "Page images saved.";
     } catch (error) {
       status.textContent = error.message;
@@ -4288,7 +4256,7 @@ function applyImageFraming(target = document) {
   const images =
     target.tagName === "IMG" ? [target] : target.querySelectorAll("img");
   images.forEach((image) => {
-    if (image.dataset.framePreview !== undefined) return;
+    if (image.dataset.framePreview !== undefined || image.closest('.page-image-studio')) return;
     const frame = frameForImage(image);
     if (!frame) return;
     image.style.setProperty("object-fit", frame.fit, "important");

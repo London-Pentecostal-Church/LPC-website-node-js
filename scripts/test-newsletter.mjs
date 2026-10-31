@@ -3,6 +3,18 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 const source=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+test('Image desk switches panels with click and keyboard without replacing unsaved fields',()=>{
+ const init=source.slice(source.indexOf('function initPageImageTabs('),source.indexOf('function initPageImageAdmin('));
+ const tabs=['home','ministries','contact'].map(page=>({dataset:{imagePage:page},events:{},setAttribute(k,v){this[k]=v},addEventListener(k,v){this.events[k]=v},focus(){this.focused=true}}));
+ const panels=tabs.map(tab=>({dataset:{imagePanel:tab.dataset.imagePage},unsavedValue:'changed-image.jpg'}));
+ const form={querySelectorAll:s=>s==='[data-image-page]'?tabs:panels};
+ runInNewContext(init+';initPageImageTabs(form)',{form});
+ tabs[1].events.click();assert.equal(tabs[1]['aria-selected'],'true');assert.equal(panels[1].hidden,false);assert.equal(panels[0].hidden,true);
+ let prevented=false;tabs[1].events.keydown({key:'End',preventDefault(){prevented=true}});
+ assert(prevented);assert(tabs[2].focused);assert.equal(panels[2].hidden,false);assert.equal(tabs[2].tabIndex,0);
+ tabs[2].events.keydown({key:'ArrowRight',preventDefault(){}});assert.equal(panels[0].hidden,false);
+ assert(panels.every(panel=>panel.unsavedValue==='changed-image.jpg'));
+});
 test('Pastoral hierarchy includes every current profile beneath the president and grows with the team',()=>{
  const renderer=source.slice(source.indexOf('function renderPastoralCard('),source.indexOf('function renderPastorProfile('));
  const team=[{id:'senior-pastor',name:'Pr Sam John',role:'President'},...Array.from({length:10},(_,i)=>({id:`pastor-${i}`,name:`Pastor ${i}`,role:'Associate',image:'/portrait.jpg'}))];
