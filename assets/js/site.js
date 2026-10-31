@@ -509,9 +509,9 @@ function matchCalendarBranch(location) {
       .replace(/[^a-z0-9]/g, "");
   const raw = String(location || "").toLowerCase(),
     normalized = normalize(location);
-  return Object.values(branchConfig.branches)
-    .map((branch) => ({
-      branch,
+  return Object.entries(branchConfig.branches)
+    .map(([slug,branch]) => ({
+      branch:{...branch,slug},
       score: Math.max(
         0,
         ...[branch.churchName, branch.name, branch.address]
@@ -529,6 +529,29 @@ function matchCalendarBranch(location) {
     .sort((a, b) => b.score - a.score)
     .find((match) => match.score > 0)?.branch;
 }
+function calendarEventFile(event,stamp=new Date()) {
+  const text=value=>String(value || '').replace(/\\/g,'\\\\').replace(/\r\n|\r|\n/g,'\\n').replace(/;/g,'\\;').replace(/,/g,'\\,');
+  const utc=value=>new Date(value).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z');
+  const localDay=value=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(value));return ['year','month','day'].map(type=>parts.find(p=>p.type===type).value).join('');};
+  const date=value=>event.allDay?localDay(value):utc(value),suffix=event.allDay?';VALUE=DATE':'';
+  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//LPC//Church Events//EN','CALSCALE:GREGORIAN','BEGIN:VEVENT','UID:'+encodeURIComponent((event.id || event.title)+'-'+event.start)+'@lpc-website','DTSTAMP:'+utc(stamp),'DTSTART'+suffix+':'+date(event.start),'DTEND'+suffix+':'+date(event.end),'SUMMARY:'+text(event.title),'LOCATION:'+text(event.location),'END:VEVENT','END:VCALENDAR'];
+  const encoder=new TextEncoder();
+  return lines.map(line=>{let part='',bytes=0;const folded=[];for(const character of line){const length=encoder.encode(character).length;if(bytes+length>75){folded.push(part);part=' ';bytes=1;}part+=character;bytes+=length;}folded.push(part);return folded.join('\r\n');}).join('\r\n')+'\r\n';
+}
+
+function openCalendarEvent(event,opener) {
+  const date=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',dateStyle:'full'}),time=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',timeStyle:'short'});
+  const start=new Date(event.start),end=new Date(event.end),branch=matchCalendarBranch(event.location || '');
+  const when=date.format(start)+(event.allDay?' · All day':' · '+time.format(start)+' – '+(date.format(start)!==date.format(end)?date.format(end)+' · ':'')+time.format(end));
+  const dialog=document.createElement('dialog');dialog.className='calendar-event-dialog';dialog.setAttribute('aria-labelledby','calendar-event-title');
+  dialog.innerHTML=`<header><p class="section-label">Upcoming at LPC</p><button class="btn btn--outline" type="button" data-event-close autofocus>Close</button></header><h2 id="calendar-event-title">${escapeHtml(event.title)}</h2><dl><dt>When · London time</dt><dd>${escapeHtml(when)}</dd><dt>Where</dt><dd>${escapeHtml(event.location || 'Location to be confirmed.')}</dd></dl><div class="calendar-event-actions"><button class="btn btn--gold" type="button" data-event-download>Save to calendar</button>${event.location ? `<a class="btn btn--outline" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}" target="_blank" rel="noopener noreferrer">Get directions ↗</a>` : ''}</div><p class="calendar-event-help">Download the .ics file, then open it in your calendar app to add this event.</p>${branch ? `<a class="calendar-event-branch" href="#/branches/${encodeURIComponent(branch.slug)}">Explore ${escapeHtml(branch.name)} →</a>` : ''}`;
+  const previousOverflow=document.body.style.overflow;document.body.append(dialog);dialog.showModal();document.body.style.overflow='hidden';
+  dialog.addEventListener('close',()=>{document.body.style.overflow=previousOverflow;dialog.remove();if(opener?.isConnected)opener.focus();},{once:true});
+  dialog.querySelector('[data-event-close]').addEventListener('click',()=>dialog.close());
+  dialog.addEventListener('click',event=>{if(event.target===dialog || event.target.closest('.calendar-event-branch'))dialog.close();});
+  dialog.querySelector('[data-event-download]').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([calendarEventFile(event)],{type:'text/calendar;charset=utf-8'})),link=document.createElement('a');link.href=url;link.download='lpc-event-'+event.start.slice(0,10)+'.ics';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);});
+}
+
 function renderCalendarSection() {
   return '<section class="section section--calendar"><div class="container"><div class="calendar-heading"><div><p class="section-label">Church calendar</p><h2 class="section-title">Upcoming events at LPC</h2></div><div class="calendar-controls"><button type="button" data-calendar-direction="-1" aria-label="Previous events" disabled>←</button><button type="button" data-calendar-direction="1" aria-label="Next events" disabled>→</button></div></div><div class="calendar-tiles" tabindex="0" aria-label="Upcoming church events" aria-busy="true"><p class="calendar-message" role="status">Loading upcoming events…</p></div></div></section>';
 }
@@ -598,6 +621,7 @@ async function hydrateCalendarEvents() {
       month: "2-digit",
       day: "2-digit",
     });
+    const eventIndices=new Map(data.events.map((event,index)=>[event,index]));
     const groups = new Map();
     for (const event of data.events) {
       const location = (event.location || "").trim();
@@ -648,7 +672,7 @@ async function hydrateCalendarEvents() {
           group.events
             .map(
               (e) =>
-                '<div class="calendar-tile__service"><h3>' +
+                '<button type="button" class="calendar-tile__service calendar-event-open" data-calendar-event="'+eventIndices.get(e)+'" aria-label="View '+escapeAttribute(e.title)+'"><h3>' +
                 escapeHtml(e.title) +
                 "</h3><p>" +
                 escapeHtml(
@@ -662,7 +686,7 @@ async function hydrateCalendarEvents() {
                           : "") +
                         time.format(new Date(e.end)),
                 ) +
-                "</p></div>",
+                '</p><span class="calendar-event-indicator" aria-hidden="true">↗</span></button>',
             )
             .join("") +
           "</div>" +
@@ -675,6 +699,7 @@ async function hydrateCalendarEvents() {
         );
       })
       .join("");
+    track.querySelectorAll('[data-calendar-event]').forEach(button=>button.addEventListener('click',()=>{const pause=track.closest('section').querySelector('.calendar-pause');if(pause?.getAttribute('aria-pressed')==='false')pause.click();openCalendarEvent(data.events[Number(button.dataset.calendarEvent)],button);}));
     update();
     const section = track.closest("section"),
       motion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -2315,6 +2340,7 @@ function normalizeRoute() {
 }
 
 function renderRoute() {
+  document.querySelector('.calendar-event-dialog[open]')?.close();
   document.querySelector('.media-inspector[open]')?.close();
   const route = normalizeRoute();
   const render = routes[route] || getDynamicRouteRenderer(route);

@@ -3253,3 +3253,20 @@ body.is-branch-page .site-search-trigger,body.is-red-header-sample .site-search-
 .site-search-dialog [data-search-results] > p { padding:20px;border:1px dashed #bed1d9;border-radius:12px;line-height:1.6; }
 @media(max-width:1200px) { #site-header.is-open #site-search-open { grid-column:1/-1;display:flex;width:100%;background:#ffffff12;color:white;border-color:#ffffff50;min-height:44px; } }
 @media(max-width:600px) { .site-search-dialog { padding:18px;width:calc(100vw - 20px); } .site-search-dialog h2 { font-size:1.35rem; } .site-search-dialog > header { margin-bottom:18px; } }
+/* Upcoming events become practical visit plans and portable calendar entries. */
+.calendar-tile .calendar-event-open { position:relative;width:100%;min-height:54px;background:transparent;border:0;border-bottom:1px solid #dce5e9;color:inherit;font:inherit;text-align:left;cursor:pointer;padding-right:18px; }
+.calendar-event-open:hover h3 { text-decoration:underline;text-underline-offset:3px; }
+.calendar-event-indicator { position:absolute;right:0;top:16px;font-size:.85rem;opacity:.65; }
+.calendar-event-dialog { width:min(620px,calc(100vw - 28px));max-height:90dvh;box-sizing:border-box;border:0;border-radius:22px;padding:28px;background:#f7fafb;color:#17394b;overscroll-behavior:contain; }
+.calendar-event-dialog::backdrop { background:#071e2dce; }
+.calendar-event-dialog > header { display:flex;align-items:center;justify-content:space-between;gap:16px; }
+.calendar-event-dialog > header p { margin:0; }
+.calendar-event-dialog h2 { font-size:clamp(1.6rem,3vw,2.4rem);line-height:1.1;margin:24px 0;overflow-wrap:anywhere; }
+.calendar-event-dialog dl { display:grid;gap:8px;margin:0 0 24px; }
+.calendar-event-dialog dt { font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:#157981;margin-top:12px; }
+.calendar-event-dialog dd { margin:0;line-height:1.7;overflow-wrap:anywhere; }
+.calendar-event-actions { display:flex;flex-wrap:wrap;gap:10px; }
+.calendar-event-actions .btn { min-height:44px; }
+.calendar-event-help { font-size:.78rem;color:#587481;line-height:1.6; }
+.calendar-event-branch { display:inline-flex;align-items:center;min-height:44px;margin-top:8px;font-weight:700;color:#08777e; }
+@media(max-width:600px) { .calendar-event-dialog { padding:20px;width:calc(100vw - 20px); } .calendar-event-actions .btn { flex:1 1 100%;font-size:.85rem;padding:12px; } }
