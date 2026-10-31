@@ -2148,7 +2148,7 @@ function renderFooter() {
     (item) => normalizeRoute() === `/branches/${item.slug}`,
   );
   return `
-    <footer class="footer">
+    <footer class="footer footer--compact">
       <svg class="footer-swoosh" viewBox="0 0 1440 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0 86C300 12 460 8 720 8C1080 8 1290 22 1440 4L1440 0H0Z" fill="#fff"/><path d="M0 86C300 12 460 8 720 8C1080 8 1290 22 1440 4" fill="none" stroke="#efc45b" stroke-width="4" vector-effect="non-scaling-stroke"/></svg>
       <div class="container">
         <div class="footer__inner">
@@ -2166,8 +2166,8 @@ function renderFooter() {
             </div>
           </section>
 
-          <section class="footer__column">
-            <h4>Quick Links</h4>
+          <details class="footer__column footer-fold" data-footer-fold open>
+            <summary>Explore the website<span aria-hidden="true">+</span></summary>
             <ul>
               <li><a href="#/home">Home</a></li>
               <li><a href="#/about">About Us</a></li>
@@ -2178,10 +2178,10 @@ function renderFooter() {
               <li><a href="#/watch">Watch</a></li>
               <li><a href="#/contact">Contact</a></li>
             </ul>
-          </section>
+          </details>
 
-        <section class="footer__column">
-  <h4>Contact Us</h4>
+        <details class="footer__column footer-fold" data-footer-fold open>
+  <summary>Contact us<span aria-hidden="true">+</span></summary>
 
   <p class="footer__address">
     ${
@@ -2226,14 +2226,14 @@ function renderFooter() {
 
     <a href="mailto:info@lpc.org.uk">info@lpc.org.uk</a>
   </div>
-</section>
+</details>
 
-         <section class="footer__column">
-  <h4>Service Times</h4>
+         <details class="footer__column footer-fold" data-footer-fold open>
+  <summary>Service times<span aria-hidden="true">+</span></summary>
   <ul class="footer__services">
     ${renderServiceTimes(branch)}
   </ul>
-</section>
+</details>
         </div>
         <div class="footer__bottom"><span>
           &copy; 2026 London Pentecostal Church | Part of Alpha International Ministries | Charity No : 1126140 | All rights reserved. | <a href="#/volunteers">Team access</a>
@@ -2241,6 +2241,15 @@ function renderFooter() {
       </div>
     </footer>
   `;
+}
+
+let footerLayoutMedia = null;
+function initFooterLayout() {
+  if (!footerLayoutMedia) {
+    footerLayoutMedia = window.matchMedia('(max-width: 700px)');
+    footerLayoutMedia.addEventListener('change',initFooterLayout);
+  }
+  document.querySelectorAll('[data-footer-fold]').forEach(fold=>{ fold.open = !footerLayoutMedia.matches; });
 }
 
 function quickItem(iconName, title, text, href = "#/plan-your-visit") {
@@ -2357,6 +2366,7 @@ function renderRoute() {
   applySiteSettings();
   window.scrollTo({ top: 0, behavior: "instant" });
   initHomeHeroAdmin();
+  initFooterLayout();
   initNewsletterStudio();
   initAdminWorkspace();
   initPastorAdmin();

@@ -7,6 +7,18 @@ const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls('));
 
+test('Footer starts compact on phones, opens on desktop and reuses one responsive listener across routes',()=>{
+ const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+ const source=site.slice(site.indexOf('let footerLayoutMedia = null;'),site.indexOf('function quickItem('));
+ let listener,bindings=0;const media={matches:true,addEventListener:(type,fn)=>{bindings++;listener=fn}};
+ const folds=[{open:true},{open:true},{open:true}];
+ const context={window:{matchMedia:()=>media},document:{querySelectorAll:()=>folds}};
+ runInNewContext(source+';initFooterLayout();initFooterLayout();',context);
+ assert(folds.every(f=>!f.open));assert.equal(bindings,1);
+ media.matches=false;listener();assert(folds.every(f=>f.open));
+ media.matches=true;listener();assert(folds.every(f=>!f.open));
+});
+
 test('Admin workspace searches task keywords and restores groups when cleared',()=>{
  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
  const source=site.slice(site.indexOf('function initAdminWorkspace()'),site.indexOf('function renderAdminWorkspaceEditor('));

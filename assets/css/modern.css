@@ -3103,3 +3103,40 @@ body.is-red-header-sample .menu-toggle {
 .connect-artwork img { display:block; width:100%; max-width:760px; height:auto; margin:0 auto 20px; border-radius:16px; }
 @media(max-width:700px) { .connect-heading { margin-bottom:22px; } .connect-heading h1 { font-size:2.25rem; } .connect-heading > p:last-child { font-size:.95rem; } .connect-actions,.connect-visit { grid-template-columns:1fr; gap:14px; } .connect-action { padding:20px; gap:14px; border-radius:18px; } .connect-action__icon { width:36px; height:36px; border-radius:10px; } .connect-action__icon svg { width:21px; height:21px; } .connect-action__label { font-size:.65rem; margin-bottom:8px; } .connect-action h2 { font-size:1.15rem; margin-bottom:10px; } .connect-action__hint { margin-top:12px; font-size:.7rem; } .connect-action__arrow { font-size:1.1rem; } .connect-address,.connect-local { padding:20px; } }
 @media(prefers-reduced-motion:reduce) { .connect-action { transition:none; } .connect-action:hover { transform:none; } }
+/* A compact shared footer: destinations available without another long page. */
+.footer--compact { padding-top:90px; }
+.footer--compact .footer-swoosh { height:70px; }
+.footer--compact .footer__inner { padding-block:24px 28px; gap:32px; align-items:start; }
+.footer--compact .footer-fold { min-width:0; }
+.footer--compact .footer-fold > summary { display:flex; align-items:center; justify-content:space-between; gap:12px; list-style:none; cursor:pointer; font-size:.85rem; font-weight:700; color:#fff; padding-bottom:14px; }
+.footer--compact .footer-fold > summary::-webkit-details-marker { display:none; }
+.footer--compact .footer-fold > summary > span { font-size:1.2rem; line-height:1; color:#edc65c; }
+.footer--compact .footer-fold[open] > summary > span { transform:rotate(45deg); }
+.footer--compact .footer-fold > ul { margin:0; }
+.footer--compact .footer-fold > ul:not(.footer__services) { display:grid; grid-template-columns:1fr 1fr; gap:4px 12px; }
+.footer--compact .footer-fold li { margin:0; }
+.footer--compact .footer__services { gap:12px; font-size:.8rem; line-height:1.5; }
+.footer--compact .footer-fold > ul:not(.footer__services) a { display:inline-flex; min-height:36px; align-items:center; }
+.footer--compact .footer__address { margin-top:0; }
+.footer--compact .footer__bottom { padding-block:18px; }
+@media(max-width:700px) {
+ .footer--compact { padding-top:56px; }
+ .footer--compact .footer-swoosh { height:46px; }
+ .footer--compact .footer__inner { display:flex; flex-direction:column; gap:0; padding:16px 0 8px; }
+ .footer--compact .footer__brand { width:100%; padding-bottom:22px; }
+ .footer--compact .footer__brandmark { gap:12px; }
+ .footer--compact .footer__brandmark img { width:40px; height:40px; }
+ .footer--compact .footer__brandmark strong { font-size:.9rem; }
+ .footer--compact .footer__brandmark p { font-size:.75rem; }
+ .footer--compact .footer__brand > p { margin:14px 0; font-size:.78rem; }
+ .footer--compact .footer__socials { gap:10px; }
+ .footer--compact .footer__socials a { width:44px; height:44px; }
+ .footer--compact .footer-fold { width:100%; border-top:1px solid #ffffff28; }
+ .footer--compact .footer-fold > summary { padding:16px 0; min-height:22px; font-size:.9rem; }
+ .footer--compact .footer-fold[open] { padding-bottom:18px; }
+ .footer--compact .footer-fold > ul:not(.footer__services) { grid-template-columns:1fr 1fr; gap:0 16px; }
+ .footer--compact .footer-fold > ul:not(.footer__services) a { min-height:44px; }
+ .footer--compact .footer__contact-item { margin-top:12px; }
+ .footer--compact .footer__contact-item a { display:inline-flex; align-items:center; min-height:44px; }
+ .footer--compact .footer__bottom { margin-top:0; text-align:left; font-size:.7rem; line-height:1.8; }
+}
