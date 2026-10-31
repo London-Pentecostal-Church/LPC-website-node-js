@@ -642,6 +642,36 @@
   margin: 0;
   font-size: 12px;
 }
+.vs-app .wp-weekbar--filtered {
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
+  gap: 10px;
+  padding: 10px;
+  margin: 12px 0;
+}
+.vs-app .wp-weekbar--filtered .wp-filters {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 10px;
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid #dfe7ec;
+  min-width: 0;
+}
+.vs-app .wp-weekbar--filtered .wp-filters .vs-field { width: auto; min-width: 0; margin: 0; font-size: 12px; }
+.vs-app .wp-weekbar--filtered .wp-filters select { width: 100%; min-width: 0; min-height: 44px; padding: 8px; font-size: 16px; }
+@media (min-width: 960px) {
+  .vs-app .wp-weekbar--filtered { grid-template-columns: minmax(380px,1.15fr) minmax(280px,.85fr); grid-template-areas: "week filters" "dates filters"; gap: 6px 20px; padding: 12px 16px; }
+  .vs-app .wp-weekbar--filtered .wp-week-nav { grid-area: week; justify-content: center; gap: 10px; }
+  .vs-app .wp-weekbar--filtered .wp-week-nav > div { min-width: 160px; }
+  .vs-app .wp-weekbar--filtered .wp-week-nav strong { font-size: 17px; white-space: nowrap; }
+  .vs-app .wp-weekbar--filtered .wp-week-nav .vs-btn { min-height: 44px; padding: 8px 10px; font-size: 12px; }
+  .vs-app .wp-weekbar--filtered .wp-date-tools { grid-area: dates; justify-content: center; gap: 10px; }
+  .vs-app .wp-weekbar--filtered .wp-date-tools > .vs-btn,
+  .vs-app .wp-weekbar--filtered .wp-date-picker > summary { min-height: 36px; padding: 7px 12px; font-size: 12px; }
+  .vs-app .wp-weekbar--filtered .wp-filters { grid-area: filters; align-self: center; padding: 0; border: 0; }
+  .vs-app .wp-weekbar--filtered .wp-filters select { font-size: 14px; }
+}
 .wp-calendar {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -1165,6 +1195,10 @@ button.wp-week-day:focus-visible { outline: 3px solid #087f85; outline-offset: 3
 .wp-meeting-top time { flex-shrink: 0; }
 
 .wp-account-role { display: block; font-size: .8rem; color: #54697a; margin-top: 3px; }
+.wp-account > .wp-account-identity { display: block; min-width: 0; max-width: 380px; padding: 10px 14px; border: 1px solid #78b8bc; border-left: 4px solid #087d83; border-radius: 10px; background: #eaf6f6; box-sizing: border-box; overflow-wrap: anywhere; }
+.wp-account-identity .wp-account-name { display: block; color: #12394b; font-size: 16px; line-height: 1.35; }
+.wp-account-identity .wp-account-role { color: #235365; font-size: 13px; font-weight: 400; line-height: 1.4; margin-top: 3px; }
+.wp-account-identity .wp-account-role b { font-weight: 700; }
 
 /* Phone account menus expand in the page instead of overflowing the viewport. */
 @media (max-width: 760px) {
@@ -1298,3 +1332,76 @@ button.wp-week-day:focus-visible { outline: 3px solid #087f85; outline-offset: 3
   .vs-app .wp-collapsible:not([open]) .wp-expand-label { min-height: 22px; margin-top: 3px; font-size: 12px; line-height: 1.3; }
   .vs-app .wp-collapsible:not([open]) .wp-expand-icon { font-size: 18px; }
 }
+
+/* A shared rhythm for planner tiles and short, task-first controls. */
+.wp-date-picker { position: relative; }
+.wp-date-picker > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; padding: 8px 12px; border: 1px solid #cbd8e2; border-radius: 8px; background: #fff; font-size: 14px; font-weight: 600; }
+.wp-date-picker > summary::after { content: ' ▾'; margin-left: 8px; }
+.wp-date-picker[open] > .vs-field { padding-top: 10px; display: flex; flex-wrap: wrap; }
+.wp-event-grid > .wp-collapsible:not([open]) { align-self: stretch; }
+.wp-event-grid > .wp-collapsible:not([open]) > summary { display: flex; flex-direction: column; height: 100%; }
+.wp-event-grid > .wp-collapsible > summary > .wp-meeting-top { width: 100%; }
+.wp-event-grid > .wp-collapsible:not([open]) .wp-expand-label { margin-top: auto; width: 100%; }
+.wp-collapsible[open] > .wp-card-body { animation: home-reveal .2s ease-out; }
+@media (max-width: 760px) {
+  .section.vs-section { padding-block: 12px 24px; }
+  .vs-app.wp-app { padding: 0 12px 24px; }
+  .vs-app .landing-navigation { gap: 8px; margin-bottom: 10px; }
+  .vs-app .landing-navigation a { flex: 1 1 0; font-size: 12px; padding: 8px; min-height: 44px; }
+  .vs-app .wp-heading { gap: 10px; padding: 0 0 12px; }
+  .vs-app .wp-heading h1 { font-size: 22px; line-height: 1.2; margin: 0; }
+  .vs-app .wp-heading > div:first-child > p { display: none; }
+  .vs-app .wp-account { grid-template-columns: repeat(6,minmax(0,1fr)); gap: 6px; }
+  .vs-app .wp-account > .wp-account-identity { grid-column: 1 / -1; max-width: 100%; font-size: 13px; line-height: 1.35; padding: 10px 12px; }
+  .vs-app .wp-account-identity .wp-account-role { font-size: 13px; line-height: 1.4; margin-top: 3px; }
+  .vs-app .wp-account > .wp-menu { grid-column: span 3; }
+  .vs-app .wp-account .wp-menu summary { font-size: 12px; min-height: 44px; padding: 8px; display: flex; align-items: center; }
+  .vs-app .wp-account .wp-menu[open] { grid-column: 1 / -1; }
+  .vs-app .wp-account > .vs-btn { grid-column: span 3; min-height: 44px; padding: 8px; font-size: 12px; }
+  .vs-app .wp-primary { margin: 0 0 10px; gap: 6px; }
+  .vs-app .wp-primary button { min-height: 44px; padding: 8px; font-size: 12px; line-height: 1.3; }
+  .vs-app .wp-section-heading { margin: 10px 0; gap: 8px; }
+  .vs-app .wp-section-heading h2 { font-size: 19px; margin-bottom: 3px; }
+  .vs-app .wp-section-heading p { font-size: 13px; line-height: 1.4; margin: 0; }
+  .vs-app .wp-weekbar { display: grid; gap: 8px; padding: 8px; margin: 10px 0; }
+  .vs-app .wp-week-nav { display: grid; grid-template-columns: 44px minmax(0,1fr) 44px; gap: 6px; align-items: center; }
+  .vs-app .wp-week-nav > div { grid-column: 2; grid-row: 1; padding: 0; }
+  .vs-app .wp-week-nav > .vs-btn:first-child { grid-column: 1; grid-row: 1; }
+  .vs-app .wp-week-nav > .vs-btn:last-child { grid-column: 3; grid-row: 1; }
+  .vs-app .wp-week-nav .vs-btn { min-height: 44px; padding: 6px; font-size: 20px; }
+  .vs-app .wp-week-word { display: none; }
+  .vs-app .wp-week-nav strong { font-size: 15px; }
+  .vs-app .wp-week-nav small { display: inline; font-size: 12px; margin-left: 5px; }
+  .vs-app .wp-date-tools { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin: 0; align-items: start; }
+  .vs-app .wp-date-tools > .vs-btn { min-height: 44px; padding: 8px; font-size: 12px; }
+  .vs-app .wp-date-picker summary { min-height: 44px; justify-content: center; padding: 8px; font-size: 12px; }
+  .vs-app .wp-date-picker[open] { grid-column: 1 / -1; }
+  .vs-app .wp-date-picker .vs-field { width: 100%; margin: 0; }
+  .vs-app .wp-date-picker input { width: 100%; max-width: 100%; }
+  .vs-app .wp-filters { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin-bottom: 12px; }
+  .vs-app .wp-filters .vs-field { font-size: 12px; }
+  .vs-app .wp-filters select { padding-inline: 8px; }
+  .vs-app .wp-personal-controls { font-size: 13px; margin-block: 10px; }
+  .vs-app .wp-personal-controls summary { min-height: 44px; padding-block: 10px; }
+  .vs-app .wp-agenda { gap: 14px; }
+  .vs-app .wp-week-strip { grid-template-columns: repeat(7,minmax(44px,1fr)); gap: 4px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; }
+  .vs-app .wp-week-day { min-height: 58px; padding: 6px 2px; gap: 3px; align-items: center; }
+  .vs-app .wp-week-day strong { font-size: 11px; }
+  .vs-app .wp-week-day span { font-size: 10px; }
+  .vs-app .wp-week-day small { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .vs-app .wp-has-meetings::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #087f85; }
+  .vs-app .wp-personal, .vs-app .wp-event-grid { gap: 10px; }
+  .vs-app .wp-event-day > header { padding: 8px 10px; margin-bottom: 8px; }
+  .vs-app .wp-meeting, .vs-app details.wp-collapsible:not([open]) { padding: 12px; border-radius: 10px; }
+  .vs-app .wp-collapsible > summary .wp-meeting-top { flex-wrap: nowrap; align-items: flex-start; gap: 8px; }
+  .vs-app .wp-collapsible > summary time { font-size: 16px; line-height: 1.3; }
+  .vs-app .wp-collapsible > summary .vs-badge { width: auto; max-width: 68%; font-size: 12px; line-height: 1.3; padding: 4px 8px; }
+  .vs-app .wp-collapsible > summary h3 { font-size: 17px; line-height: 1.3; margin: 6px 0 4px; }
+  .vs-app .wp-collapsible > summary .wp-branch { font-size: 13px; line-height: 1.35; margin: 0; }
+  .vs-app .wp-collapsible > summary .wp-tile-duty, .vs-app .wp-collapsible > summary .wp-tile-key { font-size: 13px; line-height: 1.4; margin: 6px 0 0; padding: 0; background: none; }
+  .vs-app .wp-collapsible .wp-expand-label { min-height: 24px; font-size: 12px; margin-top: 6px; }
+  .vs-app .wp-collapsible .wp-expand-icon { font-size: 18px; }
+  .vs-app .vs-card { margin-block: 12px; padding: 14px; }
+  .vs-app .wp-empty { padding: 18px 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .wp-collapsible[open] > .wp-card-body { animation: none; } }

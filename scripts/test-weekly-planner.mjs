@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { handleVolunteers, upgradePlanner, meetingReadiness } from "../worker/volunteers.mjs";
+import { handleVolunteers, upgradePlanner, meetingReadiness, emptyVolunteers } from "../worker/volunteers.mjs";
 import { readFileSync } from "node:fs";
 const demo = JSON.parse(
   readFileSync(new URL("./fixtures/weekly-demo.json", import.meta.url), "utf8"),
@@ -36,6 +36,67 @@ function setup(seed = demo) {
     },
   };
 }
+test("One-off meetings create exactly one paired date and never repeat in later weeks", async () => {
+  const h=setup(emptyVolunteers());
+  const meeting={name:'Family day',branch:'Main Church',team:'English',recurrence:'once',startDate:'2032-04-10',time:'10:00',duration:120};
+  assert.equal((await h.call({action:'meeting',meeting})).status,200);
+  assert.equal(h.get().sessions.length,2);
+  assert.deepEqual(new Set(h.get().sessions.map(s=>s.kind)),new Set(['ministry','service']));
+  assert(h.get().sessions.every(s=>s.date==='2032-04-10'));
+  for(const start of ['2032-04-05','2032-04-12','2032-05-03']) assert.equal((await h.call({action:'ensure-week',start})).status,200);
+  assert.equal(h.get().sessions.length,2);
+});
+
+test("Daily fasting series create 3, 7 or 21 inclusive dates across weeks and stop at the end", async () => {
+  for(const days of [3,7,21]) {
+    const h=setup(emptyVolunteers());
+    const startDate='2032-02-25', end=new Date(startDate+'T12:00:00Z');end.setUTCDate(end.getUTCDate()+days-1);
+    const endDate=end.toISOString().slice(0,10);
+    assert.equal((await h.call({action:'meeting',meeting:{name:days+' days fasting',branch:'Main Church',team:'Malayalam',recurrence:'daily',startDate,endDate,time:'19:30',duration:90}})).status,200);
+    const saved=h.get().sessions;
+    assert.equal(saved.length,days*2);assert.equal(new Set(saved.map(s=>s.date)).size,days);
+    for(const date of new Set(saved.map(s=>s.date))) assert.equal(saved.filter(s=>s.date===date).length,2);
+    assert.equal(saved.map(s=>s.date).sort()[0],startDate);assert.equal(saved.map(s=>s.date).sort().at(-1),endDate);
+    const before=structuredClone(saved);
+    for(const start of ['2032-02-23','2032-03-01','2032-03-08','2032-03-15','2032-03-22']) await h.call({action:'ensure-week',start});
+    assert.deepEqual(h.get().sessions,before);
+  }
+});
+
+test("Dated series validate dates, limits and permissions without saving partial calendars", async () => {
+  const h=setup(emptyVolunteers());
+  const meeting={name:'Prayer',branch:'Main Church',team:'English',recurrence:'daily',startDate:'2032-04-01',endDate:'2032-04-07',time:'19:30',duration:60};
+  for(const changes of [{recurrence:'monthly'},{startDate:'2032-02-30'},{endDate:'2032-03-31'},{endDate:'2032-07-01'}]) {
+    assert.equal((await h.call({action:'meeting',meeting:{...meeting,...changes}})).status,400);
+    assert.equal(h.get().sessions.length,0);assert.equal(h.get().meetings.length,0);
+  }
+  assert.equal((await h.call({action:'meeting',meeting},{id:'choir',name:'Choir coordinator',manage:['service']})).status,403);
+  assert.equal((await h.call({action:'meeting',meeting})).status,200);
+  const m=h.get().meetings[0],before=structuredClone(h.get());
+  for(const changes of [{recurrence:'weekly',day:1},{startDate:'2032-04-02'},{endDate:'2032-04-10'}]) {
+    assert.equal((await h.call({action:'meeting',meeting:{...m,...changes}})).status,400);
+    assert.deepEqual(h.get(),before);
+  }
+});
+
+test("Editing a daily series preserves shifted dates, assignments and cancellations; ending it prevents regeneration", async () => {
+  const h=setup();await h.call({action:'upgrade-planner'});
+  const meetingInput={name:'Fasting prayer',branch:'Main Church',team:'Malayalam',recurrence:'daily',startDate:'2032-04-01',endDate:'2032-04-03',time:'19:30',duration:60};
+  assert.equal((await h.call({action:'meeting',meeting:meetingInput})).status,200);
+  const meeting=h.get().meetings.find(m=>m.name===meetingInput.name);
+  const original=h.get().sessions.find(s=>s.meetingId===meeting.id&&s.kind==='ministry');
+  const pastor=h.get().members.find(m=>m.username==='pastor.test');original.slots[0].main=pastor.id;
+  assert.equal((await h.call({action:'meeting-occurrence',sessionId:original.id,date:'2032-04-05',time:'20:00',cancelled:true,comment:'Moved date'})).status,200);
+  assert.equal((await h.call({action:'meeting',meeting:{...meeting,name:'Fasting and family prayer',time:'18:30'}})).status,200);
+  const edited=h.get().sessions.find(s=>s.id===original.id);
+  assert.equal(edited.date,'2032-04-05');assert.equal(edited.scheduledDate,'2032-04-01');assert.equal(edited.slots[0].main,pastor.id);assert.equal(edited.cancelled,true);
+  assert.equal((await h.call({action:'ensure-week',start:'2032-03-29'})).status,200);
+  assert.equal(h.get().sessions.filter(s=>s.meetingId===meeting.id).length,6);
+  assert.equal((await h.call({action:'delete-meeting-series',meetingId:meeting.id,confirm:true})).status,200);
+  await h.call({action:'ensure-week',start:'2032-03-29'});
+  assert.equal(h.get().sessions.filter(s=>s.meetingId===meeting.id).length,0);
+});
+
 test("Shared weekly planner migration preserves all prior duties", () => {
   const before = structuredClone(demo);
   const migrated = upgradePlanner(structuredClone(demo));
@@ -538,14 +599,14 @@ test("Audit retention is configurable by website admin only and cleanup runs aft
   assert(!h2.get().history.some(h => ["45days", "90days"].includes(h.id)));
 });
 
-test("Reserve overlaps are permitted while overlapping primary duties name the conflicting meeting", async () => {
+test("Reserve overlaps are permitted only at the same branch; primary clashes identify the conflicting meeting", async () => {
   const { seed, session } = rulesFixture("ministry");
   const [primary, reserve] = seed.members;
   const other = { ...structuredClone(session), id: "other-meeting", name: "Other branch service", branch: "Other branch", slots: [{ ...session.slots[0], id: "other-slot", main: reserve.id, backup: "" }] };
   seed.sessions.push(other);
   const h = setup(seed);
   const input = { action: "allocation", sessionId: session.id, status: "confirmed", slots: [{ ...session.slots[0], main: primary.id, backup: reserve.id }] };
-  assert.equal((await h.call(input)).status, 200, "Reserve may already be primary elsewhere");
+  assert.equal((await h.call(input)).status, 400, "Reserve cannot cover a different branch at the same time");
   const before = structuredClone(h.get());
   const result = await h.call({ ...input, slots: [{ ...session.slots[0], main: reserve.id, backup: "" }] });
   assert.equal(result.status, 400);
@@ -556,7 +617,67 @@ test("Reserve overlaps are permitted while overlapping primary duties name the c
   const seed2 = structuredClone(seed);
   seed2.sessions[1].slots[0] = { ...other.slots[0], main: "", backup: primary.id };
   const h2 = setup(seed2);
-  assert.equal((await h2.call(input)).status, 200, "Primary may be a reserve elsewhere");
+  assert.equal((await h2.call(input)).status, 400, "Primary cannot be a reserve at a different branch simultaneously");
+  for(const seed3 of [structuredClone(seed),seed2]) {
+    seed3.sessions[1].branch=session.branch;seed3.sessions[1].occurrenceId='different-event';
+    assert.equal((await setup(seed3).call(input)).status,200,"Same-branch reserve overlap is allowed");
+  }
+});
+
+test('Primary and reserve allocations enforce the one-hour end-to-start travel boundary in both directions', async()=>{
+  for(const kind of ['ministry','service']) for(const position of ['main','backup']) for(const [otherTime,otherDuration,branchName,expected] of [
+    ['08:00',60,'Other branch',200],['08:01',60,'Other branch',400],['09:00',60,'Other branch',400],
+    ['11:00',60,'Other branch',400],['11:59',60,'Other branch',400],['12:00',60,'Other branch',200],
+    ['11:00',60,'same',200],['09:00',60,'same',200],['10:00',60,'same',position==='backup'?200:400],
+  ]) {
+    const {seed,session}=rulesFixture(kind);session.time='10:00';session.duration=60;
+    const person=seed.members[0];
+    const other={...structuredClone(session),id:'other-event',occurrenceId:'different-event',name:'Other service',branch:branchName==='same'?session.branch:branchName,time:otherTime,duration:otherDuration,slots:[{...session.slots[0],id:'other-slot',main:person.id,backup:''}]};seed.sessions.push(other);
+    const h=setup(seed),before=structuredClone(h.get());
+    const result=await h.call({action:'allocation',sessionId:session.id,status:'confirmed',slots:[{...session.slots[0],[position]:person.id}]});
+    assert.equal(result.status,expected,`${kind} ${position} ${otherTime} ${branchName}`);
+    if(expected===400){assert.deepEqual(h.get(),before);assert.equal(result.body.conflict.sessionId,'other-event');assert(result.body.error.includes('Other service'));if(otherTime!=='10:00'){assert(result.body.error.includes('60 minutes'));assert.equal(result.body.conflict.type,'travel');}}
+  }
+});
+
+test('Reserve-reserve clashes at another branch and emergency cover obey travel restrictions', async()=>{
+  const {seed,session}=rulesFixture('ministry');const person=seed.members[0];session.time='10:00';session.duration=60;
+  seed.sessions.push({...structuredClone(session),id:'reserve-event',occurrenceId:'reserve-event',name:'Reserve service',branch:'Other branch',time:'11:30',slots:[{...session.slots[0],id:'reserve-slot',main:'',backup:person.id}]});
+  const result=await setup(seed).call({action:'allocation',sessionId:session.id,status:'draft',slots:[{...session.slots[0],backup:person.id}]});assert.equal(result.status,400);assert.equal(result.body.conflict.gapMinutes,30);
+  const {seed:coverSeed,pastoral}=coverageFixture();const coverPerson=coverSeed.members[1];pastoral.time='10:00';pastoral.duration=60;
+  coverSeed.sessions.push({...structuredClone(pastoral),id:'cover-event',occurrenceId:'cover-event',name:'Other branch cover',branch:'Other branch',time:'11:30',slots:[{...pastoral.slots[0],main:coverPerson.id,backup:''}]});
+  const cover=await setup(coverSeed).call({action:'allocation',sessionId:pastoral.id,status:'confirmed',slots:pastoral.slots,emergencyCover:{memberId:coverPerson.id,reason:'Emergency cover'}});assert.equal(cover.status,400);assert.equal(cover.body.conflict.type,'travel');
+});
+
+test('Moving a booked meeting cannot create a travel clash and leaves saved dates untouched',async()=>{
+ const {seed,session}=rulesFixture('ministry');const person=seed.members[0];session.time='10:00';session.duration=60;session.slots[0].main=person.id;
+ seed.meetings.push({...seed.meetings.find(m=>m.id===session.meetingId),id:'travel-meeting'});
+ seed.services.push({...seed.services.find(s=>s.id===session.serviceId),id:'travel-service',meetingId:'travel-meeting'});
+ seed.sessions.push({...structuredClone(session),id:'later-event',serviceId:'travel-service',meetingId:'travel-meeting',occurrenceId:'later-event',name:'Later service',branch:'Other branch',time:'12:00',slots:[{...session.slots[0],main:person.id,backup:''}]});
+ const h=setup(seed),before=structuredClone(h.get());
+ const r=await h.call({action:'meeting-occurrence',sessionId:session.id,date:session.date,time:'10:30',comment:'Move service later',cancelled:false});assert.equal(r.status,400);assert.equal(r.body.conflict.type,'travel');assert.equal(r.body.conflict.gapMinutes,30);assert.deepEqual(h.get(),before);
+});
+
+test('Cover requests and acceptance recheck the travel gap before changing the rota',async()=>{
+ const {seed,choir}=coverageFixture();const [requester,target]=seed.members;choir.time='10:00';choir.duration=60;choir.slots[0].main=requester.id;
+ const other={...structuredClone(choir),id:'travel-cover',occurrenceId:'travel-cover',name:'Other branch service',branch:'Other branch',time:'11:30',slots:[{...choir.slots[0],main:target.id,backup:''}]};seed.sessions.push(other);
+ const h=setup(seed),request={action:'swap',sessionId:choir.id,slotId:choir.slots[0].id,position:'main',targetId:target.id,comment:'Please cover this duty'};
+ const blocked=await h.call(request,requester);assert.equal(blocked.status,400);assert.equal(blocked.body.conflict.type,'travel');
+ h.get().sessions.find(s=>s.id===other.id).time='12:00';assert.equal((await h.call(request,requester)).status,200);
+ h.get().sessions.find(s=>s.id===other.id).time='11:30';const before=structuredClone(h.get());
+ const accepted=await h.call({action:'swap-response',swapId:h.get().swaps.at(-1).id,response:'accept'},target);assert.equal(accepted.status,400);assert.equal(accepted.body.conflict.type,'travel');assert.deepEqual(h.get(),before);
+});
+
+test('Browser and server booking rules agree, including midnight and London clock changes', async()=>{
+  const {runInNewContext}=await import('node:vm');
+  const server=readFileSync(new URL('../worker/volunteers.mjs',import.meta.url),'utf8'),browser=readFileSync(new URL('../assets/js/volunteers.js',import.meta.url),'utf8');
+  const serverRule=runInNewContext(server.slice(server.indexOf('function bookingRestriction('),server.indexOf('function conflicting('))+';bookingRestriction');
+  const browserRule=runInNewContext(browser.slice(browser.indexOf('  function bookingRestriction('),browser.indexOf('  function refreshAssignmentChoices('))+';bookingRestriction');
+  const a={date:'2031-06-01',time:'23:30',duration:60,branch:'A'},b={date:'2031-06-02',time:'01:00',duration:60,branch:'B'};
+  for(const [first,next] of [[a,b],[{...a,date:'2031-03-29'},{...b,date:'2031-03-30',time:'02:00'}],[{...a,date:'2031-10-25'},{...b,date:'2031-10-26',time:'02:00'}]])assert.equal(JSON.stringify(serverRule(first,next)),JSON.stringify(browserRule(first,next)));
+  assert.equal(serverRule(a,b).gapMinutes,30);assert.equal(serverRule(a,{...b,time:'01:30'}),null);
+  assert.equal(serverRule({...a,date:'2031-03-29'},{...b,date:'2031-03-30',time:'02:00'}).gapMinutes,30);
+  assert.equal(serverRule({...a,date:'2031-10-25'},{...b,date:'2031-10-26',time:'02:00'}),null);
 });
 
 test("Deleted or orphaned meetings never block assignments or appear as live meetings", async () => {

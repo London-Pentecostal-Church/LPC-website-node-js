@@ -1,6 +1,7 @@
 import { createVolunteerStore } from './volunteer-store.mjs';
 import { handleVolunteers } from './volunteers.mjs';
 import { calendarEvents } from './calendar.mjs';
+import { handleContact } from './contact-http.mjs';
 /* BUNDLED_DATA */
 const json = (body,status=200,extra={}) => new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store',...extra}});
 const cookie = request => request.headers.get('cookie')?.match(/(?:^|;\s*)lpc_admin=([a-f0-9]{64})(?:;|$)/)?.[1];
@@ -211,11 +212,12 @@ function withDefaultThumbnail(video) {
 
 
 export default {async fetch(request,env){
- if(new URL(request.url).pathname==='/api/calendar/events'){try{return json(await calendarEvents(env.LPC_CALENDAR_ICS_URL));}catch{return json({error:'Calendar temporarily unavailable'},503);}}
+ if(new URL(request.url).pathname==='/api/calendar/events'){try{return json(await calendarEvents(env.LPC_CALENDAR_ICS_URL));}catch(error){console.error('Calendar load failed:',error.name,error.message);return json({error:'Calendar temporarily unavailable'},503);}}
 
  const url=new URL(request.url),path=url.pathname;
  try {
   if(path.startsWith('/api/')){
+   if(path==='/api/contact')return handleContact(request,env);
    if(!env.BUCKET)return json({error:'Admin storage is temporarily unavailable'},503);
    if(!['GET','HEAD'].includes(request.method)){
     if(request.headers.get('origin')!==url.origin||request.headers.get('sec-fetch-site')==='cross-site')return json({error:'Invalid request origin'},403);

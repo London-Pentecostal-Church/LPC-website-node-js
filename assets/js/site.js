@@ -64,21 +64,24 @@ const homeHeroStorageKey = "LPC_HOME_HERO_CONFIG";
 let serverHomeHeroConfig = null;
 let serverHeroImagesConfig = {};
 let adminSession = { authenticated: false };
-let pastorThoughtConfig = null;
+let closeSiteMenu = () => {};
+let newsletterConfig = null;
 let siteSettingsConfig = null;
 
 const defaultSiteSettingsConfig = {
   topbarSlogan: "Celebrating 25 Years of God's Faithfulness",
 };
 
-const defaultPastorThoughtConfig = {
-  kicker: "Pastor's Thought",
-  title: "A word of encouragement for this week.",
-  author: "LPC Pastoral Team",
+const defaultNewsletterConfig = {
+  kicker: "Newsletter",
+  title: "News & updates from LPC",
+  author: "",
   date: "",
-  body: "Use this space to share a short pastoral reflection, Scripture encouragement, or thought connected to the messages and worship life of the church.",
-  ctaText: "Watch Sermons",
-  ctaHref: "#/watch",
+  body: "",
+  image: "",
+  imageAlt: "",
+  ctaText: "",
+  ctaHref: "",
 };
 
 const heroImageDefaults = {
@@ -309,6 +312,7 @@ const mediaSources = {
 
 let pastors = [
   {
+    id: "senior-pastor",
     name: "Pr Sam John",
     role: "President & Senior Minister",
     image: "./assets/images/team/sam-john-hero.png",
@@ -376,62 +380,8 @@ applyPastorConfig(pastorConfig);
 const routes = {
   "/home": renderHome,
   "/": renderHome,
-  "/plan-your-visit": () =>
-    renderSubPage({
-      pageKey: "plan-your-visit",
-      label: "Plan Your Visit",
-      title: "Know what to expect when you visit LPC.",
-      copy: "Join us for prayer, worship, the Word, and church family across our branches. Whether this is your first Sunday or you are returning, we want your visit to feel clear, warm, and welcoming.",
-      image: "./assets/images/derived/plan-visit-hero.jpg",
-      actions: [
-        ["Find a Branch", "#/branches", "btn--gold"],
-        ["Watch Online", "#/watch", "btn--outline"],
-      ],
-      body: `
-        <section class="section section--tight section--swoosh">
-          <div class="container grid-two">
-            <article class="cards-banner">
-              <p class="section-label">What To Expect</p>
-              <h2 class="cards-banner__title">A Sunday centred on worship, prayer, and the Word.</h2>
-              <p class="cards-banner__copy">Our Sunday services begin at 10:30 AM. Expect passionate worship, Bible teaching, family connection, and ministry for all ages.</p>
-              <ul class="feature-list" style="margin-top:20px">
-                <li>Friendly welcome team and clear arrival guidance</li>
-                <li>Prayer and ministry time during the service</li>
-                <li>Sunday School and youth connection across branches</li>
-                <li>Online sermon access if you cannot attend in person</li>
-              </ul>
-            </article>
-            <div class="content-stack">
-              ${card("Service Times", "Sunday Worship - 10:30 AM<br>Wednesday Prayer - 7:30 PM<br>Youth Service - Friday 7:00 PM")}
-              ${card("Need directions?", "Use the branch directory to choose the nearest LPC location and plan your route before Sunday.")}
-              ${card("First time at LPC", "If it helps, come a few minutes early. Our team can help with seating, children, and any questions about the service.")}
-            </div>
-          </div>
-        </section>
-        ${renderBranchesSection(true)}
-      `,
-    }),
-  "/ministries": () =>
-    renderSubPage({
-      pageKey: "ministries",
-      label: "Ministries",
-      title: "Helping every generation grow in faith.",
-      copy: "LPC is built around worship, discipleship, community life, youth development, and service. Our ministries are designed to help people belong, grow, and serve with confidence.",
-      image: "./assets/images/derived/branches-hero.jpg",
-      actions: [["Explore Youth", "#/youth", "btn--gold"]],
-      body: `
-        <section class="section section--tight section--swoosh">
-          <div class="container">
-            <div class="cards-grid">
-              ${infoCard("Food Bank", "Supporting our local community with nutritious meals and resources.", "utensils")}
-              ${infoCard("Sunday School", "Biblical foundation for children and young families across our branches.", "book")}
-              ${infoCard("Christ Envoys Youth Ministry", "A Christ-centred ministry shaping the next generation.", "users")}
-              ${infoCard("Women in Christ", "LPC Women’s Group nurtures Christian growth, strengthens friendships, and builds a supportive community through faith, fellowship, laughter, and shared experiences.", "play")}
-            </div>
-          </div>
-        </section>
-      `,
-    }),
+  "/plan-your-visit": () => renderVisitPlan(),
+  "/ministries": () => renderMinistryExplorer(),
   "/youth": () =>
     renderSubPage({
       pageKey: "youth",
@@ -465,16 +415,7 @@ const routes = {
         </section>
       `,
     }),
-  "/branches": () =>
-    renderSubPage({
-      pageKey: "branches",
-      label: "Branches",
-      title: "A church family across London and Essex.",
-      copy: "Every LPC branch shares the same worship heartbeat, biblical teaching, and family culture while serving its local community faithfully.",
-      image: "./assets/images/derived/branches-hero.jpg",
-      actions: [["Plan Your Visit", "#/plan-your-visit", "btn--gold"]],
-      body: renderBranchesSection(true),
-    }),
+  "/branches": () => renderBranchDirectory(),
   "/about": () =>
     renderSubPage({
       pageKey: "about",
@@ -487,8 +428,7 @@ const routes = {
         <section class="section section--tight section--about">
           <div class="container about-layout">
             <div class="about-copy">
-              <p class="section-label">About Us</p>
-              <h2 class="section-title">Welcome to London Pentecostal Church</h2>
+
               <p>Thank you for taking time to find out more about who we are. As a church we are all about knowing Jesus Christ and making Him known. Our desire is to spread the Word of God, so that we can transform our city, this nation and even the world.</p>
               <p>We are a community of people who are from all walks of life and who are at different stages in their relationships with God. LPC is a blend of new believers and established Christians. Most importantly we are a people hungry for more of God in our lives.</p>
               <p>If you are looking for a place to connect with God and to connect with His people, this is the place for you. We are looking forward to meeting you.</p>
@@ -501,7 +441,7 @@ const routes = {
             <article class="vision-card vision-card--teal">
               <h3>Our Vision</h3>
               <p>Building a spiritual house for spiritual sacrifices.</p>
-              <a href="#/pastors">Meet Our Team</a>
+
             </article>
             <article class="vision-card vision-card--gold">
               <h3>Our Mission</h3>
@@ -512,95 +452,54 @@ const routes = {
         </section>
       `,
     }),
-  "/pastors": () =>
-    renderSubPage({
-      pageKey: "pastors",
-      label: "Meet Our Team",
-      title: "Pastors and ministers serving LPC.",
-      copy: "Meet the pastors and ministers serving the LPC family across every branch.",
-      image: "./assets/images/derived/pastors-hero.jpg",
-      actions: [
-        ["About LPC", "#/about", "btn--gold"],
-        ["Contact Us", "#/contact", "btn--outline"],
-      ],
-      body: `
-        <section class="section section--tight section--team">
-          <div class="container">
-            <div class="section-heading">
-              <p class="section-label">Our Leadership Team</p>
-              <h2 class="section-title">Meet Our Team</h2>
-            </div>
-            <div class="team-grid">
-            ${pastors
-              .map(
-                (pastor) => `
-                  <article class="team-card">
-                    ${pastor.id ? `<a href="#/pastors/${encodeURIComponent(pastor.id)}" aria-label="Read about ${escapeAttribute(pastor.name)}">` : ""}${pastor.image ? `<img src="${escapeAttribute(pastor.image)}" alt="${escapeAttribute(pastor.name)}">` : `<div class="pastor-photo-empty">${icon("users")}</div>`}${pastor.id ? "</a>" : ""}
-                    <div>
-                      <h3>${pastor.id ? `<a href="#/pastors/${encodeURIComponent(pastor.id)}">${escapeHtml(pastor.name)}</a>` : escapeHtml(pastor.name)}</h3>
-                      <p>${escapeHtml(pastor.role)}</p>${pastor.id ? `<a href="#/pastors/${encodeURIComponent(pastor.id)}">Read introduction</a>` : ""}
-                    </div>
-                  </article>
-                `,
-              )
-              .join("")}
-            </div>
-          </div>
-        </section>
-      `,
-    }),
-  "/watch": () =>
-    renderSubPage({
-      pageKey: "watch",
-      label: getPastorThoughtConfig().kicker,
-      title: getPastorThoughtConfig().title,
-      copy: renderPastorThoughtCopy(),
-      image: "./assets/images/derived/watch-hero.jpg",
-      actions: [
-        [
-          getPastorThoughtConfig().ctaText,
-          getPastorThoughtConfig().ctaHref,
-          "btn--gold",
-        ],
-        ["Plan Your Visit", "#/plan-your-visit", "btn--outline"],
-      ],
-      body: renderWatchHub(),
-    }),
+  "/pastors": () => renderPastoralGallery(),
+  "/watch": () => `<article class="page page-watch"><header class="watch-stage-heading"><div class="container"><p class="section-label">LPC online</p><h1>One family. Worship wherever you are.</h1><p>Choose a church, then press play. Live services and recent messages, together in one place.</p></div></header>${renderWatchHub()}${renderFooter()}</article>`,
   "/admin": renderAdminPanel,
   "/admin/home-hero": renderAdminPanel,
   "/lpcadmin": renderAdminPanel,
-  "/contact": () =>
-    renderSubPage({
-      pageKey: "contact",
-      label: "Contact",
-      title: "Reach out to the LPC family.",
-      copy: "Whether you have a question, prayer request, or you're planning your first visit, we'd be glad to hear from you.",
-      image: "./assets/images/derived/contact-hero.jpg",
-      body: `
-        <section class="section section--tight">
-          <div class="container grid-two">
-            <div class="content-stack">
-              ${card("Phone", "020 8690 0701")}
-              ${card("Email", "info@lpc.org.uk")}
-              ${card("Main Address", "Oasis Centre, Essex Rd, Romford RM6 4JA")}
-            </div>
-            <article class="contact-card">
-              <h3>Send a message</h3>
-              <form class="contact-form">
-                <label>Name<input name="name" type="text" placeholder="Your name" maxlength="150" required></label>
-                <label>Email<input name="email" type="email" placeholder="Your email" maxlength="254" required></label>
-                <label>Message<textarea name="message" placeholder="How can we help?" maxlength="10000" required></textarea></label>
-                <label hidden>Website<input name="website" tabindex="-1" autocomplete="off"></label>
-                <button class="btn btn--gold" type="submit">Send Message</button>
-                <p data-contact-status role="status" aria-live="polite"></p>
-              </form>
-            </article>
-          </div>
-        </section>
-      `,
-    }),
+  "/contact": () => renderContactHub(),
   "/branches/chadwell-heath": renderHome,
 };
+
+function renderMinistryExplorer() {
+  const ministries=[
+    {audience:'Children & families',title:'Sunday School',icon:'book',copy:'Biblical foundation for children and young families across our branches.',cta:'Ask about Sunday School',color:'#176b74'},
+    {audience:'Young people',title:'Christ Envoys Youth Ministry',icon:'users',copy:'A Christ-centred ministry shaping the next generation through worship, learning Scripture, friendship and discipleship.',cta:'Explore LPC Youth',href:'#/youth',color:'#594681'},
+    {audience:'Women & fellowship',title:'Women in Christ',icon:'users',copy:'LPC Women’s Group nurtures Christian growth, strengthens friendships, and builds a supportive community through faith, fellowship, laughter, and shared experiences.',cta:'Ask about Women in Christ',color:'#914c66'},
+    {audience:'Community support',title:'Food Bank',icon:'users',copy:'Supporting our local community with nutritious meals and resources.',cta:'Ask about the Food Bank',color:'#8c6723'}
+  ];
+  const image=getHeroImageConfig('ministries','./assets/images/derived/branches-hero.jpg').desktopImage;
+  return `<article class="page page-ministry-explorer"><section class="ministry-explorer container"><header><p class="section-label">Life beyond Sunday</p><h1>Find your place to grow.</h1><p>Worship, discipleship and community life. Choose who you’re exploring for.</p></header>
+    <div class="ministry-choices" role="tablist" aria-label="Explore ministries">${ministries.map((m,i)=>`<button type="button" role="tab" id="ministry-choice-${i}" aria-controls="ministry-panel-${i}" aria-selected="${i===0}" tabindex="${i===0?0:-1}" data-ministry-choice="${i}" style="--ministry-color:${m.color}"><span aria-hidden="true">${icon(m.icon)}</span><span><strong>${m.audience}</strong><small>${m.title}</small></span></button>`).join('')}</div>
+    ${ministries.map((m,i)=>`<article class="ministry-result" role="tabpanel" id="ministry-panel-${i}" aria-labelledby="ministry-choice-${i}" data-ministry-panel="${i}" ${i?'hidden':''} style="--ministry-color:${m.color}"><div class="ministry-result-copy"><p class="section-label">${m.audience}</p><h2>${m.title}</h2><p>${m.copy}</p><a class="btn btn--gold" href="${m.href || 'mailto:office@londonpentecostalchurch.org?subject='+encodeURIComponent('lpc-website contact - '+m.title)}">${m.cta} <span aria-hidden="true">→</span></a>${m.href ? '' : '<small>Your email app opens with the church office and subject filled in.</small>'}</div>${image ? `<img class="ministry-result-image" src="${escapeAttribute(image)}" alt="Ministry life across the LPC church family" loading="lazy">` : ''}</article>`).join('')}
+    </section>${renderFooter()}</article>`;
+}
+
+function initMinistryExplorer() {
+  const tabs=[...document.querySelectorAll('[data-ministry-choice]')],panels=[...document.querySelectorAll('[data-ministry-panel]')];
+  if(!tabs.length)return;
+  const select=index=>{tabs.forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.setAttribute('tabindex',i===index?'0':'-1');});panels.forEach((panel,i)=>{panel.hidden=i!==index;});};
+  tabs.forEach((tab,index)=>{
+    tab.addEventListener('click',()=>select(index));
+    tab.addEventListener('keydown',event=>{
+      const next=event.key==='ArrowRight'?(index+1)%tabs.length:event.key==='ArrowLeft'?(index+tabs.length-1)%tabs.length:event.key==='Home'?0:event.key==='End'?tabs.length-1:null;
+      if(next===null)return;event.preventDefault();select(next);tabs[next].focus();
+    });
+  });
+}
+
+function renderContactHub() {
+  const main = branchCards.find(branch=>branch.slug==='chadwell-heath');
+  const address = String(main?.address || 'Oasis Centre, Essex Rd, Romford RM6 4JA').trim();
+  const artwork = getHeroImageConfig('contact','./assets/images/derived/contact-hero.jpg').desktopImage;
+  return `<article class="page page-connect"><section class="connect-hub container" aria-labelledby="connect-title">
+    <header class="connect-heading"><p class="section-label">Contact LPC</p><h1 id="connect-title">Let’s start a conversation.</h1><p>A question, a prayer request, or your first visit—we’re here to listen.</p></header>
+    <div class="connect-actions"><a class="connect-action connect-action--email" href="mailto:office@londonpentecostalchurch.org?subject=lpc-website%20contact"><span class="connect-action__icon" aria-hidden="true">${icon('mail')}</span><span class="connect-action__copy"><span class="connect-action__label">Write to us</span><h2>Email the church office</h2><span class="connect-action__detail">office@<wbr>londonpentecostalchurch.org</span><span class="connect-action__hint">Opens your email app · Subject ready to go</span></span><span class="connect-action__arrow" aria-hidden="true">↗</span></a>
+    <a class="connect-action connect-action--phone" href="tel:+442086900701"><span class="connect-action__icon" aria-hidden="true">${icon('phone')}</span><span class="connect-action__copy"><span class="connect-action__label">Speak to us</span><h2>Call the church</h2><span class="connect-action__detail">020 8690 0701</span><span class="connect-action__hint">Tap to open your phone dialler</span></span><span class="connect-action__arrow" aria-hidden="true">↗</span></a></div>
+    <div class="connect-visit"><div class="connect-address"><p class="section-label">Find us</p><h2>Main church · Chadwell Heath</h2><p>${escapeHtml(address)}</p><a class="connect-directions" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}" target="_blank" rel="noopener noreferrer">Get directions <span aria-hidden="true">↗</span></a></div><div class="connect-local"><span aria-hidden="true">⌂</span><div><h2>Looking for your local church?</h2><p>Find our churches across London and Essex.</p><a href="#/branches">Explore all churches <span aria-hidden="true">→</span></a></div></div></div>
+    ${artwork ? `<details class="connect-artwork"><summary>More about contacting LPC</summary><img src="${escapeAttribute(artwork)}" alt="LPC contact and branch enquiry information" loading="lazy"></details>` : ''}
+    </section>${renderFooter()}</article>`;
+}
 
 function matchCalendarBranch(location) {
   const normalize = (value) =>
@@ -610,9 +509,9 @@ function matchCalendarBranch(location) {
       .replace(/[^a-z0-9]/g, "");
   const raw = String(location || "").toLowerCase(),
     normalized = normalize(location);
-  return Object.values(branchConfig.branches)
-    .map((branch) => ({
-      branch,
+  return Object.entries(branchConfig.branches)
+    .map(([slug,branch]) => ({
+      branch:{...branch,slug},
       score: Math.max(
         0,
         ...[branch.churchName, branch.name, branch.address]
@@ -630,6 +529,29 @@ function matchCalendarBranch(location) {
     .sort((a, b) => b.score - a.score)
     .find((match) => match.score > 0)?.branch;
 }
+function calendarEventFile(event,stamp=new Date()) {
+  const text=value=>String(value || '').replace(/\\/g,'\\\\').replace(/\r\n|\r|\n/g,'\\n').replace(/;/g,'\\;').replace(/,/g,'\\,');
+  const utc=value=>new Date(value).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z');
+  const localDay=value=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(value));return ['year','month','day'].map(type=>parts.find(p=>p.type===type).value).join('');};
+  const date=value=>event.allDay?localDay(value):utc(value),suffix=event.allDay?';VALUE=DATE':'';
+  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//LPC//Church Events//EN','CALSCALE:GREGORIAN','BEGIN:VEVENT','UID:'+encodeURIComponent((event.id || event.title)+'-'+event.start)+'@lpc-website','DTSTAMP:'+utc(stamp),'DTSTART'+suffix+':'+date(event.start),'DTEND'+suffix+':'+date(event.end),'SUMMARY:'+text(event.title),'LOCATION:'+text(event.location),'END:VEVENT','END:VCALENDAR'];
+  const encoder=new TextEncoder();
+  return lines.map(line=>{let part='',bytes=0;const folded=[];for(const character of line){const length=encoder.encode(character).length;if(bytes+length>75){folded.push(part);part=' ';bytes=1;}part+=character;bytes+=length;}folded.push(part);return folded.join('\r\n');}).join('\r\n')+'\r\n';
+}
+
+function openCalendarEvent(event,opener) {
+  const date=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',dateStyle:'full'}),time=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',timeStyle:'short'});
+  const start=new Date(event.start),end=new Date(event.end),branch=matchCalendarBranch(event.location || '');
+  const when=date.format(start)+(event.allDay?' · All day':' · '+time.format(start)+' – '+(date.format(start)!==date.format(end)?date.format(end)+' · ':'')+time.format(end));
+  const dialog=document.createElement('dialog');dialog.className='calendar-event-dialog';dialog.setAttribute('aria-labelledby','calendar-event-title');
+  dialog.innerHTML=`<header><p class="section-label">Upcoming at LPC</p><button class="btn btn--outline" type="button" data-event-close autofocus>Close</button></header><h2 id="calendar-event-title">${escapeHtml(event.title)}</h2><dl><dt>When · London time</dt><dd>${escapeHtml(when)}</dd><dt>Where</dt><dd>${escapeHtml(event.location || 'Location to be confirmed.')}</dd></dl><div class="calendar-event-actions"><button class="btn btn--gold" type="button" data-event-download>Save to calendar</button>${event.location ? `<a class="btn btn--outline" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}" target="_blank" rel="noopener noreferrer">Get directions ↗</a>` : ''}</div><p class="calendar-event-help">Download the .ics file, then open it in your calendar app to add this event.</p>${branch ? `<a class="calendar-event-branch" href="#/branches/${encodeURIComponent(branch.slug)}">Explore ${escapeHtml(branch.name)} →</a>` : ''}`;
+  const previousOverflow=document.body.style.overflow;document.body.append(dialog);dialog.showModal();document.body.style.overflow='hidden';
+  dialog.addEventListener('close',()=>{document.body.style.overflow=previousOverflow;dialog.remove();if(opener?.isConnected)opener.focus();},{once:true});
+  dialog.querySelector('[data-event-close]').addEventListener('click',()=>dialog.close());
+  dialog.addEventListener('click',event=>{if(event.target===dialog || event.target.closest('.calendar-event-branch'))dialog.close();});
+  dialog.querySelector('[data-event-download]').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([calendarEventFile(event)],{type:'text/calendar;charset=utf-8'})),link=document.createElement('a');link.href=url;link.download='lpc-event-'+event.start.slice(0,10)+'.ics';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);});
+}
+
 function renderCalendarSection() {
   return '<section class="section section--calendar"><div class="container"><div class="calendar-heading"><div><p class="section-label">Church calendar</p><h2 class="section-title">Upcoming events at LPC</h2></div><div class="calendar-controls"><button type="button" data-calendar-direction="-1" aria-label="Previous events" disabled>←</button><button type="button" data-calendar-direction="1" aria-label="Next events" disabled>→</button></div></div><div class="calendar-tiles" tabindex="0" aria-label="Upcoming church events" aria-busy="true"><p class="calendar-message" role="status">Loading upcoming events…</p></div></div></section>';
 }
@@ -699,6 +621,7 @@ async function hydrateCalendarEvents() {
       month: "2-digit",
       day: "2-digit",
     });
+    const eventIndices=new Map(data.events.map((event,index)=>[event,index]));
     const groups = new Map();
     for (const event of data.events) {
       const location = (event.location || "").trim();
@@ -749,7 +672,7 @@ async function hydrateCalendarEvents() {
           group.events
             .map(
               (e) =>
-                '<div class="calendar-tile__service"><h3>' +
+                '<button type="button" class="calendar-tile__service calendar-event-open" data-calendar-event="'+eventIndices.get(e)+'" aria-label="View '+escapeAttribute(e.title)+'"><h3>' +
                 escapeHtml(e.title) +
                 "</h3><p>" +
                 escapeHtml(
@@ -763,7 +686,7 @@ async function hydrateCalendarEvents() {
                           : "") +
                         time.format(new Date(e.end)),
                 ) +
-                "</p></div>",
+                '</p><span class="calendar-event-indicator" aria-hidden="true">↗</span></button>',
             )
             .join("") +
           "</div>" +
@@ -776,6 +699,7 @@ async function hydrateCalendarEvents() {
         );
       })
       .join("");
+    track.querySelectorAll('[data-calendar-event]').forEach(button=>button.addEventListener('click',()=>{const pause=track.closest('section').querySelector('.calendar-pause');if(pause?.getAttribute('aria-pressed')==='false')pause.click();openCalendarEvent(data.events[Number(button.dataset.calendarEvent)],button);}));
     update();
     const section = track.closest("section"),
       motion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -863,9 +787,66 @@ async function hydrateCalendarEvents() {
   }
 }
 
+function homeDisclosure(title, preview, content) {
+  return `<details class="home-disclosure"><summary><span><strong>${escapeHtml(title)}</strong><small>${escapeHtml(preview)}</small></span><span class="home-disclosure__chevron" aria-hidden="true">⌄</span></summary><div class="home-disclosure__body">${content}</div></details>`;
+}
+function renderVisitPlanDetails(branch) {
+  if (!branch) return '<p>No church information is available yet.</p>';
+  const address = String(branch.address || '').trim();
+  const services = String(branch.services || '').trim();
+  return `<div class="visit-plan__destination" aria-live="polite"><p class="section-label">Your destination</p><h2>${escapeHtml(branch.churchName || branch.name)}</h2>
+    <div class="visit-plan__facts"><div><strong>Where</strong><p>${escapeHtml(address || 'Find the latest location details on the church page.')}</p></div><div><strong>When</strong><p>${services ? escapeHtml(services).replace(/\n/g,'<br>') : 'Check with the church for current service times before travelling.'}</p></div></div>
+    <div class="visit-plan__actions">${address ? `<a class="btn btn--gold" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}" target="_blank" rel="noopener noreferrer">Get directions <span aria-hidden="true">↗</span></a>` : ''}<a class="btn btn--outline" href="#/branches/${encodeURIComponent(branch.slug)}">Explore this church <span aria-hidden="true">→</span></a></div></div>`;
+}
+
+function renderVisitPlan() {
+  const image = getHeroImageConfig('plan-your-visit','./assets/images/derived/plan-visit-hero.jpg').desktopImage;
+  return `<article class="page page-visit-plan"><section class="visit-plan container" aria-labelledby="visit-plan-title"><header class="visit-plan__heading"><p class="section-label">Your first visit</p><h1 id="visit-plan-title">You belong here.</h1><p>A church family, a warm welcome. Let’s make your first visit simple.</p></header>
+    <div class="visit-plan__board"><div class="visit-plan__welcome">${image ? `<img src="${escapeAttribute(image)}" alt="Welcome to the LPC church family">` : ''}<div><span>Worship · Prayer · Community</span><h2>Come as you are.</h2><p>Whether it’s your first Sunday or you’re returning, we look forward to welcoming you.</p></div></div>
+    <div class="visit-plan__panel"><label for="visit-plan-church"><span>01</span> Choose your church</label><select id="visit-plan-church">${branchCards.map(b=>`<option value="${escapeAttribute(b.slug)}">${escapeHtml(b.name)}</option>`).join('')}</select><div data-visit-plan-details>${renderVisitPlanDetails(branchCards[0])}</div></div></div>
+    <section class="visit-plan__prepare" aria-labelledby="visit-prepare-title"><div><p class="section-label">Feel at home</p><h2 id="visit-prepare-title">A little help before you arrive.</h2><a href="mailto:office@londonpentecostalchurch.org?subject=lpc-website%20contact">Ask the church office <span aria-hidden="true">↗</span></a></div><div class="visit-plan__answers">
+    <details><summary>What happens at a service?</summary><p>Expect worship, Bible teaching, prayer and ministry time, with a welcome for all ages. You can also <a href="#/watch">watch a service online</a> before your visit.</p></details>
+    <details><summary>It’s my first time. What should I do?</summary><p>If it helps, come a few minutes early. Our welcome team can help with seating, children and questions about the service.</p></details>
+    <details><summary>Can I bring my children?</summary><p>Families are welcome. Sunday School and youth connections are available across our branches; check with your chosen church for the local arrangements.</p></details>
+    <details><summary>Main church service guide</summary><ul class="footer__services">${renderServiceTimes()}</ul><p>These are the main church’s published service times. Confirm local arrangements with your chosen branch.</p></details>
+    </div></section></section>${renderFooter()}</article>`;
+}
+
+function initVisitPlan() {
+  const select = document.getElementById('visit-plan-church');
+  const details = document.querySelector('[data-visit-plan-details]');
+  if (!select || !details) return;
+  select.addEventListener('change',()=>{ details.innerHTML = renderVisitPlanDetails(branchCards.find(b=>b.slug===select.value)); });
+}
+
+function renderVisitDetails(branch) {
+  if (!branch) return '';
+  const address = String(branch.address || '').trim(), services = String(branch.services || '').trim();
+  return `<div class="visit-finder-info" aria-live="polite">
+    ${services ? `<div><span class="visit-finder-label">When we meet</span><p>${escapeHtml(services)}</p></div>` : ''}
+    ${address ? `<div><span class="visit-finder-label">Where to find us</span><p>${escapeHtml(address)}</p></div>` : ''}
+    ${!services ? '<p class="visit-finder-note">Find current service times and local information on this church’s page.</p>' : ''}
+    <div class="visit-finder-actions"><a class="btn btn--gold" href="#/branches/${encodeURIComponent(branch.slug)}">Explore this church <span aria-hidden="true">→</span></a>
+    ${address ? `<a class="visit-finder-directions" href="https://www.google.com/maps/search/?api=1&amp;query=${escapeAttribute(encodeURIComponent(address))}" target="_blank" rel="noopener">Get directions ↗</a>` : ''}</div>
+  </div>`;
+}
+function renderVisitFinder() {
+  if (!branchCards.length) return '';
+  return `<aside class="visit-finder" aria-labelledby="visit-finder-title">
+    <div class="visit-finder-top"><span class="visit-finder-symbol" aria-hidden="true">✦</span><span>${branchCards.length} churches. One family.</span></div>
+    <h2 id="visit-finder-title">Find your place.</h2><p class="visit-finder-intro">A local church. A warm welcome. Start your first visit here.</p>
+    <label for="visit-branch">Choose your church</label><select id="visit-branch">${branchCards.map(b=>`<option value="${escapeAttribute(b.slug)}">${escapeHtml(b.name)}</option>`).join('')}</select>
+    <div data-visit-details>${renderVisitDetails(branchCards[0])}</div>
+  </aside>`;
+}
+function initVisitFinder() {
+  const select = document.getElementById('visit-branch'), details = document.querySelector('[data-visit-details]');
+  if (!select || !details) return;
+  select.addEventListener('change', () => { details.innerHTML = renderVisitDetails(branchCards.find(branch=>branch.slug===select.value)); });
+}
 function renderHome() {
   return `
-    <article class="page">
+    <article class="page page-home">
       <section class="hero">
         <div class="container hero__inner">
           <div class="hero__content">
@@ -874,42 +855,43 @@ function renderHome() {
             <p class="hero__quote">for spiritual sacrifices</p>
             <p class="hero__copy">We’re a multicultural church family growing in faith and doing life together. Wherever you are on your journey, you’re welcome here.</p>
             <div class="hero__actions">
-              <a class="btn btn--gold" href="#/plan-your-visit">Plan Your Visit</a>
               <a class="btn btn--hero-glass" href="#/watch"><span class="play-mark" aria-hidden="true">▶</span> Watch Sermons</a>
             </div>
 
           </div>
           ${renderHomeHeroMedia()}
+          ${renderVisitFinder()}
         </div>
-        <div class="hero-caption"><span>Worship. Community. Purpose.</span><a href="#/branches" class="explore-link">Find your community <span aria-hidden="true">↘</span></a><button class="hero-motion" type="button" aria-label="Pause background video">Pause video</button></div>
+        <div class="hero-caption"><span>Worship. Community. Purpose.</span><button class="hero-motion" type="button" aria-label="Pause background video">Pause video</button></div>
         <svg class="hero-sweep" viewBox="0 0 1440 220" preserveAspectRatio="none" aria-hidden="true"><path class="sweep-gold" d="M0 180C380 290 680 40 1060 65C1230 76 1350 109 1440 0V220H0Z" fill="#efc45b"/><path d="M0 193C370 284 745 91 1090 100C1250 104 1370 114 1440 45V220H0Z" fill="#fff"/><path class="swoosh-edge" d="M0 193C370 284 745 91 1090 100C1250 104 1370 114 1440 45" fill="none"/></svg>
         <svg class="hero-orbit" viewBox="0 0 700 700" fill="none" aria-hidden="true"><path d="M35 650C620 730 805 31 420 45C250 49 150 177 212 288" stroke="#efc45b" stroke-width="2"/></svg>
       </section>
 
+      <div class="container home-highlights" aria-label="News and services">
+        ${renderNewsletterSection(true)}
+        ${renderMediaSection(mediaSources.home, true)}
+      </div>
+      ${renderCalendarSection()}
       <section class="quick-strip">
         <div class="container">
           <div class="quick-strip__grid">
-            ${quickItem("calendar", "Join us this Sunday", "Find service details", "#/plan-your-visit")}
-            ${quickItem("marker", "Find your church", "Across London & Essex", "#/branches")}
             ${quickItem("users", "The next generation", "Discover LPC Youth", "#/youth")}
-            ${quickItem("play", "Church, wherever you are", "Watch online", "#/watch")}
+            ${quickItem("users", "Meet our pastors", "Here to serve you", "#/pastors")}
           </div>
         </div>
       </section>
 
-      ${renderCalendarSection()}
-      ${renderBranchesSection()}
-
-      ${renderMediaSection(mediaSources.home)}
-      ${renderSocialSection(mediaSources.home, "LPC")}
-
+      <div class="container home-sections" aria-label="Explore LPC">
+      ${homeDisclosure('Our branches', branchCards.length + ' churches · Find your local community', renderBranchesSection())}
+      ${homeDisclosure('Stay connected', 'YouTube, Facebook and social updates', renderSocialSection(mediaSources.home, "LPC"))}
+      ${homeDisclosure('Our people', 'Leadership serving the LPC family', `
       <section class="section section--tight section--leadership">
         <div class="container">
           <div class="team-ribbon">
             <div class="team-ribbon__intro">
               <p class="section-label">Our people</p><h3>Here to serve.<br>Here for you.</h3>
               <p>Leadership serving the LPC family across every branch.</p>
-              <a class="btn btn--outline" href="#/pastors">Meet the Team</a>
+
             </div>
             <div class="team-ribbon__people">
               ${pastors
@@ -925,21 +907,9 @@ function renderHome() {
             </div>
           </div>
 
-          <div class="welcome-banner">
-            <div class="welcome-banner__copy">
-              <p class="section-label">Your next step</p><h3>Come as you are.<br>Find your place.</h3>
-              <p>Wherever you are on your journey, there's a place for you at LPC. Visit a branch, meet the family, and grow in faith with us.</p>
-            </div>
-            <div class="welcome-banner__actions">
-              <a class="btn btn--gold" href="#/branches">Find Your Nearest Branch</a>
-              <a class="btn btn--light" href="#/plan-your-visit">Plan Your Visit</a>
-            </div>
-            <div class="welcome-banner__media">
-              <img src="./assets/images/derived/welcome-crowd.jpg" alt="Church fellowship">
-            </div>
-          </div>
         </div>
-      </section>
+      </section>`)}
+      </div>
 
       ${renderFooter()}
     </article>
@@ -1032,21 +1002,53 @@ function getHeroImageConfig(key, fallbackImage) {
   };
 }
 
-function getPastorThoughtConfig() {
-  return { ...defaultPastorThoughtConfig, ...(pastorThoughtConfig || {}) };
+function getNewsletterConfig() {
+  // Retain the existing storage record so published content survives the refactor.
+  const news = { ...defaultNewsletterConfig, ...(newsletterConfig || {}) };
+  if (["Pastor's Thought", "Pastor’s thought"].includes(news.kicker)) news.kicker = "Newsletter";
+  if (news.title === "A word of encouragement for this week.") news.title = defaultNewsletterConfig.title;
+  if (news.ctaText === "Watch Sermons" && news.ctaHref === "#/watch") news.ctaText = news.ctaHref = "";
+  return news;
 }
 
 function getSiteSettingsConfig() {
   return { ...defaultSiteSettingsConfig, ...(siteSettingsConfig || {}) };
 }
 
-function renderPastorThoughtCopy() {
-  const thought = getPastorThoughtConfig();
-  const meta = [thought.author, thought.date].filter(Boolean).join(" - ");
-  return `
-    <span class="pastor-thought__body">${escapeHtml(thought.body)}</span>
-    ${meta ? `<span class="pastor-thought__meta">${escapeHtml(meta)}</span>` : ""}
-  `;
+function renderNewsletterSection(compact = false) {
+  const news = getNewsletterConfig();
+  if (!news.body.trim() && !news.image.trim()) return "";
+  const meta = [news.author, news.date].filter(Boolean).join(" · ");
+  const heading = `<p class="section-label">${escapeHtml(news.kicker)}</p><h2 class="section-title" id="newsletter-title">${escapeHtml(news.title)}</h2>${meta ? `<p class="newsletter-meta">${escapeHtml(meta)}</p>` : ''}`;
+  const body = news.body ? `<div class="newsletter-body">${escapeHtml(news.body)}</div>` : '';
+  return `<section class="section section--tight section--newsletter" aria-labelledby="newsletter-title"><div class="container">
+    <article class="newsletter-card${news.image ? ' newsletter-card--image' : ''}">
+      ${compact ? `<header class="newsletter-heading">${heading}</header>` : ''}
+      ${news.image ? `<button class="newsletter-image-button" type="button" aria-label="Enlarge newsletter image" aria-haspopup="dialog"><img class="newsletter-image" src="${escapeAttribute(news.image)}" alt="${escapeAttribute(news.imageAlt || news.title)}" loading="lazy"><span class="newsletter-image-hint">Tap to enlarge ↗</span></button>` : ''}
+      <div class="newsletter-content">${compact ? '' : heading}
+      ${compact && news.body.length > 180 ? `<details class="newsletter-article"><summary><span class="newsletter-excerpt">${escapeHtml(news.body.slice(0,160).trim())}…</span><span class="newsletter-read"><span class="newsletter-read-open">Read news</span><span class="newsletter-read-close">Close article</span> <span aria-hidden="true">↗</span></span></summary>${body}</details>` : body}
+      ${news.ctaText && news.ctaHref ? `<a class="btn btn--outline" href="${escapeAttribute(news.ctaHref)}">${escapeHtml(news.ctaText)}</a>` : ''}
+      </div></article>
+      ${news.image ? `<dialog class="newsletter-viewer" aria-label="Newsletter image"><button class="newsletter-viewer-close" type="button" autofocus aria-label="Close image viewer">Close ✕</button><img src="${escapeAttribute(news.image)}" alt="${escapeAttribute(news.imageAlt || news.title)}"></dialog>` : ''}
+      </div></section>`;
+}
+
+function initNewsletterViewer() {
+  const opener = document.querySelector('.newsletter-image-button'), viewer = document.querySelector('.newsletter-viewer');
+  if (!opener || !viewer) return;
+  let previousOverflow;
+  opener.addEventListener('click', () => {
+    if (viewer.open) return;
+    previousOverflow = document.body.style.overflow;
+    viewer.showModal();
+    document.body.style.overflow = 'hidden';
+  });
+  viewer.querySelector('.newsletter-viewer-close').addEventListener('click', () => viewer.close());
+  viewer.addEventListener('click', event => { if (event.target === viewer) viewer.close(); });
+  viewer.addEventListener('close', () => {
+    document.body.style.overflow = previousOverflow ?? '';
+    if (opener.isConnected) opener.focus({preventScroll:true});
+  });
 }
 
 function videoType(url) {
@@ -1211,41 +1213,52 @@ function renderHomeHeroAdminFields() {
 
 function renderAdminPanel() {
   if (!adminSession.authenticated) return renderAdminLogin();
-  return `
-    <article class="page">
-      <section class="section section--tight section--admin-hero">
-        <div class="container admin-panel">
-          <div class="admin-panel__header">
-            <div>
-              <p class="section-label">Admin Control Panel</p>
-              <h1 class="section-title">Manage your church website</h1>
-              <p class="section-copy">Manage user access, weekly schedules, pastors, branches, and website content.</p>
-            </div>
-            <button class="btn btn--outline" type="button" data-admin-logout>Sign out</button>
-          </div>
-          <nav class="admin-maintenance-links admin-shortcut-grid" aria-label="Website maintenance">
-            <a href="#/lpcadmin/users"><span class="admin-shortcut-icon" aria-hidden="true">01</span><strong>Users &amp; access</strong><small>User profiles, accounts, serving roles and scheduler permissions</small><span class="admin-shortcut-open">Manage users →</span></a>
-            <a href="#/lpcadmin/volunteers"><span class="admin-shortcut-icon" aria-hidden="true">02</span><strong>Weekly planner</strong><small>Meetings, pastors and volunteer duties</small><span class="admin-shortcut-open">Open planner →</span></a>
-            <a href="#/lpcadmin/pastors"><span class="admin-shortcut-icon" aria-hidden="true">03</span><strong>Pastor profiles</strong><small>Photos, names and introductions</small><span class="admin-shortcut-open">Manage pastors →</span></a>
-            <a href="#/lpcadmin/branches"><span class="admin-shortcut-icon" aria-hidden="true">04</span><strong>Church branches</strong><small>Colours, service times and contact details</small><span class="admin-shortcut-open">Manage branches →</span></a>
-            <a href="#/lpcadmin/assets"><span class="admin-shortcut-icon" aria-hidden="true">05</span><strong>Photos & videos</strong><small>Find, upload and reuse website media</small><span class="admin-shortcut-open">Open media library →</span></a>
-          </nav>
-          <details class="admin-section-fold"><summary><strong>Pastor’s thought</strong><span>Edit the message on the Watch page</span></summary>${renderPastorThoughtAdminFields()}</details>
-          <details class="admin-section-fold"><summary><strong>Website header message</strong><span>Edit the announcement at the top of the website</span></summary>${renderSiteSettingsAdminFields()}</details>
-          <section class="admin-panel__section">
-            <div class="admin-panel__section-heading">
-              <h2>Page images and heroes</h2><a class="btn btn--gold" href="#/lpcadmin/page-images">Edit images within pages</a>
-              <p>Open a tile to edit the active video/image, desktop crop, and mobile crop. After saving, you return here and the preview updates.</p>
-            </div>
-            <div class="admin-hero-tiles">
-              ${renderHeroPreviewTiles()}
-            </div>
-          </section>
-        </div>
-      </section>
-      ${renderFooter()}
-    </article>
-  `;
+  const groups = [
+    {name:'People & schedules',tasks:[
+      ['users','Users & access','Profiles, accounts and permissions','users members roles login account permissions'],
+      ['volunteers','Weekly planner','Meetings and serving duties','pastoral choir media schedule rota meetings reports excel'],
+      ['pastors','Pastor profiles','Photos and introductions','pastors ministers biographies'],
+      ['branches','Church branches','Locations, service times and contacts','church branches location address service times contacts']
+    ]},
+    {name:'Website & publishing',tasks:[
+      ['newsletter','Newsletter','Share news with the church family','news announcement newsletter home'],
+      ['header','Header message','The announcement above navigation','header slogan celebration top bar'],
+      ['appearance','Page appearance','Hero images, video and framing','hero background appearance video crop desktop mobile'],
+      ['page-images','Images within pages','Choose images for page content','page pictures images content'],
+      ['assets','Media library','Upload and reuse photos and videos','assets media library upload photos videos']
+    ]}
+  ];
+  const incomplete = branchCards.filter(b=>!String(b.address || '').trim() || !String(b.services || '').trim()).length;
+  return `<article class="page page-admin-workspace"><section class="container admin-workspace"><header class="admin-workspace__heading"><div><p class="section-label">Website administrator</p><h1>What would you like to do?</h1></div><button class="btn btn--outline" type="button" data-admin-logout>Sign out</button></header>
+    <label class="admin-task-search" for="admin-task-search">Find an admin tool<input id="admin-task-search" type="search" placeholder="Try users, newsletter or service times" autocomplete="off" aria-controls="admin-task-groups"></label>
+    ${incomplete ? `<a class="admin-attention" href="#/lpcadmin/branches"><span aria-hidden="true">!</span><div><strong>Help visitors find your churches</strong><p>${incomplete} ${incomplete === 1 ? 'church needs' : 'churches need'} an address or service times completed.</p></div><span aria-hidden="true">→</span></a>` : ''}
+    <nav id="admin-task-groups" class="admin-maintenance-links" aria-label="Admin tools">${groups.map(group=>`<section class="admin-task-group" data-admin-task-group><h2>${group.name}</h2><div class="admin-task-grid">${group.tasks.map(([path,title,copy,keywords])=>`<a class="admin-task" href="#/lpcadmin/${path}" data-admin-task="${escapeAttribute((title+' '+copy+' '+keywords).toLowerCase())}"><div><strong>${title}</strong><small>${copy}</small></div><span aria-hidden="true">↗</span></a>`).join('')}</div></section>`).join('')}</nav><p class="admin-task-empty" data-admin-task-empty role="status" hidden>No matching tools. Try another word or clear the search.</p>
+    </section>${renderFooter()}</article>`;
+}
+
+function initAdminWorkspace() {
+  const input = document.getElementById('admin-task-search');
+  if (!input) return;
+  const tasks = [...document.querySelectorAll('[data-admin-task]')];
+  const groups = [...document.querySelectorAll('[data-admin-task-group]')];
+  const empty = document.querySelector('[data-admin-task-empty]');
+  input.addEventListener('input',()=>{
+    const terms = input.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    tasks.forEach(task=>{ task.hidden = !terms.every(term=>task.dataset.adminTask.includes(term)); });
+    groups.forEach(group=>{ group.hidden = ![...group.querySelectorAll('[data-admin-task]')].some(task=>!task.hidden); });
+    empty.hidden = tasks.some(task=>!task.hidden);
+  });
+}
+
+function renderAdminWorkspaceEditor(section) {
+  if (!adminSession.authenticated) return renderAdminLogin();
+  const pages = {
+    newsletter:['Newsletter','Share news and an optional image on the home page.',renderNewsletterAdminFields],
+    header:['Website header message','Update the announcement above the main navigation.',renderSiteSettingsAdminFields],
+    appearance:['Page appearance','Choose a page to edit its hero image, video or desktop and mobile framing.',()=>`<div class="admin-hero-tiles">${renderHeroPreviewTiles()}</div>`]
+  };
+  const [title,copy,body] = pages[section];
+  return `<article class="page page-admin-workspace"><section class="container admin-workspace admin-workspace-editor"><a class="admin-back-link" href="#/lpcadmin">← Admin workspace</a><header class="admin-workspace__heading"><div><p class="section-label">Website editing</p><h1>${title}</h1><p>${copy}</p></div></header>${body()}</section>${renderFooter()}</article>`;
 }
 
 function renderAdminHeroEditor(key) {
@@ -1276,7 +1289,7 @@ function renderAdminHeroEditor(key) {
               <h1 class="section-title">${heroLabel(key)} hero</h1>
               <p class="section-copy">Update the video or image for this page. Leave video blank to use image mode.</p>
             </div>
-            <a class="btn btn--outline" href="#/lpcadmin">Back to previews</a>
+            <a class="btn btn--outline" href="#/lpcadmin/appearance">Back to page appearance</a>
           </div>
           <div class="admin-editor-layout">
             ${renderHeroPreviewTile(key, true)}
@@ -1300,7 +1313,7 @@ function renderAdminHomeHeroEditor() {
               <h1 class="section-title">Home page video hero</h1>
               <p class="section-copy">Use a controlled video for the main homepage hero, with poster and focal settings.</p>
             </div>
-            <a class="btn btn--outline" href="#/lpcadmin">Back to previews</a>
+            <a class="btn btn--outline" href="#/lpcadmin/appearance">Back to page appearance</a>
           </div>
           <div class="admin-editor-layout">
             ${renderHomeHeroPreviewTile(true)}
@@ -1328,41 +1341,46 @@ function renderSiteSettingsAdminFields() {
   `;
 }
 
-function renderPastorThoughtAdminFields() {
-  const thought = getPastorThoughtConfig();
-  return `
-    <form class="admin-form" id="pastor-thought-form">
-      <label>Kicker
-        <input name="kicker" type="text" value="${escapeAttribute(thought.kicker)}" placeholder="Pastor's Thought">
-      </label>
-      <label>Title
-        <input name="title" type="text" value="${escapeAttribute(thought.title)}" placeholder="A word of encouragement for this week">
-      </label>
-      <label>Thought / Encouragement
-        <textarea name="body" rows="6" placeholder="Write the pastoral thought here...">${escapeHtml(thought.body)}</textarea>
-      </label>
-      <div class="admin-hero-card__grid">
-        <label>Author
-          <input name="author" type="text" value="${escapeAttribute(thought.author)}" placeholder="Pr Sam John">
-        </label>
-        <label>Date / Season
-          <input name="date" type="text" value="${escapeAttribute(thought.date)}" placeholder="Sunday 16 June">
-        </label>
-      </div>
-      <div class="admin-hero-card__grid">
-        <label>Button Text
-          <input name="ctaText" type="text" value="${escapeAttribute(thought.ctaText)}" placeholder="Watch Sermons">
-        </label>
-        <label>Button Link
-          <input name="ctaHref" type="text" value="${escapeAttribute(thought.ctaHref)}" placeholder="#/watch">
-        </label>
-      </div>
-      <div class="admin-form__actions">
-        <button class="btn btn--gold" type="submit">Publish Thought</button>
-        <a class="btn btn--light" href="#/watch">View Watch Page</a>
-      </div>
-    </form>
-  `;
+function renderNewsletterDraftPreview(draft) {
+  return `<article class="newsletter-draft-card">${draft.image ? `<img src="${escapeAttribute(draft.image)}" alt="${escapeAttribute(draft.imageAlt || draft.title)}">` : ''}<div><p class="section-label">${escapeHtml(draft.kicker || 'Newsletter')}</p><h3>${escapeHtml(draft.title || 'Your headline')}</h3>${draft.author || draft.date ? `<p class="newsletter-draft-meta">${escapeHtml([draft.author,draft.date].filter(Boolean).join(' · '))}</p>` : ''}<p class="newsletter-draft-body">${escapeHtml(draft.body || 'Your news will appear here as you write.')}</p>${draft.ctaText ? `<span class="newsletter-draft-link">${escapeHtml(draft.ctaText)} →</span>` : ''}</div></article>`;
+}
+
+function renderNewsletterAdminFields() {
+  const thought = getNewsletterConfig();
+  return `<form class="admin-form newsletter-studio" id="newsletter-form" data-newsletter-mode="edit">
+    <div class="newsletter-studio-switch" role="group" aria-label="Newsletter view"><button type="button" data-newsletter-view="edit" aria-pressed="true">Edit news</button><button type="button" data-newsletter-view="preview" aria-pressed="false">Preview</button></div>
+    <div class="newsletter-studio-layout"><div class="newsletter-studio-fields">
+      <label>Headline<input name="title" required value="${escapeAttribute(thought.title)}" placeholder="News &amp; updates from LPC"></label>
+      <label>News<textarea name="body" rows="8" maxlength="15000" placeholder="Share news and announcements for the church family">${escapeHtml(thought.body)}</textarea></label>
+      <label>Image (optional)${renderAssetPickerInput({name:'image',value:thought.image,placeholder:'Choose an image or keep this a text announcement'})}<span>Leave blank for a text announcement.</span></label>
+      <label>Image description<input name="imageAlt" value="${escapeAttribute(thought.imageAlt)}" placeholder="Describe the image for screen readers"></label>
+      <details class="newsletter-studio-options"><summary>Byline, edition &amp; optional link</summary>
+      <label>Section label<input name="kicker" value="${escapeAttribute(thought.kicker)}" placeholder="Newsletter"></label>
+      <div class="admin-hero-card__grid"><label>Published by (optional)<input name="author" value="${escapeAttribute(thought.author)}" placeholder="LPC office"></label><label>Date / edition (optional)<input name="date" value="${escapeAttribute(thought.date)}" placeholder="November 2026"></label></div>
+      <label>Link text (optional)<input name="ctaText" value="${escapeAttribute(thought.ctaText)}" placeholder="Find out more"></label><label>Link destination (optional)<input name="ctaHref" value="${escapeAttribute(thought.ctaHref)}" placeholder="#/contact or https://..."></label></details>
+    </div><aside class="newsletter-studio-preview" aria-label="Newsletter preview"><div class="newsletter-preview-heading"><h2>Reader preview</h2><span>Updates as you type</span></div><div data-newsletter-preview>${renderNewsletterDraftPreview(thought)}</div><p class="newsletter-preview-note">Preview of your news content. The home page adapts the layout to the screen.</p></aside></div>
+    <div class="newsletter-publish-bar"><div><strong data-newsletter-dirty>Saved version</strong><p data-newsletter-status role="status" aria-live="polite"></p></div><button class="btn btn--gold" type="submit">Publish newsletter</button></div>
+  </form>`;
+}
+
+function initNewsletterStudio() {
+  const form = document.getElementById('newsletter-form');
+  const preview = form?.querySelector('[data-newsletter-preview]');
+  if (!preview) return;
+  const dirty = form.querySelector('[data-newsletter-dirty]');
+  const keys = ['kicker','title','body','image','imageAlt','author','date','ctaText','ctaHref'];
+  const read = () => {const values = new FormData(form);return Object.fromEntries(keys.map(key=>[key,String(values.get(key)||'').trim() || (['image','imageAlt','date'].includes(key) ? '' : defaultNewsletterConfig[key] || '')]));};
+  let saved = JSON.stringify(read());
+  const update = () => {const draft=read();preview.innerHTML=renderNewsletterDraftPreview(draft);dirty.textContent=JSON.stringify(draft)===saved ? 'Saved version' : 'Unpublished changes';};
+  form.addEventListener('input',update);
+  form.addEventListener('change',update);
+  form.addEventListener('newsletter-published',event=>{saved=JSON.stringify(Object.fromEntries(keys.map(key=>[key,event.detail[key]])));update();});
+  const setMode = mode => {
+    form.dataset.newsletterMode=mode;
+    form.querySelectorAll('[data-newsletter-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.newsletterView===mode)));
+  };
+  form.querySelectorAll('[data-newsletter-view]').forEach(button=>button.addEventListener('click',()=>setMode(button.dataset.newsletterView)));
+  form.addEventListener('invalid',()=>setMode('edit'),true);
 }
 
 function renderAdminLogin() {
@@ -1588,6 +1606,7 @@ function renderSubPage({
   body,
 }) {
   const hero = getHeroImageConfig(pageKey, image);
+  actions = actions.filter(action => !(pageKey === "watch" && action[1] === "#/watch"));
   return `
     <article class="page">
       <section class="subhero">
@@ -1632,7 +1651,7 @@ function renderBranchPage(branch, image) {
   const source = getBranchMedia(branch);
   return renderSubPage({
     pageKey: branch.slug,
-    label: escapeHtml(branch.churchName),
+    label: "Our branches",
     title: escapeHtml(branch.churchName),
     copy: escapeHtml(branch.summary),
     image,
@@ -1663,11 +1682,10 @@ function renderBranchPage(branch, image) {
             <article class="content-card content-card--feature">
               <p class="section-label">What To Expect</p>
               <h3>Warm welcome, worship, prayer, and branch family life.</h3>
-              <p>${escapeHtml(branch.summary)}</p>
+
               <p style="margin-top:14px">Every LPC branch carries the same worship culture, biblical teaching, and family heart while serving its local community faithfully.</p>
             </article>
             <div class="branch-engagement__cards">
-              ${card("Service Life", escapeHtml(branch.services || "Contact this branch for service times."))}
               ${card("Local Connection", "A branch community for worship, friendship, pastoral care, and outreach.")}
             </div>
           </div>
@@ -1712,7 +1730,7 @@ function renderBranchHeroMedia(branch, image, source) {
   `;
 }
 
-function renderMediaSection(source) {
+function renderMediaSection(source, featured = false) {
   if (!source) return "";
   const socialLinks = source.socials
     .map(
@@ -1722,12 +1740,12 @@ function renderMediaSection(source) {
     .join("");
 
   return `
-    <section class="section section--tight section--media">
+    <section class="section section--tight section--media ${featured ? 'home-featured-media' : ''}">
       <div class="container media-section">
         <div class="media-section__header">
           <p class="section-label">Media</p>
           <h2 class="section-title">${source.title}</h2>
-          <p class="section-copy">Make room for faith in your week. Join us online for worship and messages from our church family.</p>
+          <p class="section-copy">${featured ? 'Join the live service or watch the latest message.' : 'Make room for faith in your week. Join us online for worship and messages from our church family.'}</p>
         </div>
         <div class="media-section__body">
           ${
@@ -1751,7 +1769,8 @@ function renderMediaSection(source) {
           <aside class="media-socials">
             <p class="media-kicker"><span></span>Live on Sundays</p>
             <h3>${source.watchTitle || "Watch online"}</h3>
-            <p>Join the service live when available, catch up on the latest message, or open the full channel collection.</p>
+            <p>${featured ? 'Worship with us wherever you are.' : 'Join the service live when available, catch up on the latest message, or open the full channel collection.'}</p>
+            ${featured ? '<a class="btn btn--gold" href="#/watch">Watch services →</a>' : ''}
              <div class="footer__socials">
   ${mediaSources.home.socials
     .filter(([name]) => name !== "Instagram")
@@ -1813,19 +1832,19 @@ function mediaCollections() {
   return branchCards.map((branch) => ({
     key: branch.slug,
     label: branch.churchName,
+    tabLabel: branch.name,
     branchHref: "#/branches/" + branch.slug,
     source: getBranchMedia(branch),
   }));
 }
 function renderWatchHub() {
   const rows = mediaCollections()
-    .map(({ key, label, branchHref, source }) => {
+    .map(({ key, label, tabLabel = label, branchHref, source }, index) => {
       const id = youtubeVideoId(source.videoUrl);
       const player = id
-        ? '<div class="youtube-preview youtube-preview--compact"><iframe src="https://www.youtube.com/embed/' +
+        ? '<div class="youtube-preview youtube-preview--compact"><iframe data-watch-src="https://www.youtube.com/embed/' +
           id +
           "?playsinline=1&rel=0&controls=1" +
-          (source.autoplay === "silent" ? "&autoplay=1&mute=1" : "") +
           '" title="' +
           escapeAttribute(label) +
           ' video" loading="eager" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>'
@@ -1837,7 +1856,7 @@ function renderWatchHub() {
             '" data-youtube-title="' +
             escapeAttribute(label) +
             '" data-youtube-autoplay="' +
-            escapeAttribute(source.autoplay || "silent") +
+            'off' +
             '"><p class="youtube-player__status">Loading latest service...</p></div>'
           : '<div class="watch-collection__empty"><h3>' +
             (source.youtubeUrl ? "Watch on YouTube" : "Videos coming soon") +
@@ -1846,8 +1865,8 @@ function renderWatchHub() {
               ? "Open the channel to explore services and sermons."
               : "Visit this branch for service times and contact details.") +
             "</p></div>";
-      return (
-        '<article class="watch-row" style="' +
+      const row = (
+        '<article class="watch-row" id="watch-panel-' + index + '" data-watch-priority="' + (id ? '2' : '1') + '" data-watch-order="' + index + '" style="' +
         collectionThemeStyle(key) +
         '"><div class="watch-collection"><div class="watch-collection__meta"><p class="section-label">' +
         escapeHtml(label) +
@@ -1856,7 +1875,7 @@ function renderWatchHub() {
         "</h3></div>" +
         player +
         '<div class="watch-collection__actions">' +
-        (source.youtubeUrl
+        (source.youtubeUrl && !source.socials.some(([,url]) => url === source.youtubeUrl)
           ? '<a class="btn btn--gold" href="' +
             escapeAttribute(source.youtubeUrl) +
             '" target="_blank" rel="noopener">Open YouTube channel</a>'
@@ -1894,13 +1913,56 @@ function renderWatchHub() {
             '">View branch details</a>') +
         "</div></aside></article>"
       );
+      const available = !!(id || source.youtubeUrl);
+      return { available, index, label: tabLabel, priority: id ? 2 : 1, html: available ? row : '<details class="watch-coming-soon" style="' + collectionThemeStyle(key) + '"><summary><span><strong>' + escapeHtml(label) + '</strong><small>Videos coming soon · Open for branch details</small></span><span aria-hidden="true">⌄</span></summary><div class="watch-coming-soon__body">' + row + '</div></details>' };
     })
-    .join("");
+    .sort((a,b) => b.priority - a.priority);
+  const availableRows = rows.filter(row => row.available).map(row => row.html).join('');
+  const upcomingRows = rows.filter(row => !row.available).map(row => row.html).join('');
+  const tabs = rows.filter(row=>row.available).map((row,i)=>'<button type="button" role="tab" id="watch-tab-'+row.index+'" aria-controls="watch-panel-'+row.index+'" aria-selected="'+(i===0)+'" tabindex="'+(i===0?'0':'-1')+'" data-watch-select="'+row.index+'">'+escapeHtml(row.label)+'</button>').join('');
   return (
-    '<section class="section section--watch-hub"><div class="container watch-hub"><h2 class="section-title">Choose a branch to watch</h2><div class="watch-hub__rows">' +
-    rows +
-    "</div></div></section>"
+    '<section class="section section--watch-hub"><div class="container watch-hub"><h2 class="sr-only">Watch services</h2>'+(tabs?'<div class="watch-church-tabs" role="tablist" aria-label="Choose a church to watch">'+tabs+'</div>':'')+'<div class="watch-hub__rows" data-watch-available>' +
+    (availableRows || '<p>No videos are available yet. Open a branch below for updates.</p>') +
+    '</div>' + (upcomingRows ? '<section class="watch-upcoming"><h3>More branches · Videos coming soon</h3><div class="watch-upcoming__rows">' + upcomingRows + '</div></section>' : '') + '</div></section>'
   );
+}
+
+function initWatchStage() {
+  const list=document.querySelector('[data-watch-available]'), tabs=[...document.querySelectorAll('[data-watch-select]')];
+  if(!list || !tabs.length)return;
+  const rows=[...list.querySelectorAll('.watch-row')];
+  const select=index=>{
+    rows.forEach(row=>{
+      const active=row.dataset.watchOrder===String(index);
+      row.hidden=!active;row.setAttribute('role','tabpanel');row.setAttribute('aria-labelledby','watch-tab-'+row.dataset.watchOrder);
+      if(!active) row.querySelectorAll('.youtube-preview[data-youtube-handle]').forEach(player=>{
+        delete player.dataset.youtubeRequested;
+        player.innerHTML='<p class="youtube-player__status">Choose this church to load its service.</p>';
+      });
+      row.querySelectorAll('iframe').forEach(frame=>{
+        if(!active && frame.hasAttribute('src')){frame.dataset.watchSrc=frame.getAttribute('src');frame.removeAttribute('src');}
+        if(active && !frame.hasAttribute('src') && frame.dataset.watchSrc)frame.setAttribute('src',frame.dataset.watchSrc);
+      });
+    });
+    tabs.forEach(tab=>{const active=tab.dataset.watchSelect===String(index);tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;});
+  };
+  tabs.forEach((tab,i)=>{
+    tab.addEventListener('click',()=>{select(tab.dataset.watchSelect);hydrateYouTubePlayers();});
+    tab.addEventListener('keydown',event=>{
+      let next=event.key==='ArrowRight'?(i+1)%tabs.length:event.key==='ArrowLeft'?(i+tabs.length-1)%tabs.length:event.key==='Home'?0:event.key==='End'?tabs.length-1:-1;
+      if(next<0)return;event.preventDefault();tabs[next].focus();tabs[next].click();
+    });
+  });
+  select(tabs[0].dataset.watchSelect);
+}
+
+function prioritiseWatchPlayer(player, mode) {
+  const row = player.closest('.watch-row[data-watch-priority]');
+  if (!row || !row.parentElement.matches('[data-watch-available]')) return;
+  row.dataset.watchPriority = mode === 'Live now' ? '3' : '2';
+  const list = row.parentElement;
+  const next = [...list.children].find(entry => entry !== row && (Number(entry.dataset.watchPriority) < Number(row.dataset.watchPriority) || (entry.dataset.watchPriority === row.dataset.watchPriority && Number(entry.dataset.watchOrder) > Number(row.dataset.watchOrder))));
+  if (row.nextElementSibling !== (next || null)) list.insertBefore(row, next || null);
 }
 
 function collectionColor(key) {
@@ -1991,6 +2053,39 @@ function socialIcon(name) {
   return icons[name] || icons.YouTube;
 }
 
+function renderBranchDirectory() {
+  return `<article class="page page-directory"><section class="church-finder container" aria-labelledby="church-finder-title">
+    <header class="church-finder__heading"><div><p class="section-label">One family · London & Essex</p><h1 id="church-finder-title">Find your church.</h1><p>Different places. The same warm welcome.</p></div>
+    <div class="church-finder__search"><label for="church-search">Search by church or town</label><input id="church-search" type="search" placeholder="Try Chelmsford or Southend" autocomplete="off" aria-controls="church-results"><p data-church-count role="status" aria-live="polite">${branchCards.length} churches to explore</p></div></header>
+    <div class="church-directory" id="church-results">${branchCards.map(branch => {
+      const address = String(branch.address || '').trim();
+      const services = String(branch.services || '').trim();
+      const image = getHeroImageConfig(branch.slug, branch.image).desktopImage;
+      return `<article class="church-place" data-church-search="${escapeAttribute([branch.name,branch.churchName,address,branch.summary].filter(Boolean).join(' ').toLowerCase())}" style="--place-color:${escapeAttribute(branch.color)}">
+        <a class="church-place__image" href="#/branches/${encodeURIComponent(branch.slug)}" aria-label="Explore ${escapeAttribute(branch.churchName || branch.name)}">${image ? `<img src="${escapeAttribute(image)}" alt="${escapeAttribute(branch.churchName || branch.name)}" loading="lazy">` : ''}<span>Explore church <span aria-hidden="true">↗</span></span></a>
+        <div class="church-place__body"><div class="church-place__identity">${branch.logo ? `<img src="${escapeAttribute(branch.logo)}" alt="" loading="lazy">` : ''}<div><h2>${escapeHtml(branch.name)}</h2><p>${escapeHtml(branch.subtitle || 'Pentecostal Church')}</p></div></div>
+        ${address ? `<p class="church-place__address">${escapeHtml(address)}</p>` : `<p class="church-place__address">${escapeHtml(branch.summary || 'Discover our local church family.')}</p>`}
+        <div class="church-place__visit">${services ? `<p><strong>When we meet</strong><span>${escapeHtml(services).replace(/\n/g,'<br>')}</span></p>` : `<p>Visit the church page for service information.</p>`}
+        ${address ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}" target="_blank" rel="noopener noreferrer">Directions <span aria-hidden="true">↗</span></a>` : ''}</div></div></article>`;
+    }).join('')}</div><p class="church-finder__empty" data-church-empty hidden>No churches match your search. Try another town or clear the search.</p>
+    </section>${renderFooter()}</article>`;
+}
+
+function initBranchDirectory() {
+  const input = document.getElementById('church-search');
+  if (!input) return;
+  const cards = [...document.querySelectorAll('[data-church-search]')];
+  const count = document.querySelector('[data-church-count]');
+  const empty = document.querySelector('[data-church-empty]');
+  input.addEventListener('input', () => {
+    const terms = input.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    let visible = 0;
+    cards.forEach(card => { card.hidden = !terms.every(term => card.dataset.churchSearch.includes(term)); if (!card.hidden) visible++; });
+    count.textContent = `${visible} ${visible === 1 ? 'church' : 'churches'} ${terms.length ? 'found' : 'to explore'}`;
+    empty.hidden = visible > 0;
+  });
+}
+
 function renderBranchesSection(includePadding = false) {
   return (
     '<section class="section section--branches"><div class="container"><div class="section-heading"><p class="section-label">Our Branches</p><h2 class="section-title">One family. Many places to belong.</h2><p class="section-copy">Find a community near you for worship, friendship and a shared life of faith.</p></div><div class="branch-grid">' +
@@ -2036,12 +2131,56 @@ function renderBranchesSection(includePadding = false) {
   );
 }
 
+function renderServiceTimes(branch = null) {
+  return branch
+        ? (branch.services || "Service times to be confirmed.")
+            .split(/\r?\n/)
+            .filter((line) => line.trim())
+            .map((line) => {
+              const [service, ...timing] = line.split(/\s*-\s*/);
+              return `
+                <li>
+                  <span class="service__name">${escapeHtml(service)}</span>
+                  ${
+                    timing.length
+                      ? `<span class="service__time">${escapeHtml(timing.join(" - "))}</span>`
+                      : ""
+                  }
+                </li>
+              `;
+            })
+            .join("")
+        : `
+          <li>
+            <span class="service__name">Sunday Service</span>
+            <span class="service__time">
+              8:00 AM — Hindi<br>
+              9:30 AM — English<br>
+              11:00 AM — Malayalam<br>
+              4:30 PM — Branches
+            </span>
+          </li>
+          <li>
+            <span class="service__name">Cell Prayers</span>
+            <span class="service__time">7:30 PM · Monday – Friday</span>
+          </li>
+          <li>
+            <span class="service__name">Sunday School</span>
+            <span class="service__time">10:30 AM</span>
+          </li>
+          <li>
+            <span class="service__name">Youth Meetings</span>
+            <span class="service__time">12:00 PM · Last Sunday of the month</span>
+          </li>
+        `;
+}
+
 function renderFooter() {
   const branch = branchCards.find(
     (item) => normalizeRoute() === `/branches/${item.slug}`,
   );
   return `
-    <footer class="footer">
+    <footer class="footer footer--compact">
       <svg class="footer-swoosh" viewBox="0 0 1440 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0 86C300 12 460 8 720 8C1080 8 1290 22 1440 4L1440 0H0Z" fill="#fff"/><path d="M0 86C300 12 460 8 720 8C1080 8 1290 22 1440 4" fill="none" stroke="#efc45b" stroke-width="4" vector-effect="non-scaling-stroke"/></svg>
       <div class="container">
         <div class="footer__inner">
@@ -2059,9 +2198,10 @@ function renderFooter() {
             </div>
           </section>
 
-          <section class="footer__column">
-            <h4>Quick Links</h4>
+          <details class="footer__column footer-fold" data-footer-fold open>
+            <summary>Explore the website<span aria-hidden="true">+</span></summary>
             <ul>
+              <li><a href="#/home">Home</a></li>
               <li><a href="#/about">About Us</a></li>
               <li><a href="#/pastors">Pastors</a></li>
               <li><a href="#/ministries">Ministries</a></li>
@@ -2070,10 +2210,10 @@ function renderFooter() {
               <li><a href="#/watch">Watch</a></li>
               <li><a href="#/contact">Contact</a></li>
             </ul>
-          </section>
+          </details>
 
-        <section class="footer__column">
-  <h4>Contact Us</h4>
+        <details class="footer__column footer-fold" data-footer-fold open>
+  <summary>Contact us<span aria-hidden="true">+</span></summary>
 
   <p class="footer__address">
     ${
@@ -2118,63 +2258,30 @@ function renderFooter() {
 
     <a href="mailto:info@lpc.org.uk">info@lpc.org.uk</a>
   </div>
-</section>
+</details>
 
-         <section class="footer__column">
-  <h4>Service Times</h4>
+         <details class="footer__column footer-fold" data-footer-fold open>
+  <summary>Service times<span aria-hidden="true">+</span></summary>
   <ul class="footer__services">
-    ${
-      branch
-        ? (branch.services || "Service times to be confirmed.")
-            .split(/\r?\n/)
-            .filter((line) => line.trim())
-            .map((line) => {
-              const [service, ...timing] = line.split(/\s*-\s*/);
-              return `
-                <li>
-                  <span class="service__name">${escapeHtml(service)}</span>
-                  ${
-                    timing.length
-                      ? `<span class="service__time">${escapeHtml(timing.join(" - "))}</span>`
-                      : ""
-                  }
-                </li>
-              `;
-            })
-            .join("")
-        : `
-          <li>
-            <span class="service__name">Sunday Service</span>
-            <span class="service__time">
-              8:00 AM — Hindi<br>
-              9:30 AM — English<br>
-              11:00 AM — Malayalam<br>
-              4:30 PM — Branches
-            </span>
-          </li>
-          <li>
-            <span class="service__name">Cell Prayers</span>
-            <span class="service__time">7:30 PM · Monday – Friday</span>
-          </li>
-          <li>
-            <span class="service__name">Sunday School</span>
-            <span class="service__time">10:30 AM</span>
-          </li>
-          <li>
-            <span class="service__name">Youth Meetings</span>
-            <span class="service__time">12:00 PM · Last Sunday of the month</span>
-          </li> 
-        `
-    }
+    ${renderServiceTimes(branch)}
   </ul>
-</section>
+</details>
         </div>
-        <div class="footer__bottom"><a href="#/volunteers">Team access</a><br>
-          &copy; 2026 London Pentecostal Church | Part of Alpha International Ministries | Charity No : 1126140 | All rights reserved.
-        </div>
+        <div class="footer__bottom"><span>
+          &copy; 2026 London Pentecostal Church | Part of Alpha International Ministries | Charity No : 1126140 | All rights reserved. | <a href="#/volunteers">Team access</a>
+        </span></div>
       </div>
     </footer>
   `;
+}
+
+let footerLayoutMedia = null;
+function initFooterLayout() {
+  if (!footerLayoutMedia) {
+    footerLayoutMedia = window.matchMedia('(max-width: 700px)');
+    footerLayoutMedia.addEventListener('change',initFooterLayout);
+  }
+  document.querySelectorAll('[data-footer-fold]').forEach(fold=>{ fold.open = !footerLayoutMedia.matches; });
 }
 
 function quickItem(iconName, title, text, href = "#/plan-your-visit") {
@@ -2211,6 +2318,8 @@ function card(title, html) {
 function icon(name) {
   const stroke = "currentColor";
   const map = {
+    mail: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3" stroke="${stroke}" stroke-width="1.8"/><path d="m4 7 8 6 8-6" stroke="${stroke}" stroke-width="1.8" stroke-linejoin="round"/></svg>`,
+    phone: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 3 3 4-2 3c1 3 3 5 6 6l3-2 4 3-1 4C10 22 2 14 3 4l4-1Z" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
     calendar: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3" stroke="${stroke}" stroke-width="1.8"/><path d="M8 3v4M16 3v4M3 10h18" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round"/></svg>`,
     marker: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-5.4 7-11a7 7 0 1 0-14 0c0 5.6 7 11 7 11Z" stroke="${stroke}" stroke-width="1.8"/><circle cx="12" cy="10" r="2.6" stroke="${stroke}" stroke-width="1.8"/></svg>`,
     users: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M17 20v-1.2A3.8 3.8 0 0 0 13.2 15H10.8A3.8 3.8 0 0 0 7 18.8V20" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="8" r="3.2" stroke="${stroke}" stroke-width="1.8"/><path d="M4 19.5v-.8A3.2 3.2 0 0 1 7 15.5M20 19.5v-.8A3.2 3.2 0 0 0 17 15.5" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round"/></svg>`,
@@ -2231,10 +2340,13 @@ function normalizeRoute() {
 }
 
 function renderRoute() {
+  document.querySelector('.calendar-event-dialog[open]')?.close();
+  document.querySelector('.media-inspector[open]')?.close();
   const route = normalizeRoute();
   const render = routes[route] || getDynamicRouteRenderer(route);
   const app = document.getElementById("app");
   applyRouteTheme(route);
+  document.querySelector('.newsletter-viewer[open]')?.close();
   app.innerHTML = render
     ? render()
     : `
@@ -2249,16 +2361,26 @@ function renderRoute() {
       ${renderFooter()}
     `;
 
-  // The planner owns its return navigation; all other routes share this one.
-  if (!app.querySelector('#volunteer-app')) {
+  // Public browsing stays public even when a planner account is signed in.
+  // The planner owns its navigation; only website-admin routes need this return link.
+  if (/^\/lpcadmin(?:\/|$)/.test(route) && !app.querySelector('#volunteer-app')) {
     const navigation = document.createElement('div');
     navigation.className = 'container route-return';
-    navigation.innerHTML = window.LPCTeamAuth.navigation(adminSession.authenticated ? {admin:true} : null);
+    const setReturnNavigation = actor => {
+      navigation.innerHTML = actor ? window.LPCTeamAuth.navigation(actor) : '';
+      const existingHrefs = new Set(Array.from(app.querySelectorAll('a[href]')).filter(link => !navigation.contains(link)).map(link => link.getAttribute('href')));
+      navigation.querySelectorAll('a').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href === '#/home' || href === '#' + route || existingHrefs.has(href)) link.remove();
+      });
+      navigation.hidden = !navigation.querySelector('a');
+    };
+    setReturnNavigation(adminSession.authenticated ? {admin:true} : null);
     app.prepend(navigation);
     fetch('/api/volunteers/session', {cache:'no-store'})
       .then(response => response.ok ? response.json() : null)
       .then(session => {
-        if (session && navigation.isConnected) navigation.innerHTML = window.LPCTeamAuth.navigation(session.actor);
+        if (session && navigation.isConnected) setReturnNavigation(session.actor);
       }).catch(() => {});
   }
 
@@ -2270,6 +2392,7 @@ function renderRoute() {
     link.classList.toggle("is-active", active);
   });
 
+  closeSiteMenu(false);
   document.getElementById("site-header").classList.remove("is-open");
   const toggle = document.getElementById("menu-toggle");
   toggle?.setAttribute("aria-expanded", "false");
@@ -2277,15 +2400,23 @@ function renderRoute() {
   applySiteSettings();
   window.scrollTo({ top: 0, behavior: "instant" });
   initHomeHeroAdmin();
+  initFooterLayout();
+  initNewsletterStudio();
+  initAdminWorkspace();
   initPastorAdmin();
   initAssetManager();
+  initNewsletterViewer();
+  initVisitFinder();
+  initMinistryExplorer();
+  initVisitPlan();
+  initBranchDirectory();
   applyImageFraming();
   initBranchAdmin();
   window.LPCVolunteers?.mount();
   applyPageImages(document.getElementById("app"), route);
   initPageImageAdmin();
-  initContactForm();
   hydrateCalendarEvents();
+  initWatchStage();
   hydrateYouTubePlayers();
   initPageMotion();
   const motion = document.querySelector(".hero-motion");
@@ -2315,8 +2446,9 @@ function renderRoute() {
 }
 
 function getDynamicRouteRenderer(route) {
-  if (route === '/lpcadmin/users') return () => adminSession.authenticated ? '<section class="section vs-section"><div id="volunteer-app" data-users-page="true" class="container"><p>Loading users &amp; access…</p></div></section>' : renderAdminLogin();
-  if (route === '/volunteers' || route === '/lpcadmin/volunteers') return () => '<section class="section vs-section"><div id="volunteer-app" class="container"><p>Loading volunteer schedules…</p></div></section>';
+  if (['/lpcadmin/newsletter','/lpcadmin/header','/lpcadmin/appearance'].includes(route)) return () => renderAdminWorkspaceEditor(route.split('/').pop());
+  if (route === '/lpcadmin/users') return () => adminSession.authenticated ? '<section class="section vs-section"><div id="volunteer-app" data-users-page="true" class="container"><p>Loading users &amp; access…</p></div></section>' + renderFooter() : renderAdminLogin();
+  if (route === '/volunteers' || route === '/lpcadmin/volunteers') return () => '<section class="section vs-section"><div id="volunteer-app" class="container"><p>Loading volunteer schedules…</p></div></section>' + renderFooter();
 
   if (route === "/lpcadmin/page-images") return renderPageImageAdmin;
   if (route === "/lpcadmin/branches" || route === "/admin/branches")
@@ -2398,7 +2530,7 @@ function initHomeHeroAdmin() {
   const form = document.getElementById("home-hero-form");
   if (!form) {
     initSiteSettingsAdmin();
-    initPastorThoughtAdmin();
+    initNewsletterAdmin();
     initHeroImagesAdmin();
     initHeroImageEditorAdmin();
     return;
@@ -2440,7 +2572,7 @@ function initHomeHeroAdmin() {
 
   initHeroImagesAdmin();
   initHeroImageEditorAdmin();
-  initPastorThoughtAdmin();
+  initNewsletterAdmin();
   initSiteSettingsAdmin();
 }
 
@@ -2802,8 +2934,8 @@ function initSiteSettingsAdmin() {
   });
 }
 
-function initPastorThoughtAdmin() {
-  const form = document.getElementById("pastor-thought-form");
+function initNewsletterAdmin() {
+  const form = document.getElementById("newsletter-form");
   if (!form) return;
 
   form.addEventListener("submit", async (event) => {
@@ -2812,26 +2944,33 @@ function initPastorThoughtAdmin() {
     const config = {
       kicker:
         String(data.get("kicker") || "").trim() ||
-        defaultPastorThoughtConfig.kicker,
+        defaultNewsletterConfig.kicker,
       title:
         String(data.get("title") || "").trim() ||
-        defaultPastorThoughtConfig.title,
+        defaultNewsletterConfig.title,
       body:
         String(data.get("body") || "").trim() ||
-        defaultPastorThoughtConfig.body,
+        defaultNewsletterConfig.body,
+      image: String(data.get("image") || "").trim(),
+      imageAlt: String(data.get("imageAlt") || "").trim(),
       author:
         String(data.get("author") || "").trim() ||
-        defaultPastorThoughtConfig.author,
+        defaultNewsletterConfig.author,
       date: String(data.get("date") || "").trim(),
       ctaText:
         String(data.get("ctaText") || "").trim() ||
-        defaultPastorThoughtConfig.ctaText,
+        defaultNewsletterConfig.ctaText,
       ctaHref:
         String(data.get("ctaHref") || "").trim() ||
-        defaultPastorThoughtConfig.ctaHref,
+        defaultNewsletterConfig.ctaHref,
     };
-    await savePastorThoughtConfig(config);
-    renderRoute();
+    const status = form.querySelector('[data-newsletter-status]'), button = form.querySelector('[type="submit"]');
+    if (!!config.ctaText !== !!config.ctaHref) { status.textContent = 'Enter both link text and a destination, or leave both blank.'; return; }
+    button.disabled = true;
+    status.textContent = 'Publishing newsletter…';
+    try { await saveNewsletterConfig(config); status.textContent = 'Newsletter published on the home page.'; if (form.dispatchEvent) form.dispatchEvent(new CustomEvent('newsletter-published',{detail:config})); }
+    catch(error) { status.textContent = error.message; }
+    finally { button.disabled = false; }
   });
 }
 
@@ -2934,7 +3073,7 @@ function refreshAfterAdminSave() {
     return;
   }
   if (normalizeRoute().startsWith("/lpcadmin/hero/")) {
-    window.location.hash = "#/lpcadmin";
+    window.location.hash = "#/lpcadmin/appearance";
     return;
   }
   if (normalizeRoute().startsWith("/lpcadmin")) {
@@ -3009,22 +3148,98 @@ function applyRouteTheme(route) {
   }
 }
 
-window.addEventListener("hashchange", renderRoute);
-window.addEventListener("DOMContentLoaded", async () => {
+function publicSearchEntries() {
+  return [
+    {title:'Watch services',group:'Explore',href:'#/watch',keywords:'online stream live sermon worship service'},
+    {title:'Plan your visit',group:'Explore',href:'#/plan-your-visit',keywords:'sunday times hindi english malayalam directions first visit family children'},
+    {title:'Find a church',group:'Explore',href:'#/branches',keywords:'branches location london essex near community'},
+    {title:'Contact LPC',group:'Explore',href:'#/contact',keywords:'email phone office prayer help contact'},
+    {title:'Ministries',group:'Explore',href:'#/ministries',keywords:'sunday school children youth women food bank support serve fellowship'},
+    {title:'LPC Youth',group:'Explore',href:'#/youth',keywords:'young people friday christ envoys discipleship'},
+    {title:'About LPC',group:'Explore',href:'#/about',keywords:'beliefs history vision mission founder church'},
+    {title:'News & upcoming events',group:'Explore',href:'#/home',keywords:'home newsletter announcements calendar events news'},
+    ...branchCards.map(b=>({title:b.churchName || b.name,group:'Church',href:'#/branches/'+encodeURIComponent(b.slug),keywords:[b.name,b.address,b.services].filter(Boolean).join(' ')})),
+    ...pastors.filter(p=>p.id).map(p=>({title:p.name,group:p.role || 'Minister',href:'#/pastors/'+encodeURIComponent(p.id),keywords:'pastor minister '+(p.role || '')}))
+  ];
+}
+
+function searchPublicEntries(query,entries=publicSearchEntries()) {
+  const terms=String(query || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+  return terms.length ? entries.filter(entry=>terms.every(term=>(entry.title+' '+entry.group+' '+entry.keywords).toLowerCase().includes(term))) : entries.slice(0,4);
+}
+
+function initPublicSearch() {
+  const trigger=document.getElementById('site-search-open');
+  if(!trigger)return;
+  let viewer=null;
+  const open=()=>{
+    if(viewer?.open){viewer.querySelector('input')?.focus();return;}
+    closeSiteMenu(false);
+    const opener=document.activeElement,previousOverflow=document.body.style.overflow;
+    viewer=document.createElement('dialog');viewer.className='site-search-dialog';viewer.setAttribute('aria-labelledby','site-search-title');
+    viewer.innerHTML='<header><h2 id="site-search-title">Find at LPC</h2><button type="button" class="btn btn--outline" data-search-close>Close</button></header><label for="site-search-query">Search churches, ministers or topics</label><input type="search" id="site-search-query" placeholder="Try Chelmsford, Sam or youth" autocomplete="off"><p data-search-count role="status" aria-live="polite"></p><nav data-search-results aria-label="Search results"></nav>';
+    const input=viewer.querySelector('input'),results=viewer.querySelector('[data-search-results]'),count=viewer.querySelector('[data-search-count]');
+    const update=()=>{const matches=searchPublicEntries(input.value);count.textContent=input.value.trim()?matches.length+(matches.length===1?' result':' results'):'Popular destinations';results.innerHTML=matches.length?matches.map(entry=>`<a href="${escapeAttribute(entry.href)}"><span><strong>${escapeHtml(entry.title)}</strong><small>${escapeHtml(entry.group)}</small></span><span aria-hidden="true">→</span></a>`).join(''):'<p>No matches. Try a church name, minister or a topic such as youth.</p>';};
+    input.addEventListener('input',update);
+    viewer.querySelector('[data-search-close]').addEventListener('click',()=>viewer.close());
+    viewer.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();viewer.close();}});
+    viewer.addEventListener('click',event=>{if(event.target===viewer || event.target.closest('[data-search-results] a'))viewer.close();});
+    viewer.addEventListener('close',()=>{document.body.style.overflow=previousOverflow;viewer.remove();if(opener?.isConnected && opener.getClientRects().length)opener.focus();else document.getElementById('menu-toggle')?.focus();viewer=null;},{once:true});
+    document.body.append(viewer);update();viewer.showModal();document.body.style.overflow='hidden';input.focus();
+  };
+  trigger.addEventListener('click',open);
+  document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='k'){event.preventDefault();open();}});
+}
+
+function initSiteNavigation() {
   const toggle = document.getElementById("menu-toggle");
   const header = document.getElementById("site-header");
+  if (!toggle || !header) return;
+  let previousOverflow = '';
+  const mobile = window.matchMedia('(max-width: 1200px)');
+  closeSiteMenu = (restoreFocus = true) => {
+    if (!header.classList.contains('is-open')) return;
+    header.classList.remove('is-open');
+    document.body.style.overflow = previousOverflow;
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Open menu');
+    if (restoreFocus) toggle.focus({preventScroll:true});
+  };
   toggle?.addEventListener("click", () => {
-    const open = header.classList.toggle("is-open");
-    toggle.setAttribute("aria-expanded", String(open));
-    toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    if (header.classList.contains('is-open')) { closeSiteMenu(); return; }
+    previousOverflow = document.body.style.overflow;
+    header.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.setAttribute('aria-label', 'Close menu');
   });
+  header.addEventListener('click', event => { if (event.target.closest('a[href]')) closeSiteMenu(false); });
+  document.addEventListener('click', event => { if (!header.contains(event.target)) closeSiteMenu(false); });
+  header.addEventListener('keydown', event => {
+    if (!header.classList.contains('is-open')) return;
+    if (event.key === 'Escape') { event.preventDefault(); closeSiteMenu(); }
+    if (event.key === 'Tab') {
+      const links = [...header.querySelectorAll('a[href],button')].filter(el=>el.getClientRects().length);
+      const first = links[0], last = links[links.length-1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+  });
+  mobile.addEventListener('change', () => { if (!mobile.matches) closeSiteMenu(false); });
+}
+
+window.addEventListener("hashchange", renderRoute);
+window.addEventListener("DOMContentLoaded", async () => {
+  initSiteNavigation();
+  initPublicSearch();
   await loadHomeHeroConfig();
   await loadHeroImagesConfig();
-  await loadPastorThoughtConfig();
+  await loadNewsletterConfig();
   await loadSiteSettingsConfig();
   await loadAdminSession();
   await loadPastors();
   await loadBranches();
+  document.querySelector('.site-search-dialog input')?.dispatchEvent(new Event('input'));
   try {
     const response = await fetch("/api/page-images", { cache: "no-store" });
     if (response.ok) pageImages = await response.json();
@@ -3080,13 +3295,13 @@ async function loadHeroImagesConfig() {
   }
 }
 
-async function loadPastorThoughtConfig() {
+async function loadNewsletterConfig() {
   try {
     const response = await loadConfiguration("pastor-thought");
     if (!response.ok) return;
-    pastorThoughtConfig = await response.json();
+    newsletterConfig = await response.json();
   } catch {
-    pastorThoughtConfig = null;
+    newsletterConfig = null;
   }
 }
 
@@ -3136,15 +3351,14 @@ async function saveHeroImagesConfig(config) {
   serverHeroImagesConfig = await response.json();
 }
 
-async function savePastorThoughtConfig(config) {
-  pastorThoughtConfig = config;
+async function saveNewsletterConfig(config) {
   const response = await fetch("/api/pastor-thought", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(config),
   });
-  if (!response.ok) throw new Error("Could not publish pastor thought");
-  pastorThoughtConfig = await response.json();
+  if (!response.ok) throw new Error("Could not publish newsletter. Please try again.");
+  newsletterConfig = await response.json();
 }
 
 async function saveSiteSettingsConfig(config) {
@@ -3162,8 +3376,9 @@ async function saveSiteSettingsConfig(config) {
 async function hydrateYouTubePlayers() {
   const players = [
     ...document.querySelectorAll(".youtube-preview[data-youtube-handle]"),
-  ];
+  ].filter(player=>!player.closest('.watch-row[hidden]') && !player.dataset.youtubeRequested);
   if (!players.length) return;
+  players.forEach(player=>{player.dataset.youtubeRequested='true';});
 
   const apiKey =
     window.LPC_YOUTUBE_API_KEY ||
@@ -3186,6 +3401,7 @@ async function hydrateYouTubePlayers() {
       }
       if (!player.isConnected) return;
       if (localVideo) {
+        prioritiseWatchPlayer(player, localVideo.mode || "Latest video");
         renderYouTubeVideoPreview(player, {
           title,
           channelUrl,
@@ -3229,6 +3445,7 @@ async function hydrateYouTubePlayers() {
         }
 
         const mode = liveVideo ? "Live now" : "Latest video";
+        prioritiseWatchPlayer(player, mode);
         renderYouTubeVideoPreview(player, {
           title,
           channelUrl,
@@ -3334,6 +3551,7 @@ function renderYouTubeVideoPreview(
   player,
   { title, channelUrl, video, mode, autoplaySilent = false },
 ) {
+  if (player.closest('.watch-row[hidden]')) { delete player.dataset.youtubeRequested; return; }
   const watchUrl =
     "https://www.youtube.com/watch?v=" + encodeURIComponent(video.id);
   player.innerHTML = '<div class="youtube-video-mount"></div>';
@@ -3364,7 +3582,7 @@ function renderYouTubeVideoPreview(
   const timeout = setTimeout(fallback, 15000);
   loadYouTubePlayerApi()
     .then((YT) => {
-      if (failed || !mount.isConnected) return;
+      if (failed || !mount.isConnected || player.closest('.watch-row[hidden]')) { clearTimeout(timeout); delete player.dataset.youtubeRequested; return; }
       embeddedPlayer = new YT.Player(mount, {
         videoId: video.id,
         playerVars: {
@@ -3492,6 +3710,19 @@ async function loadPastors() {
     if (response.ok) applyPastorConfig(await response.json());
   } catch {}
 }
+function renderPastoralGallery() {
+  const poster = getHeroImageConfig('pastors', './assets/images/derived/pastors-hero.jpg').desktopImage;
+  return `<article class="page page-people"><section class="people-gallery container" aria-labelledby="people-title">
+    <header class="people-gallery__heading"><div><p class="section-label">Our pastoral family</p><h1 id="people-title">People here for you.</h1><p>Meet the pastors and ministers serving our church family.</p></div><a class="people-contact" href="#/contact">Connect with LPC <span aria-hidden="true">↗</span></a></header>
+    <div class="people-grid">${pastors.map(p => {
+      const portrait = p.image ? `<img src="${escapeAttribute(p.image)}" alt="" loading="lazy">` : `<span class="people-initials" aria-hidden="true">${escapeHtml((p.name || '').split(/\s+/).filter(Boolean).slice(-2).map(s=>s[0]).join(''))}</span>`;
+      const content = `<div class="people-portrait">${portrait}${p.id ? '<span class="people-arrow" aria-hidden="true">↗</span>' : ''}</div><div class="people-caption"><h2>${escapeHtml(p.name)}</h2><p>${escapeHtml(p.role)}</p></div>`;
+      return p.id ? `<a class="people-card" href="#/pastors/${encodeURIComponent(p.id)}" aria-label="Meet ${escapeAttribute(p.name)}">${content}</a>` : `<article class="people-card">${content}</article>`;
+    }).join('')}</div>
+    ${poster ? `<details class="people-poster"><summary>View our pastoral family <span aria-hidden="true">+</span></summary><img src="${escapeAttribute(poster)}" alt="LPC pastoral team" loading="lazy"></details>` : ''}
+    </section>${renderFooter()}</article>`;
+}
+
 function renderPastorProfile(id) {
   const pastor = pastors.find((p) => p.id === id);
   if (!pastor)
@@ -3499,25 +3730,10 @@ function renderPastorProfile(id) {
       '<section class="section"><div class="container"><h1>Pastor profile unavailable</h1><a href="#/pastors">Back to pastors</a></div></section>' +
       renderFooter()
     );
-  return (
-    '<article class="page"><section class="section"><div class="container pastor-profile"><a href="#/pastors">Back to pastors</a><h1 class="section-title">' +
-    escapeHtml(pastor.name) +
-    "</h1><p>" +
-    escapeHtml(pastor.role) +
-    "</p>" +
-    (pastor.image
-      ? '<img class="pastor-profile__photo" src="' +
-        escapeAttribute(pastor.image) +
-        '" alt="' +
-        escapeAttribute(pastor.name) +
-        '">'
-      : "") +
-    '<p class="pastor-introduction">' +
-    escapeHtml(pastor.intro || "An introduction will be added soon.") +
-    "</p></div></section>" +
-    renderFooter() +
-    "</article>"
-  );
+  return `<article class="page page-people"><section class="people-profile container"><a class="people-back" href="#/pastors">← Our pastoral family</a><div class="people-profile__layout">
+    ${pastor.image ? `<img class="people-profile__photo" src="${escapeAttribute(pastor.image)}" alt="${escapeAttribute(pastor.name)}">` : ''}
+    <div class="people-profile__copy"><p class="section-label">${escapeHtml(pastor.role)}</p><h1>${escapeHtml(pastor.name)}</h1><p class="pastor-introduction">${escapeHtml(pastor.intro || 'An introduction will be added soon.')}</p><a class="btn btn--gold" href="#/contact">Contact the church</a></div>
+    </div></section>${renderFooter()}</article>`;
 }
 function renderPastorAdmin() {
   if (!adminSession.authenticated) return renderAdminLogin();
@@ -3610,117 +3826,45 @@ function formatAssetSize(bytes) {
 }
 function renderAssetManager() {
   if (!adminSession.authenticated) return renderAdminLogin();
-  return (
-    '<section class="section"><div class="container"><a href="#/lpcadmin">Back to admin</a><h1 class="section-title">Asset Library</h1><p>Uploaded files are permanently deleted to free storage. Original website files can be removed from the library; their packaged copies remain until a future site rebuild. Deleting a file may affect older backups.</p><div id="asset-manager" data-manager="true"><div class="asset-picker__toolbar"><label>Search images<input type="search" id="asset-search" placeholder="File name"></label><label>Show<select id="asset-filter"><option value="all">All images</option><option value="unused">Unused images</option><option value="upload">Uploaded images</option></select></label><label class="btn btn--gold">Upload image<input type="file" data-asset-upload accept=".jpg,.jpeg,.png,.webp" hidden></label><button type="button" class="btn btn--outline" id="asset-refresh">Refresh</button></div><p id="asset-summary" role="status"></p><div class="asset-picker__content" aria-live="polite"></div></div></div></section>' +
-    renderFooter()
-  );
+  return `<section class="section media-library"><div class="container"><a class="admin-back-link" href="#/lpcadmin">← Admin workspace</a><header><p class="section-label">Your visual library</p><h1>Find the right image.</h1><p>Browse, preview and manage your website photos in one place.</p></header><div id="asset-manager" data-manager="true"><div class="media-library-toolbar"><label>Search images<input type="search" id="asset-search" placeholder="Search by file name"></label><label>Show<select id="asset-filter"><option value="all">All images</option><option value="unused">Unused images</option><option value="upload">Uploaded images</option></select></label><label class="btn btn--gold">Upload image<input type="file" data-asset-upload accept=".jpg,.jpeg,.png,.webp" hidden></label><button type="button" class="btn btn--outline" id="asset-refresh">Refresh</button></div><p id="asset-summary" role="status"></p><div class="asset-picker__content" aria-live="polite"></div></div></div></section>${renderFooter()}`;
 }
+
 function initAssetManager() {
-  const manager = document.getElementById("asset-manager");
-  if (!manager) return;
-  const input = document.createElement("input");
-  const refresh = () => renderManagedAssets(manager, "image", input);
-  manager.querySelector("#asset-search").addEventListener("input", refresh);
-  manager.querySelector("#asset-filter").addEventListener("change", refresh);
-  manager.querySelector("#asset-refresh").addEventListener("click", refresh);
-  manager
-    .querySelector("[data-asset-upload]")
-    .addEventListener("change", async (event) => {
-      const file = event.target.files?.[0];
-      if (file) await uploadAssetFile(manager, "image", input, file);
-      event.target.value = "";
-    });
-  refresh();
+  const manager=document.getElementById('asset-manager');if(!manager)return;
+  const input=document.createElement('input'),refresh=()=>renderManagedAssets(manager,'image',input),reset=()=>{manager.assetPage=0;refresh();};
+  manager.querySelector('#asset-search').addEventListener('input',reset);
+  manager.querySelector('#asset-filter').addEventListener('change',reset);
+  manager.querySelector('#asset-refresh').addEventListener('click',refresh);
+  manager.querySelector('[data-asset-upload]').addEventListener('change',async event=>{const file=event.target.files?.[0];if(file){manager.assetPage=0;await uploadAssetFile(manager,'image',input,file);}event.target.value='';});refresh();
 }
-async function renderManagedAssets(manager, type, input) {
-  const content = manager.querySelector(".asset-picker__content");
-  const requestId = (manager.assetRequestId || 0) + 1;
-  manager.assetRequestId = requestId;
+
+function mediaPageWindow(items,page,size=12) {
+  const pages=Math.max(1,Math.ceil(items.length/size)),index=Math.max(0,Math.min(pages-1,Math.floor(Number(page)||0)));
+  return {index,pages,start:index*size,items:items.slice(index*size,index*size+size)};
+}
+
+function openMediaInspector(manager,type,input,asset,opener) {
+  const dialog=document.createElement('dialog');dialog.className='media-inspector';dialog.setAttribute('aria-labelledby','media-inspector-title');
+  dialog.innerHTML=`<div class="media-inspector-heading"><h2 id="media-inspector-title">${escapeHtml(asset.name)}</h2><button class="btn btn--outline" type="button" data-media-close autofocus>Close</button></div><img class="media-inspector-image" src="${escapeAttribute(asset.path)}" alt="${escapeAttribute(asset.name)}"><div class="media-inspector-details"><p>${asset.source==='upload'?'Uploaded image':'Original website image'} · ${asset.size ? formatAssetSize(asset.size) : 'Size unavailable'}</p><p class="media-inspector-path">${escapeHtml(asset.path)}</p><button type="button" class="btn btn--gold" data-media-frame>Edit framing</button><details><summary>Protection &amp; removal</summary><p>Deleting an uploaded image is permanent and may affect pages or backups. Packaged originals remain until a site rebuild.</p><div>${renderAssetProtectionActions(asset)}</div></details></div>`;
+  const previousOverflow=document.body.style.overflow;document.body.append(dialog);document.body.style.overflow='hidden';dialog.showModal();
+  dialog.addEventListener('close',()=>{document.body.style.overflow=previousOverflow;dialog.remove();if(!document.querySelector('dialog[open]')){if(opener?.isConnected)opener.focus();else manager.querySelector('#asset-search')?.focus();}},{once:true});
+  dialog.querySelector('[data-media-close]').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
+  dialog.querySelector('[data-media-frame]').addEventListener('click',()=>{dialog.close();openImageFraming(asset.path);});
+  [['[data-asset-delete]',()=>deleteAssetFile(manager,type,input,asset.path)],['[data-asset-protect]',()=>updateAssetProtection(manager,type,input,asset.path,true)],['[data-asset-unprotect]',()=>updateAssetProtection(manager,type,input,asset.path,false)]].forEach(([selector,action])=>dialog.querySelector(selector)?.addEventListener('click',()=>{dialog.close();action();}));
+}
+
+async function renderManagedAssets(manager,type,input) {
+  const content=manager.querySelector('.asset-picker__content'),requestId=(manager.assetRequestId||0)+1;manager.assetRequestId=requestId;
   try {
-    const library = await loadAdminAssets();
-    if (manager.assetRequestId !== requestId) return;
-    const all = library.images || [];
-    const search = manager.querySelector("#asset-search").value.toLowerCase();
-    const filter = manager.querySelector("#asset-filter").value;
-    const items = all.filter(
-      (a) =>
-        a.name.toLowerCase().includes(search) &&
-        (filter !== "unused" || a.deletable) &&
-        (filter !== "upload" || a.source === "upload"),
-    );
-    manager.querySelector("#asset-summary").textContent =
-      all.length +
-      " images · " +
-      formatAssetSize(all.reduce((n, a) => n + (a.size || 0), 0)) +
-      " · " +
-      all.filter((a) => a.deletable).length +
-      " unused";
-    content.innerHTML = items.length
-      ? '<div class="asset-picker__grid">' +
-        items
-          .map(
-            (a) =>
-              '<div class="asset-picker__item"><span class="asset-picker__preview"><img loading="eager" referrerpolicy="strict-origin-when-cross-origin" src="' +
-              escapeAttribute(a.path) +
-              '" alt=""></span><strong class="asset-picker__name">' +
-              escapeHtml(a.name) +
-              "</strong><p>" +
-              formatAssetSize(a.size) +
-              " · " +
-              (a.source === "upload" ? "Uploaded" : "Original website file") +
-              "</p>" +
-              renderAssetProtectionActions(a) +
-              '<button type="button" class="btn btn--outline" data-image-framing="' +
-              escapeAttribute(a.path) +
-              '">Edit framing</button></div>',
-          )
-          .join("") +
-        "</div>"
-      : "<p>No matching images.</p>";
-    applyImageFraming(content);
-    content
-      .querySelectorAll("[data-image-framing]")
-      .forEach((button) =>
-        button.addEventListener("click", () =>
-          openImageFraming(button.dataset.imageFraming),
-        ),
-      );
-    content
-      .querySelectorAll("[data-asset-delete]")
-      .forEach((button) =>
-        button.addEventListener("click", () =>
-          deleteAssetFile(manager, type, input, button.dataset.assetDelete),
-        ),
-      );
-    content
-      .querySelectorAll("[data-asset-protect]")
-      .forEach((button) =>
-        button.addEventListener("click", () =>
-          updateAssetProtection(
-            manager,
-            type,
-            input,
-            button.dataset.assetProtect,
-            true,
-          ),
-        ),
-      );
-    content
-      .querySelectorAll("[data-asset-unprotect]")
-      .forEach((button) =>
-        button.addEventListener("click", () =>
-          updateAssetProtection(
-            manager,
-            type,
-            input,
-            button.dataset.assetUnprotect,
-            false,
-          ),
-        ),
-      );
-  } catch (error) {
-    content.textContent = "Could not load images. " + error.message;
-  }
+    const library=await loadAdminAssets();if(manager.assetRequestId!==requestId||!manager.isConnected)return;
+    const all=library.images||[],search=manager.querySelector('#asset-search').value.trim().toLowerCase(),filter=manager.querySelector('#asset-filter').value;
+    const items=all.filter(a=>a.name.toLowerCase().includes(search)&&(filter!=='unused'||a.deletable)&&(filter!=='upload'||a.source==='upload'));
+    const page=mediaPageWindow(items,manager.assetPage);manager.assetPage=page.index;
+    manager.querySelector('#asset-summary').textContent=items.length+' of '+all.length+' images · '+all.filter(a=>a.deletable).length+' unused';
+    content.innerHTML=items.length?`<div class="media-gallery">${page.items.map((a,index)=>`<button type="button" class="media-tile" data-media-index="${index}" aria-label="Inspect ${escapeAttribute(a.name)}"><span class="media-tile-photo"><img loading="lazy" src="${escapeAttribute(a.path)}" alt=""></span><strong>${escapeHtml(a.name)}</strong><small>${a.source==='upload'?'Uploaded':'Website image'}</small></button>`).join('')}</div><div class="media-pagination"><button type="button" class="btn btn--outline" data-media-page="-1" ${page.index===0?'disabled':''}>← Previous</button><span data-media-page-status tabindex="-1">${page.start+1}–${page.start+page.items.length} of ${items.length}</span><button type="button" class="btn btn--outline" data-media-page="1" ${page.index===page.pages-1?'disabled':''}>Next →</button></div>`:'<p class="media-empty">No matching images. Try another name or filter.</p>';
+    content.querySelectorAll('[data-media-index]').forEach(button=>button.addEventListener('click',()=>openMediaInspector(manager,type,input,page.items[Number(button.dataset.mediaIndex)],button)));
+    content.querySelectorAll('[data-media-page]').forEach(button=>button.addEventListener('click',async()=>{manager.assetPage=page.index+Number(button.dataset.mediaPage);await renderManagedAssets(manager,type,input);content.querySelector('[data-media-page-status]')?.focus();}));
+  } catch(error) {if(manager.assetRequestId===requestId)content.textContent='Could not load images. '+error.message;}
 }
 
 let branchRevision = "";
@@ -3753,94 +3897,39 @@ function renderBranchAdmin() {
       renderFooter()
     );
   return (
-    '<section class="section"><div class="container"><a href="#/lpcadmin">Back to admin</a><h1 class="section-title">Manage branches</h1><p>Add or remove branches and update their details. Save branches to publish your changes.</p><button type="button" class="btn btn--outline" id="check-branch-recovery">Check backups for missing details</button><div id="branch-recovery" aria-live="polite"></div><form id="branches-form" class="admin-form"><div id="branch-editor-list">' +
+    '<section class="section branch-studio"><div class="container"><a class="admin-back-link" href="#/lpcadmin">← Admin workspace</a><header class="branch-studio-heading"><p class="section-label">Church information</p><h1 class="section-title">Make every visit easier.</h1><p>Choose a church. Complete its visitor details first, then update branding or media when needed.</p></header><details class="branch-data-tools"><summary>Backups &amp; data transfer</summary><button type="button" class="btn btn--outline" id="check-branch-recovery">Check backups for missing details</button><div id="branch-recovery" aria-live="polite"></div><div data-branch-transfer></div></details><form id="branches-form" class="admin-form"><div id="branch-editor-list">' +
     Object.entries(branchConfig.branches)
       .map(([slug, b]) => renderBranchFields(slug, b))
       .join("") +
-    '</div><div class="admin-form__actions"><button type="button" class="btn btn--outline" id="add-branch">Add branch</button><button type="submit" class="btn btn--gold">Save branches</button></div><p id="branches-message" role="status"></p></form></div></section>' +
+    '</div><div class="branch-publish-bar"><div><strong>Church details</strong><p id="branches-message" role="status">Changes publish when you save.</p></div><div class="branch-publish-actions"><button type="button" class="btn btn--outline" id="add-branch">Add branch</button><button type="submit" class="btn btn--gold">Save branches</button></div></div></form></div></section>' +
     renderFooter()
   );
 }
-function renderBranchFields(slug, b) {
-  b = {
-    ...b,
-    ...getBranchMedia({ ...b, slug }),
-    facebookUrl: Object.hasOwn(b, "facebookUrl")
-      ? b.facebookUrl
-      : getBranchMedia({ ...b, slug }).socials.find(
-          (item) => item[0] === "Facebook",
-        )?.[1] || "",
-    instagramUrl: Object.hasOwn(b, "instagramUrl")
-      ? b.instagramUrl
-      : getBranchMedia({ ...b, slug }).socials.find(
-          (item) => item[0] === "Instagram",
-        )?.[1] || "",
-  };
-  const text = (key, label, required = false) =>
-    "<label>" +
-    label +
-    '<input name="' +
-    key +
-    '" maxlength="200" ' +
-    (required ? "required" : "") +
-    ' value="' +
-    escapeAttribute(b[key] || "") +
-    '"></label>';
-  return (
-    '<details class="branch-editor-card" ' +
-    (!b.name ? "open" : "") +
-    ' data-branch-slug="' +
-    escapeAttribute(slug) +
-    '" style="--branch-color:' +
-    escapeAttribute(b.color || "#1f59cb") +
-    '"><summary><span class="branch-editor-icon">' +
-    (b.logo ? '<img src="' + escapeAttribute(b.logo) + '" alt="">' : "⌂") +
-    "</span><span><strong data-branch-title>" +
-    escapeHtml(b.name || "New branch") +
-    "</strong><small>" +
-    escapeHtml(b.churchName || "Add branch details") +
-    '</small></span><span class="branch-admin-colour-dot" aria-hidden="true"></span><span class="branch-editor-chevron">⌄</span></summary><div class="pastor-editor branch-editor-fields">' +
-    text("name", "Branch name", true) +
-    text("churchName", "Church name", true) +
-    text("subtitle", "Label") +
-    '<label>Branch colour<span class="admin-colour-control"><input aria-label="Choose branch colour" name="color" type="color" value="' +
-    escapeAttribute(b.color || "#1f59cb") +
-    '"><output data-colour-value>' + escapeHtml(b.color || "#1f59cb") + '</output></span></label><label>Logo' +
-    renderAssetPickerInput({ name: "logo", value: b.logo || "" }) +
-    "</label><label>Branch photo" +
-    renderAssetPickerInput({ name: "image", value: b.image || "" }) +
-    "</label>" +
-    ["summary", "address", "services", "contact"]
-      .map(
-        (key) =>
-          "<label>" +
-          {
-            summary: "Introduction",
-            address: "Address",
-            services: "Service times",
-            contact: "Contact details",
-          }[key] +
-          '<textarea name="' +
-          key +
-          '" maxlength="5000" rows="3">' +
-          escapeHtml(b[key] || "") +
-          "</textarea></label>",
-      )
-      .join("") +
-    "<h3>Watch dashboard and social links</h3>" +
-    text("youtubeUrl", "YouTube channel URL") +
-    text("videoUrl", "YouTube video or livestream URL") +
-    text("facebookUrl", "Facebook URL") +
-    text("instagramUrl", "Instagram URL") +
-    '<label>Video playback<select name="autoplay"><option value="silent" ' +
-    (b.autoplay !== "click" ? "selected" : "") +
-    '>Muted autoplay</option><option value="click" ' +
-    (b.autoplay === "click" ? "selected" : "") +
-    '>Play when clicked</option></select></label><p>Paste a specific YouTube video or live link for the preview. Channel links automatically preview the latest service; a specific video link overrides this.</p><a href="#/branches/' +
-    slug +
-    '">View branch page</a><a href="#/watch">View Watch dashboard</a><button type="button" class="btn btn--outline" data-remove-branch>Remove branch</button></div></details>'
-  );
+function branchVisitGaps(branch) {
+  return [['address','Address'],['services','Service times']].filter(([key])=>!String(branch[key] || '').trim()).map(([,label])=>label);
 }
+
+function refreshBranchReadiness(row) {
+  const badge = row.querySelector('[data-branch-readiness]');
+  if (!badge) return;
+  const gaps = branchVisitGaps({address:row.querySelector('[name="address"]').value,services:row.querySelector('[name="services"]').value});
+  badge.textContent = gaps.length ? gaps.join(' + ') + ' missing' : 'Visit details ready';
+  badge.dataset.ready = String(!gaps.length);
+}
+
+function renderBranchFields(slug, branch) {
+  const media = getBranchMedia({...branch,slug});
+  const b = {...branch,...media,facebookUrl:Object.hasOwn(branch,'facebookUrl') ? branch.facebookUrl : media?.socials.find(item=>item[0]==='Facebook')?.[1] || '',instagramUrl:Object.hasOwn(branch,'instagramUrl') ? branch.instagramUrl : media?.socials.find(item=>item[0]==='Instagram')?.[1] || ''};
+  const text = (key,label,required=false) => `<label>${label}<input name="${key}" maxlength="200" ${required ? 'required' : ''} value="${escapeAttribute(b[key] || '')}"></label>`;
+  const area = (key,label) => `<label>${label}<textarea name="${key}" maxlength="5000" rows="2">${escapeHtml(b[key] || '')}</textarea></label>`;
+  const gaps = branchVisitGaps(b);
+  return `<details class="branch-editor-card" data-branch-slug="${escapeAttribute(slug)}" ${!b.name ? 'open' : ''} style="--branch-color:${escapeAttribute(b.color || '#1f59cb')}"><summary><span class="branch-editor-icon">${b.logo ? `<img src="${escapeAttribute(b.logo)}" alt="">` : '⌂'}</span><span class="branch-card-identity"><strong data-branch-title>${escapeHtml(b.name || 'New branch')}</strong><small>${escapeHtml(b.churchName || 'Add church details')}</small><span class="branch-readiness" data-branch-readiness data-ready="${!gaps.length}">${gaps.length ? escapeHtml(gaps.join(' + '))+' missing' : 'Visit details ready'}</span></span><span class="branch-editor-chevron">⌄</span></summary>
+    <div class="pastor-editor branch-editor-fields"><div class="branch-essential-grid">${text('name','Branch name',true)}${text('churchName','Church name',true)}${area('address','Address')}${area('services','Service times')}${area('contact','Contact details')}</div>
+    <details class="branch-extra"><summary>Introduction, photos &amp; branding</summary><div class="branch-extra-fields">${area('summary','Introduction')}${text('subtitle','Label')}<label>Branch colour<span class="admin-colour-control"><input aria-label="Choose branch colour" name="color" type="color" value="${escapeAttribute(b.color || '#1f59cb')}"><output data-colour-value>${escapeHtml(b.color || '#1f59cb')}</output></span></label><label>Logo${renderAssetPickerInput({name:'logo',value:b.logo || ''})}</label><label>Branch photo${renderAssetPickerInput({name:'image',value:b.image || ''})}</label></div></details>
+    <details class="branch-extra"><summary>Watch &amp; social media</summary><div class="branch-extra-fields">${text('youtubeUrl','YouTube channel URL')}${text('videoUrl','YouTube video or livestream URL')}${text('facebookUrl','Facebook URL')}${text('instagramUrl','Instagram URL')}<label>Video playback<select name="autoplay"><option value="silent" ${b.autoplay !== 'click' ? 'selected' : ''}>Muted autoplay</option><option value="click" ${b.autoplay === 'click' ? 'selected' : ''}>Play when clicked</option></select></label><p>A specific video link overrides the latest service from your channel.</p><a href="#/watch">View Watch dashboard</a></div></details>
+    <div class="branch-card-actions"><a href="#/branches/${encodeURIComponent(slug)}">View church page →</a><button type="button" class="btn btn--outline" data-remove-branch>Remove branch</button></div></div></details>`;
+}
+
 function pageBodyImages(root) {
   return [...root.querySelectorAll("img")].filter(
     (image) =>
@@ -3964,33 +4053,6 @@ function initPageImageAdmin() {
     }
   });
 }
-function initContactForm() {
-  const form = document.querySelector(".contact-form");
-  if (!form) return;
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const button = form.querySelector('[type="submit"]'),
-      status = form.querySelector("[data-contact-status]");
-    button.disabled = true;
-    status.textContent = "Sending your message…";
-    try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(Object.fromEntries(new FormData(form))),
-      });
-      const data = await response.json();
-      if (!response.ok || !data.sent)
-        throw Error(data.error || "Your message could not be sent.");
-      form.reset();
-      status.textContent = "Your message has been sent to the church office.";
-    } catch (error) {
-      status.textContent = error.message;
-    } finally {
-      button.disabled = false;
-    }
-  });
-}
 function initBranchAdmin() {
   const form = document.getElementById("branches-form");
   if (!form) return;
@@ -3998,7 +4060,8 @@ function initBranchAdmin() {
   tools.className = "admin-form__actions";
   tools.innerHTML =
     '<button type="button" class="btn btn--outline" data-export-branches>Export saved JSON</button><label class="btn btn--outline">Import JSON<input type="file" accept=".json,application/json" data-import-branches hidden></label>';
-  form.before(tools);
+  const transfer = document.querySelector('[data-branch-transfer]');
+  if (transfer) transfer.append(tools); else form.before(tools);
   tools.querySelector("[data-export-branches]").onclick = () => {
     const blob = new Blob([JSON.stringify(branchConfig, null, 2)], {
         type: "application/json",
@@ -4043,16 +4106,18 @@ function initBranchAdmin() {
   form.addEventListener(
     "invalid",
     (event) => {
-      const row = event.target.closest("details");
+      const row = event.target.closest("[data-branch-slug]");
       if (row) row.open = true;
+      const group = event.target.closest("details");
+      if (group) group.open = true;
     },
     true,
   );
   form.addEventListener(
     "toggle",
     (event) => {
-      if (event.target.matches("details[open]"))
-        form.querySelectorAll("details[open]").forEach((row) => {
+      if (event.target.matches("[data-branch-slug][open]"))
+        form.querySelectorAll("[data-branch-slug][open]").forEach((row) => {
           if (row !== event.target) row.open = false;
         });
     },
@@ -4061,6 +4126,7 @@ function initBranchAdmin() {
   form.addEventListener("input", (event) => {
     const row = event.target.closest("[data-branch-slug]");
     if (!row) return;
+    refreshBranchReadiness(row);
     if (event.target.name === "name")
       row.querySelector("[data-branch-title]").textContent =
         event.target.value || "New branch";
