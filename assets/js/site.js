@@ -3122,6 +3122,49 @@ function applyRouteTheme(route) {
   }
 }
 
+function publicSearchEntries() {
+  return [
+    {title:'Watch services',group:'Explore',href:'#/watch',keywords:'online stream live sermon worship service'},
+    {title:'Plan your visit',group:'Explore',href:'#/plan-your-visit',keywords:'sunday times hindi english malayalam directions first visit family children'},
+    {title:'Find a church',group:'Explore',href:'#/branches',keywords:'branches location london essex near community'},
+    {title:'Contact LPC',group:'Explore',href:'#/contact',keywords:'email phone office prayer help contact'},
+    {title:'Ministries',group:'Explore',href:'#/ministries',keywords:'sunday school children youth women food bank support serve fellowship'},
+    {title:'LPC Youth',group:'Explore',href:'#/youth',keywords:'young people friday christ envoys discipleship'},
+    {title:'About LPC',group:'Explore',href:'#/about',keywords:'beliefs history vision mission founder church'},
+    {title:'News & upcoming events',group:'Explore',href:'#/home',keywords:'home newsletter announcements calendar events news'},
+    ...branchCards.map(b=>({title:b.churchName || b.name,group:'Church',href:'#/branches/'+encodeURIComponent(b.slug),keywords:[b.name,b.address,b.services].filter(Boolean).join(' ')})),
+    ...pastors.filter(p=>p.id).map(p=>({title:p.name,group:p.role || 'Minister',href:'#/pastors/'+encodeURIComponent(p.id),keywords:'pastor minister '+(p.role || '')}))
+  ];
+}
+
+function searchPublicEntries(query,entries=publicSearchEntries()) {
+  const terms=String(query || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+  return terms.length ? entries.filter(entry=>terms.every(term=>(entry.title+' '+entry.group+' '+entry.keywords).toLowerCase().includes(term))) : entries.slice(0,4);
+}
+
+function initPublicSearch() {
+  const trigger=document.getElementById('site-search-open');
+  if(!trigger)return;
+  let viewer=null;
+  const open=()=>{
+    if(viewer?.open){viewer.querySelector('input')?.focus();return;}
+    closeSiteMenu(false);
+    const opener=document.activeElement,previousOverflow=document.body.style.overflow;
+    viewer=document.createElement('dialog');viewer.className='site-search-dialog';viewer.setAttribute('aria-labelledby','site-search-title');
+    viewer.innerHTML='<header><h2 id="site-search-title">Find at LPC</h2><button type="button" class="btn btn--outline" data-search-close>Close</button></header><label for="site-search-query">Search churches, ministers or topics</label><input type="search" id="site-search-query" placeholder="Try Chelmsford, Sam or youth" autocomplete="off"><p data-search-count role="status" aria-live="polite"></p><nav data-search-results aria-label="Search results"></nav>';
+    const input=viewer.querySelector('input'),results=viewer.querySelector('[data-search-results]'),count=viewer.querySelector('[data-search-count]');
+    const update=()=>{const matches=searchPublicEntries(input.value);count.textContent=input.value.trim()?matches.length+(matches.length===1?' result':' results'):'Popular destinations';results.innerHTML=matches.length?matches.map(entry=>`<a href="${escapeAttribute(entry.href)}"><span><strong>${escapeHtml(entry.title)}</strong><small>${escapeHtml(entry.group)}</small></span><span aria-hidden="true">→</span></a>`).join(''):'<p>No matches. Try a church name, minister or a topic such as youth.</p>';};
+    input.addEventListener('input',update);
+    viewer.querySelector('[data-search-close]').addEventListener('click',()=>viewer.close());
+    viewer.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();viewer.close();}});
+    viewer.addEventListener('click',event=>{if(event.target===viewer || event.target.closest('[data-search-results] a'))viewer.close();});
+    viewer.addEventListener('close',()=>{document.body.style.overflow=previousOverflow;viewer.remove();if(opener?.isConnected && opener.getClientRects().length)opener.focus();else document.getElementById('menu-toggle')?.focus();viewer=null;},{once:true});
+    document.body.append(viewer);update();viewer.showModal();document.body.style.overflow='hidden';input.focus();
+  };
+  trigger.addEventListener('click',open);
+  document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='k'){event.preventDefault();open();}});
+}
+
 function initSiteNavigation() {
   const toggle = document.getElementById("menu-toggle");
   const header = document.getElementById("site-header");
@@ -3162,6 +3205,7 @@ function initSiteNavigation() {
 window.addEventListener("hashchange", renderRoute);
 window.addEventListener("DOMContentLoaded", async () => {
   initSiteNavigation();
+  initPublicSearch();
   await loadHomeHeroConfig();
   await loadHeroImagesConfig();
   await loadNewsletterConfig();
@@ -3169,6 +3213,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   await loadAdminSession();
   await loadPastors();
   await loadBranches();
+  document.querySelector('.site-search-dialog input')?.dispatchEvent(new Event('input'));
   try {
     const response = await fetch("/api/page-images", { cache: "no-store" });
     if (response.ok) pageImages = await response.json();

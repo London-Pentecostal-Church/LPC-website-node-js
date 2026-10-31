@@ -3235,3 +3235,21 @@ body.is-red-header-sample .menu-toggle {
 .ministry-result-image { width:100%;height:100%;min-height:300px;object-fit:contain;background:#e4ebed; }
 @media(max-width:900px) { .ministry-choices { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:600px) { .ministry-choices { gap:10px;margin-bottom:18px; } .ministry-choices button { display:block;padding:14px; } .ministry-choices button > span:first-child { display:none; } .ministry-choices strong { font-size:.88rem; } .ministry-choices small { font-size:.7rem; } .ministry-result { grid-template-columns:1fr; } .ministry-result-copy { padding:22px; } .ministry-result-image { min-height:0;max-height:190px;object-fit:contain; } .ministry-result h2 { font-size:1.7rem; } .ministry-result-copy .btn { width:100%;box-sizing:border-box;font-size:.85rem;padding:12px; } }
+/* One public search entry point for churches, ministers and common tasks. */
+.site-search-trigger { display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid currentColor;border-radius:9px;background:transparent;color:inherit;font:inherit;font-size:.8rem;padding:9px;cursor:pointer;min-height:40px; }
+body.is-branch-page .site-search-trigger,body.is-red-header-sample .site-search-trigger { color:#fff;border-color:#ffffff70; }
+.site-search-dialog { width:min(660px,calc(100vw - 28px));max-height:85dvh;box-sizing:border-box;border:0;border-radius:22px;padding:26px;background:#f6f9fa;color:#16394b;overscroll-behavior:contain; }
+.site-search-dialog::backdrop { background:#061c2cc9; }
+.site-search-dialog > header { display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:24px; }
+.site-search-dialog h2 { margin:0;font-size:1.6rem;letter-spacing:-.025em; }
+.site-search-dialog > label { display:block;font-weight:700;font-size:.85rem;margin-bottom:10px; }
+.site-search-dialog > input { width:100%;min-height:52px;box-sizing:border-box;border:1px solid #9fbfcf;border-radius:12px;padding:12px;font:inherit;background:white;color:#15394b; }
+.site-search-dialog [data-search-count] { font-size:.8rem;color:#597381;margin:18px 0 10px; }
+.site-search-dialog [data-search-results] { display:grid;gap:9px; }
+.site-search-dialog [data-search-results] > a { display:flex;align-items:center;justify-content:space-between;gap:18px;padding:15px 16px;border:1px solid #d4e2e8;border-radius:12px;background:white;color:#173c4e;text-decoration:none;min-width:0; }
+.site-search-dialog [data-search-results] > a:hover { border-color:#368c91;background:#eef8f7; }
+.site-search-dialog strong,.site-search-dialog small { display:block; }
+.site-search-dialog small { font-size:.75rem;color:#607987;margin-top:5px; }
+.site-search-dialog [data-search-results] > p { padding:20px;border:1px dashed #bed1d9;border-radius:12px;line-height:1.6; }
+@media(max-width:1200px) { #site-header.is-open #site-search-open { grid-column:1/-1;display:flex;width:100%;background:#ffffff12;color:white;border-color:#ffffff50;min-height:44px; } }
+@media(max-width:600px) { .site-search-dialog { padding:18px;width:calc(100vw - 20px); } .site-search-dialog h2 { font-size:1.35rem; } .site-search-dialog > header { margin-bottom:18px; } }

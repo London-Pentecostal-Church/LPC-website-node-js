@@ -7,6 +7,16 @@ const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls('));
 
+test('Public search finds churches, ministers and topics while excluding private team destinations',()=>{
+ const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+ const source=site.slice(site.indexOf('function publicSearchEntries()'),site.indexOf('function initPublicSearch()'));
+ const context={branchCards:[{slug:'chelmsford',name:'Chelmsford',churchName:'Chelmsford Pentecostal Church',address:'Essex'}],pastors:[{id:'senior-pastor',name:'Pr Sam John',role:'President & Senior Minister'}]};
+ const search=q=>runInNewContext(source+';searchPublicEntries(query)',{...context,query:q});
+ assert.equal(search('CHELMSFORD Essex')[0].href,'#/branches/chelmsford');assert.equal(search('Sam')[0].href,'#/pastors/senior-pastor');assert.equal(search('food bank')[0].href,'#/ministries');assert.equal(search('stream')[0].href,'#/watch');
+ assert.equal(search('admin').length,0);assert.equal(search('username').length,0);assert.equal(search('no match here').length,0);assert.equal(search('').length,4);
+ const entries=runInNewContext(source+';publicSearchEntries()',context);assert(entries.every(e=>!e.href.includes('volunteers')&&!e.href.includes('lpcadmin')));
+});
+
 test('Ministry explorer switches one panel at a time and supports keyboard discovery',()=>{
  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
  const source=site.slice(site.indexOf('function initMinistryExplorer()'),site.indexOf('function renderContactHub('));
