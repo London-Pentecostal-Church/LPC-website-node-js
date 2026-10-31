@@ -3889,94 +3889,39 @@ function renderBranchAdmin() {
       renderFooter()
     );
   return (
-    '<section class="section"><div class="container"><a href="#/lpcadmin">Back to admin</a><h1 class="section-title">Manage branches</h1><p>Add or remove branches and update their details. Save branches to publish your changes.</p><button type="button" class="btn btn--outline" id="check-branch-recovery">Check backups for missing details</button><div id="branch-recovery" aria-live="polite"></div><form id="branches-form" class="admin-form"><div id="branch-editor-list">' +
+    '<section class="section branch-studio"><div class="container"><a class="admin-back-link" href="#/lpcadmin">← Admin workspace</a><header class="branch-studio-heading"><p class="section-label">Church information</p><h1 class="section-title">Make every visit easier.</h1><p>Choose a church. Complete its visitor details first, then update branding or media when needed.</p></header><details class="branch-data-tools"><summary>Backups &amp; data transfer</summary><button type="button" class="btn btn--outline" id="check-branch-recovery">Check backups for missing details</button><div id="branch-recovery" aria-live="polite"></div><div data-branch-transfer></div></details><form id="branches-form" class="admin-form"><div id="branch-editor-list">' +
     Object.entries(branchConfig.branches)
       .map(([slug, b]) => renderBranchFields(slug, b))
       .join("") +
-    '</div><div class="admin-form__actions"><button type="button" class="btn btn--outline" id="add-branch">Add branch</button><button type="submit" class="btn btn--gold">Save branches</button></div><p id="branches-message" role="status"></p></form></div></section>' +
+    '</div><div class="branch-publish-bar"><div><strong>Church details</strong><p id="branches-message" role="status">Changes publish when you save.</p></div><div class="branch-publish-actions"><button type="button" class="btn btn--outline" id="add-branch">Add branch</button><button type="submit" class="btn btn--gold">Save branches</button></div></div></form></div></section>' +
     renderFooter()
   );
 }
-function renderBranchFields(slug, b) {
-  b = {
-    ...b,
-    ...getBranchMedia({ ...b, slug }),
-    facebookUrl: Object.hasOwn(b, "facebookUrl")
-      ? b.facebookUrl
-      : getBranchMedia({ ...b, slug }).socials.find(
-          (item) => item[0] === "Facebook",
-        )?.[1] || "",
-    instagramUrl: Object.hasOwn(b, "instagramUrl")
-      ? b.instagramUrl
-      : getBranchMedia({ ...b, slug }).socials.find(
-          (item) => item[0] === "Instagram",
-        )?.[1] || "",
-  };
-  const text = (key, label, required = false) =>
-    "<label>" +
-    label +
-    '<input name="' +
-    key +
-    '" maxlength="200" ' +
-    (required ? "required" : "") +
-    ' value="' +
-    escapeAttribute(b[key] || "") +
-    '"></label>';
-  return (
-    '<details class="branch-editor-card" ' +
-    (!b.name ? "open" : "") +
-    ' data-branch-slug="' +
-    escapeAttribute(slug) +
-    '" style="--branch-color:' +
-    escapeAttribute(b.color || "#1f59cb") +
-    '"><summary><span class="branch-editor-icon">' +
-    (b.logo ? '<img src="' + escapeAttribute(b.logo) + '" alt="">' : "⌂") +
-    "</span><span><strong data-branch-title>" +
-    escapeHtml(b.name || "New branch") +
-    "</strong><small>" +
-    escapeHtml(b.churchName || "Add branch details") +
-    '</small></span><span class="branch-admin-colour-dot" aria-hidden="true"></span><span class="branch-editor-chevron">⌄</span></summary><div class="pastor-editor branch-editor-fields">' +
-    text("name", "Branch name", true) +
-    text("churchName", "Church name", true) +
-    text("subtitle", "Label") +
-    '<label>Branch colour<span class="admin-colour-control"><input aria-label="Choose branch colour" name="color" type="color" value="' +
-    escapeAttribute(b.color || "#1f59cb") +
-    '"><output data-colour-value>' + escapeHtml(b.color || "#1f59cb") + '</output></span></label><label>Logo' +
-    renderAssetPickerInput({ name: "logo", value: b.logo || "" }) +
-    "</label><label>Branch photo" +
-    renderAssetPickerInput({ name: "image", value: b.image || "" }) +
-    "</label>" +
-    ["summary", "address", "services", "contact"]
-      .map(
-        (key) =>
-          "<label>" +
-          {
-            summary: "Introduction",
-            address: "Address",
-            services: "Service times",
-            contact: "Contact details",
-          }[key] +
-          '<textarea name="' +
-          key +
-          '" maxlength="5000" rows="3">' +
-          escapeHtml(b[key] || "") +
-          "</textarea></label>",
-      )
-      .join("") +
-    "<h3>Watch dashboard and social links</h3>" +
-    text("youtubeUrl", "YouTube channel URL") +
-    text("videoUrl", "YouTube video or livestream URL") +
-    text("facebookUrl", "Facebook URL") +
-    text("instagramUrl", "Instagram URL") +
-    '<label>Video playback<select name="autoplay"><option value="silent" ' +
-    (b.autoplay !== "click" ? "selected" : "") +
-    '>Muted autoplay</option><option value="click" ' +
-    (b.autoplay === "click" ? "selected" : "") +
-    '>Play when clicked</option></select></label><p>Paste a specific YouTube video or live link for the preview. Channel links automatically preview the latest service; a specific video link overrides this.</p><a href="#/branches/' +
-    slug +
-    '">View branch page</a><a href="#/watch">View Watch dashboard</a><button type="button" class="btn btn--outline" data-remove-branch>Remove branch</button></div></details>'
-  );
+function branchVisitGaps(branch) {
+  return [['address','Address'],['services','Service times']].filter(([key])=>!String(branch[key] || '').trim()).map(([,label])=>label);
 }
+
+function refreshBranchReadiness(row) {
+  const badge = row.querySelector('[data-branch-readiness]');
+  if (!badge) return;
+  const gaps = branchVisitGaps({address:row.querySelector('[name="address"]').value,services:row.querySelector('[name="services"]').value});
+  badge.textContent = gaps.length ? gaps.join(' + ') + ' missing' : 'Visit details ready';
+  badge.dataset.ready = String(!gaps.length);
+}
+
+function renderBranchFields(slug, branch) {
+  const media = getBranchMedia({...branch,slug});
+  const b = {...branch,...media,facebookUrl:Object.hasOwn(branch,'facebookUrl') ? branch.facebookUrl : media?.socials.find(item=>item[0]==='Facebook')?.[1] || '',instagramUrl:Object.hasOwn(branch,'instagramUrl') ? branch.instagramUrl : media?.socials.find(item=>item[0]==='Instagram')?.[1] || ''};
+  const text = (key,label,required=false) => `<label>${label}<input name="${key}" maxlength="200" ${required ? 'required' : ''} value="${escapeAttribute(b[key] || '')}"></label>`;
+  const area = (key,label) => `<label>${label}<textarea name="${key}" maxlength="5000" rows="2">${escapeHtml(b[key] || '')}</textarea></label>`;
+  const gaps = branchVisitGaps(b);
+  return `<details class="branch-editor-card" data-branch-slug="${escapeAttribute(slug)}" ${!b.name ? 'open' : ''} style="--branch-color:${escapeAttribute(b.color || '#1f59cb')}"><summary><span class="branch-editor-icon">${b.logo ? `<img src="${escapeAttribute(b.logo)}" alt="">` : '⌂'}</span><span class="branch-card-identity"><strong data-branch-title>${escapeHtml(b.name || 'New branch')}</strong><small>${escapeHtml(b.churchName || 'Add church details')}</small><span class="branch-readiness" data-branch-readiness data-ready="${!gaps.length}">${gaps.length ? escapeHtml(gaps.join(' + '))+' missing' : 'Visit details ready'}</span></span><span class="branch-editor-chevron">⌄</span></summary>
+    <div class="pastor-editor branch-editor-fields"><div class="branch-essential-grid">${text('name','Branch name',true)}${text('churchName','Church name',true)}${area('address','Address')}${area('services','Service times')}${area('contact','Contact details')}</div>
+    <details class="branch-extra"><summary>Introduction, photos &amp; branding</summary><div class="branch-extra-fields">${area('summary','Introduction')}${text('subtitle','Label')}<label>Branch colour<span class="admin-colour-control"><input aria-label="Choose branch colour" name="color" type="color" value="${escapeAttribute(b.color || '#1f59cb')}"><output data-colour-value>${escapeHtml(b.color || '#1f59cb')}</output></span></label><label>Logo${renderAssetPickerInput({name:'logo',value:b.logo || ''})}</label><label>Branch photo${renderAssetPickerInput({name:'image',value:b.image || ''})}</label></div></details>
+    <details class="branch-extra"><summary>Watch &amp; social media</summary><div class="branch-extra-fields">${text('youtubeUrl','YouTube channel URL')}${text('videoUrl','YouTube video or livestream URL')}${text('facebookUrl','Facebook URL')}${text('instagramUrl','Instagram URL')}<label>Video playback<select name="autoplay"><option value="silent" ${b.autoplay !== 'click' ? 'selected' : ''}>Muted autoplay</option><option value="click" ${b.autoplay === 'click' ? 'selected' : ''}>Play when clicked</option></select></label><p>A specific video link overrides the latest service from your channel.</p><a href="#/watch">View Watch dashboard</a></div></details>
+    <div class="branch-card-actions"><a href="#/branches/${encodeURIComponent(slug)}">View church page →</a><button type="button" class="btn btn--outline" data-remove-branch>Remove branch</button></div></div></details>`;
+}
+
 function pageBodyImages(root) {
   return [...root.querySelectorAll("img")].filter(
     (image) =>
@@ -4107,7 +4052,8 @@ function initBranchAdmin() {
   tools.className = "admin-form__actions";
   tools.innerHTML =
     '<button type="button" class="btn btn--outline" data-export-branches>Export saved JSON</button><label class="btn btn--outline">Import JSON<input type="file" accept=".json,application/json" data-import-branches hidden></label>';
-  form.before(tools);
+  const transfer = document.querySelector('[data-branch-transfer]');
+  if (transfer) transfer.append(tools); else form.before(tools);
   tools.querySelector("[data-export-branches]").onclick = () => {
     const blob = new Blob([JSON.stringify(branchConfig, null, 2)], {
         type: "application/json",
@@ -4152,16 +4098,18 @@ function initBranchAdmin() {
   form.addEventListener(
     "invalid",
     (event) => {
-      const row = event.target.closest("details");
+      const row = event.target.closest("[data-branch-slug]");
       if (row) row.open = true;
+      const group = event.target.closest("details");
+      if (group) group.open = true;
     },
     true,
   );
   form.addEventListener(
     "toggle",
     (event) => {
-      if (event.target.matches("details[open]"))
-        form.querySelectorAll("details[open]").forEach((row) => {
+      if (event.target.matches("[data-branch-slug][open]"))
+        form.querySelectorAll("[data-branch-slug][open]").forEach((row) => {
           if (row !== event.target) row.open = false;
         });
     },
@@ -4170,6 +4118,7 @@ function initBranchAdmin() {
   form.addEventListener("input", (event) => {
     const row = event.target.closest("[data-branch-slug]");
     if (!row) return;
+    refreshBranchReadiness(row);
     if (event.target.name === "name")
       row.querySelector("[data-branch-title]").textContent =
         event.target.value || "New branch";

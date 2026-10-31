@@ -7,6 +7,16 @@ const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls('));
 
+test('Branch readiness calls out exact missing visit details and updates when completed',()=>{
+ const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+ const source=site.slice(site.indexOf('function branchVisitGaps('),site.indexOf('function renderBranchFields('));
+ const values={address:'',services:''},badge={dataset:{}};
+ const row={querySelector:s=>s==='[data-branch-readiness]'?badge:{value:values[s.includes('address')?'address':'services']}};
+ const env={row};runInNewContext(source+';refreshBranchReadiness(row)',env);assert.equal(badge.textContent,'Address + Service times missing');
+ values.address='12 Church Road';runInNewContext(source+';refreshBranchReadiness(row)',env);assert.equal(badge.textContent,'Service times missing');
+ values.services='Sunday 10:00';runInNewContext(source+';refreshBranchReadiness(row)',env);assert.equal(badge.textContent,'Visit details ready');assert.equal(badge.dataset.ready,'true');
+});
+
 test('Footer starts compact on phones, opens on desktop and reuses one responsive listener across routes',()=>{
  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
  const source=site.slice(site.indexOf('let footerLayoutMedia = null;'),site.indexOf('function quickItem('));
