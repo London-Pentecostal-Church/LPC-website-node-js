@@ -2308,6 +2308,7 @@ function normalizeRoute() {
 }
 
 function renderRoute() {
+  document.querySelector('.media-inspector[open]')?.close();
   const route = normalizeRoute();
   const render = routes[route] || getDynamicRouteRenderer(route);
   const app = document.getElementById("app");
@@ -3746,117 +3747,45 @@ function formatAssetSize(bytes) {
 }
 function renderAssetManager() {
   if (!adminSession.authenticated) return renderAdminLogin();
-  return (
-    '<section class="section"><div class="container"><a href="#/lpcadmin">Back to admin</a><h1 class="section-title">Asset Library</h1><p>Uploaded files are permanently deleted to free storage. Original website files can be removed from the library; their packaged copies remain until a future site rebuild. Deleting a file may affect older backups.</p><div id="asset-manager" data-manager="true"><div class="asset-picker__toolbar"><label>Search images<input type="search" id="asset-search" placeholder="File name"></label><label>Show<select id="asset-filter"><option value="all">All images</option><option value="unused">Unused images</option><option value="upload">Uploaded images</option></select></label><label class="btn btn--gold">Upload image<input type="file" data-asset-upload accept=".jpg,.jpeg,.png,.webp" hidden></label><button type="button" class="btn btn--outline" id="asset-refresh">Refresh</button></div><p id="asset-summary" role="status"></p><div class="asset-picker__content" aria-live="polite"></div></div></div></section>' +
-    renderFooter()
-  );
+  return `<section class="section media-library"><div class="container"><a class="admin-back-link" href="#/lpcadmin">← Admin workspace</a><header><p class="section-label">Your visual library</p><h1>Find the right image.</h1><p>Browse, preview and manage your website photos in one place.</p></header><div id="asset-manager" data-manager="true"><div class="media-library-toolbar"><label>Search images<input type="search" id="asset-search" placeholder="Search by file name"></label><label>Show<select id="asset-filter"><option value="all">All images</option><option value="unused">Unused images</option><option value="upload">Uploaded images</option></select></label><label class="btn btn--gold">Upload image<input type="file" data-asset-upload accept=".jpg,.jpeg,.png,.webp" hidden></label><button type="button" class="btn btn--outline" id="asset-refresh">Refresh</button></div><p id="asset-summary" role="status"></p><div class="asset-picker__content" aria-live="polite"></div></div></div></section>${renderFooter()}`;
 }
+
 function initAssetManager() {
-  const manager = document.getElementById("asset-manager");
-  if (!manager) return;
-  const input = document.createElement("input");
-  const refresh = () => renderManagedAssets(manager, "image", input);
-  manager.querySelector("#asset-search").addEventListener("input", refresh);
-  manager.querySelector("#asset-filter").addEventListener("change", refresh);
-  manager.querySelector("#asset-refresh").addEventListener("click", refresh);
-  manager
-    .querySelector("[data-asset-upload]")
-    .addEventListener("change", async (event) => {
-      const file = event.target.files?.[0];
-      if (file) await uploadAssetFile(manager, "image", input, file);
-      event.target.value = "";
-    });
-  refresh();
+  const manager=document.getElementById('asset-manager');if(!manager)return;
+  const input=document.createElement('input'),refresh=()=>renderManagedAssets(manager,'image',input),reset=()=>{manager.assetPage=0;refresh();};
+  manager.querySelector('#asset-search').addEventListener('input',reset);
+  manager.querySelector('#asset-filter').addEventListener('change',reset);
+  manager.querySelector('#asset-refresh').addEventListener('click',refresh);
+  manager.querySelector('[data-asset-upload]').addEventListener('change',async event=>{const file=event.target.files?.[0];if(file){manager.assetPage=0;await uploadAssetFile(manager,'image',input,file);}event.target.value='';});refresh();
 }
-async function renderManagedAssets(manager, type, input) {
-  const content = manager.querySelector(".asset-picker__content");
-  const requestId = (manager.assetRequestId || 0) + 1;
-  manager.assetRequestId = requestId;
+
+function mediaPageWindow(items,page,size=12) {
+  const pages=Math.max(1,Math.ceil(items.length/size)),index=Math.max(0,Math.min(pages-1,Math.floor(Number(page)||0)));
+  return {index,pages,start:index*size,items:items.slice(index*size,index*size+size)};
+}
+
+function openMediaInspector(manager,type,input,asset,opener) {
+  const dialog=document.createElement('dialog');dialog.className='media-inspector';dialog.setAttribute('aria-labelledby','media-inspector-title');
+  dialog.innerHTML=`<div class="media-inspector-heading"><h2 id="media-inspector-title">${escapeHtml(asset.name)}</h2><button class="btn btn--outline" type="button" data-media-close autofocus>Close</button></div><img class="media-inspector-image" src="${escapeAttribute(asset.path)}" alt="${escapeAttribute(asset.name)}"><div class="media-inspector-details"><p>${asset.source==='upload'?'Uploaded image':'Original website image'} · ${asset.size ? formatAssetSize(asset.size) : 'Size unavailable'}</p><p class="media-inspector-path">${escapeHtml(asset.path)}</p><button type="button" class="btn btn--gold" data-media-frame>Edit framing</button><details><summary>Protection &amp; removal</summary><p>Deleting an uploaded image is permanent and may affect pages or backups. Packaged originals remain until a site rebuild.</p><div>${renderAssetProtectionActions(asset)}</div></details></div>`;
+  const previousOverflow=document.body.style.overflow;document.body.append(dialog);document.body.style.overflow='hidden';dialog.showModal();
+  dialog.addEventListener('close',()=>{document.body.style.overflow=previousOverflow;dialog.remove();if(!document.querySelector('dialog[open]')){if(opener?.isConnected)opener.focus();else manager.querySelector('#asset-search')?.focus();}},{once:true});
+  dialog.querySelector('[data-media-close]').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
+  dialog.querySelector('[data-media-frame]').addEventListener('click',()=>{dialog.close();openImageFraming(asset.path);});
+  [['[data-asset-delete]',()=>deleteAssetFile(manager,type,input,asset.path)],['[data-asset-protect]',()=>updateAssetProtection(manager,type,input,asset.path,true)],['[data-asset-unprotect]',()=>updateAssetProtection(manager,type,input,asset.path,false)]].forEach(([selector,action])=>dialog.querySelector(selector)?.addEventListener('click',()=>{dialog.close();action();}));
+}
+
+async function renderManagedAssets(manager,type,input) {
+  const content=manager.querySelector('.asset-picker__content'),requestId=(manager.assetRequestId||0)+1;manager.assetRequestId=requestId;
   try {
-    const library = await loadAdminAssets();
-    if (manager.assetRequestId !== requestId) return;
-    const all = library.images || [];
-    const search = manager.querySelector("#asset-search").value.toLowerCase();
-    const filter = manager.querySelector("#asset-filter").value;
-    const items = all.filter(
-      (a) =>
-        a.name.toLowerCase().includes(search) &&
-        (filter !== "unused" || a.deletable) &&
-        (filter !== "upload" || a.source === "upload"),
-    );
-    manager.querySelector("#asset-summary").textContent =
-      all.length +
-      " images · " +
-      formatAssetSize(all.reduce((n, a) => n + (a.size || 0), 0)) +
-      " · " +
-      all.filter((a) => a.deletable).length +
-      " unused";
-    content.innerHTML = items.length
-      ? '<div class="asset-picker__grid">' +
-        items
-          .map(
-            (a) =>
-              '<div class="asset-picker__item"><span class="asset-picker__preview"><img loading="eager" referrerpolicy="strict-origin-when-cross-origin" src="' +
-              escapeAttribute(a.path) +
-              '" alt=""></span><strong class="asset-picker__name">' +
-              escapeHtml(a.name) +
-              "</strong><p>" +
-              formatAssetSize(a.size) +
-              " · " +
-              (a.source === "upload" ? "Uploaded" : "Original website file") +
-              "</p>" +
-              renderAssetProtectionActions(a) +
-              '<button type="button" class="btn btn--outline" data-image-framing="' +
-              escapeAttribute(a.path) +
-              '">Edit framing</button></div>',
-          )
-          .join("") +
-        "</div>"
-      : "<p>No matching images.</p>";
-    applyImageFraming(content);
-    content
-      .querySelectorAll("[data-image-framing]")
-      .forEach((button) =>
-        button.addEventListener("click", () =>
-          openImageFraming(button.dataset.imageFraming),
-        ),
-      );
-    content
-      .querySelectorAll("[data-asset-delete]")
-      .forEach((button) =>
-        button.addEventListener("click", () =>
-          deleteAssetFile(manager, type, input, button.dataset.assetDelete),
-        ),
-      );
-    content
-      .querySelectorAll("[data-asset-protect]")
-      .forEach((button) =>
-        button.addEventListener("click", () =>
-          updateAssetProtection(
-            manager,
-            type,
-            input,
-            button.dataset.assetProtect,
-            true,
-          ),
-        ),
-      );
-    content
-      .querySelectorAll("[data-asset-unprotect]")
-      .forEach((button) =>
-        button.addEventListener("click", () =>
-          updateAssetProtection(
-            manager,
-            type,
-            input,
-            button.dataset.assetUnprotect,
-            false,
-          ),
-        ),
-      );
-  } catch (error) {
-    content.textContent = "Could not load images. " + error.message;
-  }
+    const library=await loadAdminAssets();if(manager.assetRequestId!==requestId||!manager.isConnected)return;
+    const all=library.images||[],search=manager.querySelector('#asset-search').value.trim().toLowerCase(),filter=manager.querySelector('#asset-filter').value;
+    const items=all.filter(a=>a.name.toLowerCase().includes(search)&&(filter!=='unused'||a.deletable)&&(filter!=='upload'||a.source==='upload'));
+    const page=mediaPageWindow(items,manager.assetPage);manager.assetPage=page.index;
+    manager.querySelector('#asset-summary').textContent=items.length+' of '+all.length+' images · '+all.filter(a=>a.deletable).length+' unused';
+    content.innerHTML=items.length?`<div class="media-gallery">${page.items.map((a,index)=>`<button type="button" class="media-tile" data-media-index="${index}" aria-label="Inspect ${escapeAttribute(a.name)}"><span class="media-tile-photo"><img loading="lazy" src="${escapeAttribute(a.path)}" alt=""></span><strong>${escapeHtml(a.name)}</strong><small>${a.source==='upload'?'Uploaded':'Website image'}</small></button>`).join('')}</div><div class="media-pagination"><button type="button" class="btn btn--outline" data-media-page="-1" ${page.index===0?'disabled':''}>← Previous</button><span data-media-page-status tabindex="-1">${page.start+1}–${page.start+page.items.length} of ${items.length}</span><button type="button" class="btn btn--outline" data-media-page="1" ${page.index===page.pages-1?'disabled':''}>Next →</button></div>`:'<p class="media-empty">No matching images. Try another name or filter.</p>';
+    content.querySelectorAll('[data-media-index]').forEach(button=>button.addEventListener('click',()=>openMediaInspector(manager,type,input,page.items[Number(button.dataset.mediaIndex)],button)));
+    content.querySelectorAll('[data-media-page]').forEach(button=>button.addEventListener('click',async()=>{manager.assetPage=page.index+Number(button.dataset.mediaPage);await renderManagedAssets(manager,type,input);content.querySelector('[data-media-page-status]')?.focus();}));
+  } catch(error) {if(manager.assetRequestId===requestId)content.textContent='Could not load images. '+error.message;}
 }
 
 let branchRevision = "";

@@ -7,6 +7,16 @@ const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls('));
 
+test('Media library pagination retains every image and clamps after filtering or deletion',()=>{
+ const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+ const source=site.slice(site.indexOf('function mediaPageWindow('),site.indexOf('function openMediaInspector('));
+ const items=Array.from({length:29},(_,index)=>index);
+ const page=n=>runInNewContext(source+';mediaPageWindow(items,n)',{items,n});
+ assert.equal(page(0).items.length,12);assert.equal(page(1).start,12);assert.equal(page(2).items.length,5);assert.equal(page(999).index,2);assert.equal(page(-1).index,0);
+ assert.equal([...page(0).items,...page(1).items,...page(2).items].join(','),items.join(','));
+ const empty=runInNewContext(source+';mediaPageWindow([],99)');assert.equal(empty.index,0);assert.equal(empty.pages,1);assert.equal(empty.items.length,0);
+});
+
 test('Branch readiness calls out exact missing visit details and updates when completed',()=>{
  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
  const source=site.slice(site.indexOf('function branchVisitGaps('),site.indexOf('function renderBranchFields('));
