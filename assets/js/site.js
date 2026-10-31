@@ -1585,12 +1585,13 @@ function renderSubPage({
   copy,
   image,
   actions = [],
+  heroPanel = '',
   body,
 }) {
   const hero = getHeroImageConfig(pageKey, image);
   actions = actions.filter(action => !(pageKey === "watch" && action[1] === "#/watch"));
   return `
-    <article class="page">
+    <article class="page${heroPanel ? ' page-branch-arrival' : ''}">
       <section class="subhero">
         <div class="container subhero__inner">
           <div>
@@ -1608,7 +1609,7 @@ function renderSubPage({
                 : ""
             }
           </div>
-          <div class="subhero__media" style="--subhero-focal:${escapeAttribute(hero.desktopFocal)}; --subhero-mobile-focal:${escapeAttribute(hero.mobileFocal)}; --subhero-scale:${escapeAttribute(hero.desktopScale)}; --subhero-mobile-scale:${escapeAttribute(hero.mobileScale)}; --subhero-fit:${escapeAttribute(hero.desktopFit)}; --subhero-mobile-fit:${escapeAttribute(hero.mobileFit)};">
+          ${heroPanel || `<div class="subhero__media" style="--subhero-focal:${escapeAttribute(hero.desktopFocal)}; --subhero-mobile-focal:${escapeAttribute(hero.mobileFocal)}; --subhero-scale:${escapeAttribute(hero.desktopScale)}; --subhero-mobile-scale:${escapeAttribute(hero.mobileScale)}; --subhero-fit:${escapeAttribute(hero.desktopFit)}; --subhero-mobile-fit:${escapeAttribute(hero.mobileFit)};">
             ${
               hero.video
                 ? `<video class="subhero__video" autoplay muted loop playsinline preload="metadata" poster="${escapeAttribute(hero.desktopImage)}" aria-label="${escapeAttribute(label)}">
@@ -1619,7 +1620,7 @@ function renderSubPage({
                     <img src="${escapeAttribute(hero.desktopImage)}" alt="${escapeAttribute(label)}">
                   </picture>`
             }
-          </div>
+          </div>`}
         </div>
         <svg class="page-sweep" viewBox="0 0 1440 220" preserveAspectRatio="none" aria-hidden="true"><path d="M0 180C380 290 680 40 1060 65C1230 76 1350 109 1440 0V220H0Z" fill="#efc45b"/><path d="M0 193C370 284 745 91 1090 100C1250 104 1370 114 1440 45V220H0Z" fill="#fff"/><path class="swoosh-edge" d="M0 193C370 284 745 91 1090 100C1250 104 1370 114 1440 45" fill="none"/></svg>
       </section>
@@ -1627,6 +1628,18 @@ function renderSubPage({
       ${renderFooter()}
     </article>
   `;
+}
+
+function renderBranchArrival(branch) {
+  const address=String(branch.address || '').trim();
+  const services=String(branch.services || '').trim();
+  const contact=String(branch.contact || '').trim();
+  return `<aside class="branch-arrival" aria-labelledby="branch-arrival-title"><div class="branch-arrival__heading"><span aria-hidden="true">↗</span><div><p>Your visit, made simple</p><h2 id="branch-arrival-title">See you at church.</h2></div></div>
+    <div class="branch-arrival__fact"><span class="branch-arrival__number" aria-hidden="true">01</span><div><h3>When we meet</h3><p>${services ? escapeHtml(services).replace(/\r?\n/g,'<br>') : 'Contact us to confirm the next service time.'}</p></div></div>
+    <div class="branch-arrival__fact"><span class="branch-arrival__number" aria-hidden="true">02</span><div><h3>Where to find us</h3><p>${address ? escapeHtml(address).replace(/\r?\n/g,'<br>') : 'Please confirm the meeting location before travelling.'}</p></div></div>
+    ${contact ? `<details class="branch-arrival__contact"><summary>Local contact</summary><p>${escapeHtml(contact).replace(/\r?\n/g,'<br>')}</p></details>` : ''}
+    <div class="branch-arrival__actions">${address ? `<a class="btn btn--gold" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}" target="_blank" rel="noopener noreferrer">Get directions <span aria-hidden="true">↗</span></a><a href="mailto:office@londonpentecostalchurch.org?subject=${encodeURIComponent('lpc-website contact - '+(branch.churchName || branch.name))}">Ask about your visit</a>` : `<a class="btn btn--gold" href="mailto:office@londonpentecostalchurch.org?subject=${encodeURIComponent('lpc-website contact - '+(branch.churchName || branch.name))}">Ask about your visit <span aria-hidden="true">↗</span></a>`}</div>
+    <a class="branch-arrival__back" href="#/branches">← Explore other churches</a></aside>`;
 }
 
 function renderBranchPage(branch, image) {
@@ -1637,10 +1650,7 @@ function renderBranchPage(branch, image) {
     title: escapeHtml(branch.churchName),
     copy: escapeHtml(branch.summary),
     image,
-    actions: [
-      ["Back to Branches", "#/branches", "btn--gold"],
-      ["Contact LPC", "#/contact", "btn--outline"],
-    ],
+    heroPanel: renderBranchArrival(branch),
     theme: branch,
     body: `
       <section class="section section--tight section--swoosh">
@@ -1673,7 +1683,6 @@ function renderBranchPage(branch, image) {
           </div>
         </div>
       </section>
-      <section class="section section--tight"><div class="container branch-details">${branch.address ? card("Address", escapeHtml(branch.address)) : ""}${branch.services ? card("Service times", escapeHtml(branch.services)) : ""}${branch.contact ? card("Contact", escapeHtml(branch.contact)) : ""}</div></section>
       ${source ? renderSocialSection(source, branch.churchName) : ""}
     `,
   });

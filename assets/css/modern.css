@@ -3282,3 +3282,36 @@ body.is-branch-page .site-search-trigger,body.is-red-header-sample .site-search-
 .pastoral-home .people-card { color:#17384a; }
 .pastoral-home .people-caption h3 { font-size:1.05rem;line-height:1.3;margin:0 0 6px; }
 @media(max-width:600px) { .pastoral-lead { margin:0 0 28px; } .pastoral-lead > .people-card { width:210px; } .pastoral-members.people-grid { grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 14px; } .pastoral-members .people-caption h2,.pastoral-home .people-caption h3 { font-size:.95rem; } }
+
+/* Branch arrival guide: the next step comes before the church story. */
+.page-branch-arrival .subhero { padding-bottom:72px; }
+.page-branch-arrival .subhero__inner { grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:64px;padding-top:48px;padding-bottom:48px;align-items:center; }
+.page-branch-arrival .subhero__title { font-size:clamp(2.2rem,4.3vw,4rem); }
+.branch-arrival { background:#fff;color:#102539;border-radius:22px;padding:28px;box-shadow:0 22px 60px #00152c30;min-width:0;position:relative;z-index:1; }
+.branch-arrival__heading { display:flex;gap:14px;align-items:center;margin-bottom:22px; }
+.branch-arrival__heading>span { display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:#f7e7b8;font-size:1.7rem;flex-shrink:0; }
+.branch-arrival__heading p { margin:0 0 4px;color:#6e5421;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em; }
+.branch-arrival__heading h2 { margin:0;font-size:1.6rem;color:#102539; }
+.branch-arrival__fact { display:flex;gap:14px;padding:16px 0;border-top:1px solid #dce4e9; }
+.branch-arrival__number { color:#697a89;font-size:.75rem;font-weight:700;padding-top:3px; }
+.branch-arrival__fact h3 { margin:0 0 5px;font-size:1rem;color:#102539; }
+.branch-arrival__fact p,.branch-arrival__contact p { margin:0;color:#405568;line-height:1.55;font-size:.95rem;overflow-wrap:anywhere; }
+.branch-arrival__contact { border-top:1px solid #dce4e9;padding:12px 0; }
+.branch-arrival__contact summary { cursor:pointer;font-size:.9rem;font-weight:700; }
+.branch-arrival__contact p { padding-top:10px; }
+.branch-arrival__actions { display:grid;gap:12px;margin-top:8px;text-align:center; }
+.branch-arrival__actions .btn { display:flex;justify-content:space-between;min-height:48px;padding:12px 20px; }
+.branch-arrival__actions>a:not(.btn) { color:#244d68;font-size:.88rem;text-decoration:underline;text-underline-offset:4px;padding:4px; }
+.branch-arrival__back { display:block;margin-top:20px;padding-top:14px;border-top:1px solid #dce4e9;font-size:.8rem;color:#4b5c6d; }
+@media(max-width:760px) {
+  .page-branch-arrival .subhero { padding-bottom:42px; }
+  .page-branch-arrival .subhero__inner { grid-template-columns:1fr;gap:20px;padding-top:22px;padding-bottom:26px; }
+  .page-branch-arrival .subhero__title { font-size:2rem; }
+  .page-branch-arrival .subhero__copy { font-size:.95rem;line-height:1.5;margin-top:12px; }
+  .page-branch-arrival .eyebrow { margin-bottom:10px;font-size:.7rem; }
+  .branch-arrival { padding:20px;border-radius:18px; }
+  .branch-arrival__heading { margin-bottom:14px; }
+  .branch-arrival__heading h2 { font-size:1.3rem; }
+  .branch-arrival__heading p { font-size:.65rem; }
+  .branch-arrival__fact { padding:12px 0; }
+}
