@@ -7,6 +7,17 @@ const ui = readFileSync(new URL('../assets/js/volunteers.js', import.meta.url), 
 const authSource = readFileSync(new URL('../assets/js/team-auth.js', import.meta.url), 'utf8');
 const render = ui.slice(ui.indexOf('  function render()'), ui.indexOf('  function weekControls('));
 
+test('Ministry explorer switches one panel at a time and supports keyboard discovery',()=>{
+ const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+ const source=site.slice(site.indexOf('function initMinistryExplorer()'),site.indexOf('function renderContactHub('));
+ const panels=[0,1,2,3].map(i=>({hidden:i!==0}));
+ const tabs=panels.map(()=>({events:{},addEventListener(type,fn){this.events[type]=fn},setAttribute(k,v){this[k]=v},focus(){this.focused=true}}));
+ runInNewContext(source+';initMinistryExplorer()',{document:{querySelectorAll:s=>s.includes('choice')?tabs:panels}});
+ tabs[2].events.click();assert.equal(panels[2].hidden,false);assert.equal(panels.filter(p=>!p.hidden).length,1);assert.equal(tabs[2]['aria-selected'],'true');
+ tabs[2].events.keydown({key:'End',preventDefault(){}});assert(tabs[3].focused);assert.equal(panels[3].hidden,false);
+ tabs[3].events.keydown({key:'ArrowRight',preventDefault(){}});assert.equal(panels[0].hidden,false);assert.equal(tabs[0].tabindex,'0');
+});
+
 test('Media library pagination retains every image and clamps after filtering or deletion',()=>{
  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
  const source=site.slice(site.indexOf('function mediaPageWindow('),site.indexOf('function openMediaInspector('));

@@ -381,27 +381,7 @@ const routes = {
   "/home": renderHome,
   "/": renderHome,
   "/plan-your-visit": () => renderVisitPlan(),
-  "/ministries": () =>
-    renderSubPage({
-      pageKey: "ministries",
-      label: "Ministries",
-      title: "Helping every generation grow in faith.",
-      copy: "LPC is built around worship, discipleship, community life, youth development, and service. Our ministries are designed to help people belong, grow, and serve with confidence.",
-      image: "./assets/images/derived/branches-hero.jpg",
-      actions: [["Explore Youth", "#/youth", "btn--gold"]],
-      body: `
-        <section class="section section--tight section--swoosh">
-          <div class="container">
-            <div class="cards-grid">
-              ${infoCard("Food Bank", "Supporting our local community with nutritious meals and resources.", "utensils")}
-              ${infoCard("Sunday School", "Biblical foundation for children and young families across our branches.", "book")}
-              ${infoCard("Christ Envoys Youth Ministry", "A Christ-centred ministry shaping the next generation.", "users")}
-              ${infoCard("Women in Christ", "LPC Women’s Group nurtures Christian growth, strengthens friendships, and builds a supportive community through faith, fellowship, laughter, and shared experiences.", "play")}
-            </div>
-          </div>
-        </section>
-      `,
-    }),
+  "/ministries": () => renderMinistryExplorer(),
   "/youth": () =>
     renderSubPage({
       pageKey: "youth",
@@ -480,6 +460,33 @@ const routes = {
   "/contact": () => renderContactHub(),
   "/branches/chadwell-heath": renderHome,
 };
+
+function renderMinistryExplorer() {
+  const ministries=[
+    {audience:'Children & families',title:'Sunday School',icon:'book',copy:'Biblical foundation for children and young families across our branches.',cta:'Ask about Sunday School',color:'#176b74'},
+    {audience:'Young people',title:'Christ Envoys Youth Ministry',icon:'users',copy:'A Christ-centred ministry shaping the next generation through worship, learning Scripture, friendship and discipleship.',cta:'Explore LPC Youth',href:'#/youth',color:'#594681'},
+    {audience:'Women & fellowship',title:'Women in Christ',icon:'users',copy:'LPC Women’s Group nurtures Christian growth, strengthens friendships, and builds a supportive community through faith, fellowship, laughter, and shared experiences.',cta:'Ask about Women in Christ',color:'#914c66'},
+    {audience:'Community support',title:'Food Bank',icon:'users',copy:'Supporting our local community with nutritious meals and resources.',cta:'Ask about the Food Bank',color:'#8c6723'}
+  ];
+  const image=getHeroImageConfig('ministries','./assets/images/derived/branches-hero.jpg').desktopImage;
+  return `<article class="page page-ministry-explorer"><section class="ministry-explorer container"><header><p class="section-label">Life beyond Sunday</p><h1>Find your place to grow.</h1><p>Worship, discipleship and community life. Choose who you’re exploring for.</p></header>
+    <div class="ministry-choices" role="tablist" aria-label="Explore ministries">${ministries.map((m,i)=>`<button type="button" role="tab" id="ministry-choice-${i}" aria-controls="ministry-panel-${i}" aria-selected="${i===0}" tabindex="${i===0?0:-1}" data-ministry-choice="${i}" style="--ministry-color:${m.color}"><span aria-hidden="true">${icon(m.icon)}</span><span><strong>${m.audience}</strong><small>${m.title}</small></span></button>`).join('')}</div>
+    ${ministries.map((m,i)=>`<article class="ministry-result" role="tabpanel" id="ministry-panel-${i}" aria-labelledby="ministry-choice-${i}" data-ministry-panel="${i}" ${i?'hidden':''} style="--ministry-color:${m.color}"><div class="ministry-result-copy"><p class="section-label">${m.audience}</p><h2>${m.title}</h2><p>${m.copy}</p><a class="btn btn--gold" href="${m.href || 'mailto:office@londonpentecostalchurch.org?subject='+encodeURIComponent('lpc-website contact - '+m.title)}">${m.cta} <span aria-hidden="true">→</span></a>${m.href ? '' : '<small>Your email app opens with the church office and subject filled in.</small>'}</div>${image ? `<img class="ministry-result-image" src="${escapeAttribute(image)}" alt="Ministry life across the LPC church family" loading="lazy">` : ''}</article>`).join('')}
+    </section>${renderFooter()}</article>`;
+}
+
+function initMinistryExplorer() {
+  const tabs=[...document.querySelectorAll('[data-ministry-choice]')],panels=[...document.querySelectorAll('[data-ministry-panel]')];
+  if(!tabs.length)return;
+  const select=index=>{tabs.forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.setAttribute('tabindex',i===index?'0':'-1');});panels.forEach((panel,i)=>{panel.hidden=i!==index;});};
+  tabs.forEach((tab,index)=>{
+    tab.addEventListener('click',()=>select(index));
+    tab.addEventListener('keydown',event=>{
+      const next=event.key==='ArrowRight'?(index+1)%tabs.length:event.key==='ArrowLeft'?(index+tabs.length-1)%tabs.length:event.key==='Home'?0:event.key==='End'?tabs.length-1:null;
+      if(next===null)return;event.preventDefault();select(next);tabs[next].focus();
+    });
+  });
+}
 
 function renderContactHub() {
   const main = branchCards.find(branch=>branch.slug==='chadwell-heath');
@@ -2374,6 +2381,7 @@ function renderRoute() {
   initAssetManager();
   initNewsletterViewer();
   initVisitFinder();
+  initMinistryExplorer();
   initVisitPlan();
   initBranchDirectory();
   applyImageFraming();
