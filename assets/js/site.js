@@ -887,25 +887,7 @@ function renderHome() {
       ${homeDisclosure('Our people', 'Leadership serving the LPC family', `
       <section class="section section--tight section--leadership">
         <div class="container">
-          <div class="team-ribbon">
-            <div class="team-ribbon__intro">
-              <p class="section-label">Our people</p><h3>Here to serve.<br>Here for you.</h3>
-              <p>Leadership serving the LPC family across every branch.</p>
-
-            </div>
-            <div class="team-ribbon__people">
-              ${pastors
-                .map(
-                  ({ name, role }) => `
-                    <div class="team-person">
-                      <strong>${escapeHtml(name)}</strong>
-                      <span>${escapeHtml(role)}</span>
-                    </div>
-                  `,
-                )
-                .join("")}
-            </div>
-          </div>
+          <div class="pastoral-home"><h2>Meet our pastoral team.</h2>${renderPastoralTeam('h3')}</div>
 
         </div>
       </section>`)}
@@ -3710,17 +3692,20 @@ async function loadPastors() {
     if (response.ok) applyPastorConfig(await response.json());
   } catch {}
 }
+function renderPastoralCard(p,heading='h2') {
+  const portrait=p.image?`<img src="${escapeAttribute(p.image)}" alt="" loading="lazy">`:`<span class="people-initials" aria-hidden="true">${escapeHtml((p.name || '').split(/\s+/).filter(Boolean).slice(-2).map(s=>s[0]).join(''))}</span>`;
+  const content=`<div class="people-portrait">${portrait}${p.id?'<span class="people-arrow" aria-hidden="true">↗</span>':''}</div><div class="people-caption"><${heading}>${escapeHtml(p.name)}</${heading}><p>${escapeHtml(p.role)}</p></div>`;
+  return p.id?`<a class="people-card" href="#/pastors/${encodeURIComponent(p.id)}" aria-label="Meet ${escapeAttribute(p.name)}">${content}</a>`:`<article class="people-card">${content}</article>`;
+}
+
+function renderPastoralTeam(heading='h2') {
+  const lead=pastors.find(p=>p.id==='senior-pastor') || pastors[0];
+  const members=pastors.filter(p=>p!==lead);
+  return `${lead?`<div class="pastoral-lead" data-pastoral-lead>${renderPastoralCard(lead,heading)}</div>`:''}<div class="pastoral-members people-grid" data-pastoral-members>${members.map(p=>renderPastoralCard(p,heading)).join('')}</div>`;
+}
+
 function renderPastoralGallery() {
-  const poster = getHeroImageConfig('pastors', './assets/images/derived/pastors-hero.jpg').desktopImage;
-  return `<article class="page page-people"><section class="people-gallery container" aria-labelledby="people-title">
-    <header class="people-gallery__heading"><div><p class="section-label">Our pastoral family</p><h1 id="people-title">People here for you.</h1><p>Meet the pastors and ministers serving our church family.</p></div><a class="people-contact" href="#/contact">Connect with LPC <span aria-hidden="true">↗</span></a></header>
-    <div class="people-grid">${pastors.map(p => {
-      const portrait = p.image ? `<img src="${escapeAttribute(p.image)}" alt="" loading="lazy">` : `<span class="people-initials" aria-hidden="true">${escapeHtml((p.name || '').split(/\s+/).filter(Boolean).slice(-2).map(s=>s[0]).join(''))}</span>`;
-      const content = `<div class="people-portrait">${portrait}${p.id ? '<span class="people-arrow" aria-hidden="true">↗</span>' : ''}</div><div class="people-caption"><h2>${escapeHtml(p.name)}</h2><p>${escapeHtml(p.role)}</p></div>`;
-      return p.id ? `<a class="people-card" href="#/pastors/${encodeURIComponent(p.id)}" aria-label="Meet ${escapeAttribute(p.name)}">${content}</a>` : `<article class="people-card">${content}</article>`;
-    }).join('')}</div>
-    ${poster ? `<details class="people-poster"><summary>View our pastoral family <span aria-hidden="true">+</span></summary><img src="${escapeAttribute(poster)}" alt="LPC pastoral team" loading="lazy"></details>` : ''}
-    </section>${renderFooter()}</article>`;
+  return `<article class="page page-people"><section class="people-gallery container" aria-labelledby="people-title"><header class="people-gallery__heading"><div><p class="section-label">Our pastoral family</p><h1 id="people-title">Meet our pastoral team.</h1><p>Here to pray with you, support you, and help you grow in faith.</p></div><a class="people-contact" href="#/contact">Connect with LPC <span aria-hidden="true">↗</span></a></header>${renderPastoralTeam()}</section>${renderFooter()}</article>`;
 }
 
 function renderPastorProfile(id) {

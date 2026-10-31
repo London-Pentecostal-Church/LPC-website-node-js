@@ -302,7 +302,7 @@ test('Home reference sections collapse by default while the service stream stays
   const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
   const source=site.slice(site.indexOf('function homeDisclosure('),site.indexOf('function renderHomeHeroMedia()'));
   const context={escapeHtml:v=>String(v),escapeAttribute:v=>String(v),branchCards:[{},{}],pastors:[],mediaSources:{home:{}},quickItem:()=>'<a>Quick action</a>',
-    renderHomeHeroMedia:()=>'<video></video>',renderCalendarSection:()=>'<section>Events</section>',renderNewsletterSection:()=>'<section>Newsletter</section>',renderBranchesSection:()=>'<section>Branches</section>',
+    renderPastoralTeam:()=>'<section>Pastoral team</section>',renderHomeHeroMedia:()=>'<video></video>',renderCalendarSection:()=>'<section>Events</section>',renderNewsletterSection:()=>'<section>Newsletter</section>',renderBranchesSection:()=>'<section>Branches</section>',
     renderMediaSection:(_,featured)=>featured?'<section data-featured-stream>Service stream</section>':'',renderSocialSection:()=>'<section>Socials</section>',renderFooter:()=>'<footer>Contact and service times</footer>'};
   const html=runInNewContext(source+';renderHome()',context);
   assert.equal((html.match(/<details class="home-disclosure">/g)||[]).length,3);
