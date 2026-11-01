@@ -384,42 +384,7 @@ const routes = {
   "/ministries": () => renderMinistryExplorer(),
   "/youth": () => renderYouthHub(),
   "/branches": () => renderBranchDirectory(),
-  "/about": () =>
-    renderSubPage({
-      pageKey: "about",
-      label: "About Us",
-      title: "Welcome to London Pentecostal Church.",
-      copy: "Building a spiritual house for spiritual sacrifices across London and Essex.",
-      image: "./assets/images/derived/branches-hero.jpg",
-      actions: [["Meet Our Team", "#/pastors", "btn--gold"]],
-      body: `
-        <section class="section section--tight section--about">
-          <div class="container about-layout">
-            <div class="about-copy">
-
-              <p>Thank you for taking time to find out more about who we are. As a church we are all about knowing Jesus Christ and making Him known. Our desire is to spread the Word of God, so that we can transform our city, this nation and even the world.</p>
-              <p>We are a community of people who are from all walks of life and who are at different stages in their relationships with God. LPC is a blend of new believers and established Christians. Most importantly we are a people hungry for more of God in our lives.</p>
-              <p>If you are looking for a place to connect with God and to connect with His people, this is the place for you. We are looking forward to meeting you.</p>
-              <p><strong>With love and thanks,<br>Pr Sam John<br>Pastor and Founder</strong></p>
-            </div>
-          </div>
-        </section>
-        <section class="section section--tight">
-          <div class="container vision-grid">
-            <article class="vision-card vision-card--teal">
-              <h3>Our Vision</h3>
-              <p>Building a spiritual house for spiritual sacrifices.</p>
-
-            </article>
-            <article class="vision-card vision-card--gold">
-              <h3>Our Mission</h3>
-              <p>We are a community of people from all walks of life, growing together in relationship with God, welcoming new believers and established Christians, and seeking more of God in our lives.</p>
-              <a href="#/contact">Contact Us</a>
-            </article>
-          </div>
-        </section>
-      `,
-    }),
+  "/about": () => renderAboutHub(),
   "/pastors": () => renderPastoralGallery(),
   "/watch": () => `<article class="page page-watch"><header class="watch-stage-heading"><div class="container"><p class="section-label">LPC online</p><h1>One family. Worship wherever you are.</h1><p>Choose a church, then press play. Live services and recent messages, together in one place.</p></div></header>${renderWatchHub()}${renderFooter()}</article>`,
   "/admin": renderAdminPanel,
@@ -428,6 +393,11 @@ const routes = {
   "/contact": () => renderContactHub(),
   "/branches/chadwell-heath": renderHome,
 };
+
+function renderAboutHub() {
+  return renderSubPage({pageKey:'about',label:'Welcome to LPC',title:'A church family to grow with.',copy:'Building a spiritual house for spiritual sacrifices across London and Essex.',image:'./assets/images/derived/branches-hero.jpg',actions:[['Plan your first visit','#/plan-your-visit','btn--gold'],['Meet our pastors','#/pastors','btn--outline']],body:`<section class="about-values container" aria-label="Life at LPC"><article><span>01 · Our vision</span><h2>Know Jesus. Make Him known.</h2><p>Building a spiritual house for spiritual sacrifices. Our desire is to spread the Word of God and see lives transformed.</p></article><article><span>02 · Our mission</span><h2>Grow together in faith.</h2><p>A community from all walks of life, growing in relationship with God and seeking more of Him in our lives.</p></article><article><span>03 · Our welcome</span><h2>A place to connect.</h2><p>New believers and established Christians, at different stages of faith. We look forward to meeting you.</p></article></section>
+    <section class="container about-letter"><details><summary><span>${seniorPastor.image?`<img src="${escapeAttribute(seniorPastor.image)}" alt="" loading="lazy">`:''}<span><strong>A personal welcome from Pr Sam John</strong><small>Pastor and Founder · Read the full welcome</small></span></span><span aria-hidden="true">⌄</span></summary><div><p>Thank you for taking time to find out more about who we are. As a church we are all about knowing Jesus Christ and making Him known. Our desire is to spread the Word of God, so that we can transform our city, this nation and even the world.</p><p>We are a community of people who are from all walks of life and who are at different stages in their relationships with God. LPC is a blend of new believers and established Christians. Most importantly we are a people hungry for more of God in our lives.</p><p>If you are looking for a place to connect with God and to connect with His people, this is the place for you. We are looking forward to meeting you.</p><p><strong>With love and thanks,<br>Pr Sam John<br>Pastor and Founder</strong></p></div></details></section>`});
+}
 
 function renderYouthHub() {
   const hero=getHeroImageConfig('youth','./assets/images/derived/youth-hero.jpg');
@@ -527,6 +497,25 @@ function openCalendarEvent(event,opener) {
   dialog.querySelector('[data-event-download]').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([calendarEventFile(event)],{type:'text/calendar;charset=utf-8'})),link=document.createElement('a');link.href=url;link.download='lpc-event-'+event.start.slice(0,10)+'.ics';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);});
 }
 
+function calendarAgendaRows(events) {
+  const date=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  const time=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',hour:'2-digit',minute:'2-digit'});
+  return events.map((event,index)=>({event,index})).sort((a,b)=>a.event.start.localeCompare(b.event.start)).map(({event,index})=>{
+    const when=date.format(new Date(event.start)),hour=event.allDay?'All day':time.format(new Date(event.start));
+    return `<button type="button" class="calendar-agenda-row" data-agenda-event="${index}" data-agenda-search="${escapeAttribute((event.title+' '+(event.location || '')+' '+when).toLowerCase())}"><span><strong>${escapeHtml(when)}</strong><small>${hour}</small></span><span><strong>${escapeHtml(event.title)}</strong>${event.location?`<small>${escapeHtml(event.location)}</small>`:''}</span><span aria-hidden="true">↗</span></button>`;
+  }).join('');
+}
+function openCalendarAgenda(events,opener) {
+  const dialog=document.createElement('dialog');dialog.className='calendar-agenda-dialog';dialog.setAttribute('aria-labelledby','calendar-agenda-title');
+  dialog.innerHTML=`<header><div><p class="section-label">Church calendar</p><h2 id="calendar-agenda-title">Find your next gathering.</h2></div><button type="button" class="btn btn--outline" data-agenda-close>Close</button></header><label class="calendar-agenda-search">Search events<input type="search" placeholder="Event, church, town or date" autofocus></label><p data-agenda-count role="status">${events.length} upcoming events</p><div class="calendar-agenda-list">${calendarAgendaRows(events)}</div><p data-agenda-empty hidden>No matching events. Try another word or clear the search.</p>`;
+  const previousOverflow=document.body.style.overflow;document.body.append(dialog);document.body.style.overflow='hidden';dialog.showModal();
+  dialog.addEventListener('close',()=>{document.body.style.overflow=previousOverflow;dialog.remove();if(opener?.isConnected)opener.focus();},{once:true});
+  dialog.querySelector('[data-agenda-close]').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
+  const rows=[...dialog.querySelectorAll('[data-agenda-event]')];
+  dialog.querySelector('input').addEventListener('input',event=>{const terms=event.target.value.toLowerCase().trim().split(/\s+/).filter(Boolean);let count=0;rows.forEach(row=>{row.hidden=!terms.every(term=>row.dataset.agendaSearch.includes(term));if(!row.hidden)count++;});dialog.querySelector('[data-agenda-count]').textContent=count+' '+(count===1?'event':'events')+(terms.length?' found':' upcoming');dialog.querySelector('[data-agenda-empty]').hidden=count>0;});
+  rows.forEach(row=>row.addEventListener('click',()=>openCalendarEvent(events[Number(row.dataset.agendaEvent)],row)));
+}
+
 function renderCalendarSection() {
   return '<section class="section section--calendar"><div class="container"><div class="calendar-heading"><div><p class="section-label">Church calendar</p><h2 class="section-title">Upcoming events at LPC</h2></div><div class="calendar-controls"><button type="button" data-calendar-direction="-1" aria-label="Previous events" disabled>←</button><button type="button" data-calendar-direction="1" aria-label="Next events" disabled>→</button></div></div><div class="calendar-tiles" tabindex="0" aria-label="Upcoming church events" aria-busy="true"><p class="calendar-message" role="status">Loading upcoming events…</p></div></div></section>';
 }
@@ -575,6 +564,9 @@ async function hydrateCalendarEvents() {
         '<p class="calendar-message" role="status">Upcoming events will appear here soon.</p>';
       return;
     }
+    const agendaButton=document.createElement('button');agendaButton.type='button';agendaButton.className='calendar-agenda-open';agendaButton.textContent='Browse events';
+    track.closest('section').querySelector('.calendar-controls').prepend(agendaButton);
+    agendaButton.addEventListener('click',()=>{const pause=track.closest('section').querySelector('.calendar-pause');if(pause?.getAttribute('aria-pressed')==='false')pause.click();openCalendarAgenda(data.events,agendaButton);});
     const date = new Intl.DateTimeFormat("en-GB", {
       timeZone: "Europe/London",
       weekday: "short",
@@ -1282,7 +1274,7 @@ function renderAdminHeroEditor(key) {
             <a class="btn btn--outline" href="#/lpcadmin/appearance">Back to page appearance</a>
           </div>
           <div class="admin-editor-layout">
-            ${renderHeroPreviewTile(key, true)}
+            ${renderHeroPreviewWorkspace(key)}
             ${renderHeroImageEditorForm(key)}
           </div>
         </div>
@@ -1306,7 +1298,7 @@ function renderAdminHomeHeroEditor() {
             <a class="btn btn--outline" href="#/lpcadmin/appearance">Back to page appearance</a>
           </div>
           <div class="admin-editor-layout">
-            ${renderHomeHeroPreviewTile(true)}
+            ${renderHeroPreviewWorkspace('home')}
             ${renderHomeHeroAdminFields()}
           </div>
         </div>
@@ -1474,47 +1466,23 @@ function renderHeroPreviewTiles() {
   ].join("");
 }
 
-function renderHomeHeroPreviewTile(isLarge = false, previewConfig = null) {
-  const config = previewConfig || getHomeHeroConfig();
-  const media = config.video
-    ? `<video autoplay muted loop playsinline preload="metadata" poster="${escapeAttribute(config.poster)}">
-        <source src="${escapeAttribute(config.video)}" type="${videoType(config.video)}">
-      </video>`
-    : `<img src="${escapeAttribute(config.poster)}" alt="Home hero poster">`;
-  return `
-    <a class="admin-hero-tile ${isLarge ? "admin-hero-tile--large" : ""}" href="#/lpcadmin/hero/home" data-admin-preview="home">
-      <span class="admin-hero-tile__media" style="--tile-scale:${escapeAttribute(config.scale || "1")}; --tile-fit:${escapeAttribute(config.fit || "cover")}">${media}</span>
-      <span class="admin-hero-tile__body">
-        <strong>Home</strong>
-        <span>${config.video ? "Video hero" : "Image fallback"}</span>
-      </span>
-    </a>
-  `;
+function renderHeroPreviewWorkspace(key) {
+  return `<section class="hero-preview-workspace" data-hero-preview-workspace data-preview-device="desktop"><div class="hero-preview-devices" role="group" aria-label="Preview device"><button type="button" data-hero-preview-device="desktop" aria-pressed="true">Desktop</button><button type="button" data-hero-preview-device="phone" aria-pressed="false">Phone</button></div><div class="hero-preview-stage">${key==='home'?renderHomeHeroPreviewTile(true):renderHeroPreviewTile(key,true)}</div><p>Live crop preview · edits are published when you save.</p></section>`;
 }
-
-function renderHeroPreviewTile(key, isLarge = false, previewConfig = null) {
-  const config =
-    previewConfig ||
-    getHeroImageConfig(key, heroImageDefaults[key]?.desktopImage);
-  const media = config.video
-    ? `<video autoplay muted loop playsinline preload="metadata" poster="${escapeAttribute(config.desktopImage)}">
-        <source src="${escapeAttribute(config.video)}" type="${videoType(config.video)}">
-      </video>`
-    : `<picture>
-        ${config.mobileImage ? `<source media="(max-width: 760px)" srcset="${escapeAttribute(config.mobileImage)}">` : ""}
-        <img src="${escapeAttribute(config.desktopImage)}" alt="${escapeAttribute(heroLabel(key))} hero">
-      </picture>`;
-  return `
-    <a class="admin-hero-tile ${isLarge ? "admin-hero-tile--large" : ""}" href="#/lpcadmin/hero/${key}" data-admin-preview="${escapeAttribute(key)}">
-      <span class="admin-hero-tile__media" style="--tile-focal:${escapeAttribute(config.desktopFocal)}; --tile-scale:${escapeAttribute(config.desktopScale)}; --tile-fit:${escapeAttribute(config.desktopFit)}">${media}</span>
-      <span class="admin-hero-tile__body">
-        <strong>${heroLabel(key)}</strong>
-        <span>${config.video ? "Video hero" : config.mobileImage ? "Desktop + mobile images" : "Image hero"}</span>
-      </span>
-    </a>
-  `;
+function renderHomeHeroPreviewTile(isLarge=false,previewConfig=null,device='desktop') {
+  const source=previewConfig||getHomeHeroConfig(),phone=isLarge&&device==='phone';
+  const fit=phone?source.mobileFit||source.fit:source.fit,scale=phone?source.mobileScale||source.scale:source.scale,focal=phone?source.mobileFocal||source.focal:source.focal;
+  const media=source.video?`<video data-frame-preview autoplay muted loop playsinline preload="metadata" poster="${escapeAttribute(source.poster)}"><source src="${escapeAttribute(source.video)}" type="${videoType(source.video)}"></video>`:`<img data-frame-preview src="${escapeAttribute(source.poster)}" alt="Home hero poster">`;
+  const tag=isLarge?'div':'a';
+  return `<${tag} class="admin-hero-tile ${isLarge?'admin-hero-tile--large':''}" ${isLarge?'':'href="#/lpcadmin/hero/home"'} data-admin-preview="home"><span class="admin-hero-tile__media" style="--tile-focal:${escapeAttribute(focal||'center')};--tile-scale:${escapeAttribute(scale||'1')};--tile-fit:${escapeAttribute(fit||'cover')}">${media}</span><span class="admin-hero-tile__body"><strong>Home</strong><span>${source.video?'Video hero':'Image fallback'}</span></span></${tag}>`;
 }
-
+function renderHeroPreviewTile(key,isLarge=false,previewConfig=null,device='desktop') {
+  const source=previewConfig||getHeroImageConfig(key,heroImageDefaults[key]?.desktopImage),phone=isLarge&&device==='phone';
+  const image=phone?source.mobileImage||source.desktopImage:source.desktopImage,fit=phone?source.mobileFit:source.desktopFit,scale=phone?source.mobileScale:source.desktopScale,focal=phone?source.mobileFocal:source.desktopFocal;
+  const media=source.video?`<video data-frame-preview autoplay muted loop playsinline preload="metadata" poster="${escapeAttribute(image)}"><source src="${escapeAttribute(source.video)}" type="${videoType(source.video)}"></video>`:`<img data-frame-preview src="${escapeAttribute(image)}" alt="${escapeAttribute(heroLabel(key))} hero">`;
+  const tag=isLarge?'div':'a';
+  return `<${tag} class="admin-hero-tile ${isLarge?'admin-hero-tile--large':''}" ${isLarge?'':`href="#/lpcadmin/hero/${key}"`} data-admin-preview="${escapeAttribute(key)}"><span class="admin-hero-tile__media" style="--tile-focal:${escapeAttribute(focal||'center')};--tile-scale:${escapeAttribute(scale||'1')};--tile-fit:${escapeAttribute(fit||'cover')}">${media}</span><span class="admin-hero-tile__body"><strong>${heroLabel(key)}</strong><span>${source.video?'Video hero':source.mobileImage?'Desktop + mobile images':'Image hero'}</span></span></${tag}>`;
+}
 function renderHeroImageEditorForm(key) {
   const config = getHeroImageConfig(key, heroImageDefaults[key].desktopImage);
   return `
@@ -2342,7 +2310,9 @@ function normalizeRoute() {
 }
 
 function renderRoute() {
+  document.querySelector('dialog.asset-picker[open]')?.close();
   document.querySelector('.calendar-event-dialog[open]')?.close();
+  document.querySelector('.calendar-agenda-dialog[open]')?.close();
   document.querySelector('.media-inspector[open]')?.close();
   const route = normalizeRoute();
   const render = routes[route] || getDynamicRouteRenderer(route);
@@ -2530,6 +2500,7 @@ function initHomeHeroAdmin() {
 
   initAssetPicker();
   initHeroEditorLivePreview();
+  initHeroPreviewDevices();
 
   const form = document.getElementById("home-hero-form");
   if (!form) {
@@ -2580,7 +2551,14 @@ function initHomeHeroAdmin() {
   initSiteSettingsAdmin();
 }
 
+function initHeroPreviewDevices() {
+  const workspace=document.querySelector('[data-hero-preview-workspace]');if(!workspace)return;
+  const form=document.getElementById('home-hero-form') || document.getElementById('hero-image-editor-form');
+  const buttons=[...workspace.querySelectorAll('[data-hero-preview-device]')];
+  buttons.forEach(button=>button.addEventListener('click',()=>{workspace.dataset.previewDevice=button.dataset.heroPreviewDevice;buttons.forEach(b=>b.setAttribute('aria-pressed',String(b===button)));form?.dispatchEvent(new Event('hero-device-change'));}));
+}
 function initHeroEditorLivePreview() {
+  const device=()=>document.querySelector('[data-hero-preview-workspace]')?.dataset.previewDevice || 'desktop';
   const homeForm = document.getElementById("home-hero-form");
   if (homeForm) {
     const updateHomePreview = () => {
@@ -2601,10 +2579,11 @@ function initHeroEditorLivePreview() {
         title:
           String(data.get("title") || "").trim() || defaultHomeHeroConfig.title,
       };
-      replaceAdminPreview("home", renderHomeHeroPreviewTile(true, config));
+      replaceAdminPreview("home", renderHomeHeroPreviewTile(true, config,device()));
     };
     homeForm.addEventListener("input", updateHomePreview);
     homeForm.addEventListener("change", updateHomePreview);
+    homeForm.addEventListener('hero-device-change',updateHomePreview);
   }
 
   const heroForm = document.getElementById("hero-image-editor-form");
@@ -2626,10 +2605,11 @@ function initHeroEditorLivePreview() {
         desktopFit: normalizeFitMode(String(data.get("desktopFit") || "")),
         mobileFit: normalizeFitMode(String(data.get("mobileFit") || "")),
       };
-      replaceAdminPreview(key, renderHeroPreviewTile(key, true, config));
+      replaceAdminPreview(key, renderHeroPreviewTile(key, true, config,device()));
     };
     heroForm.addEventListener("input", updateHeroPreview);
     heroForm.addEventListener("change", updateHeroPreview);
+    heroForm.addEventListener('hero-device-change',updateHeroPreview);
   }
 }
 
@@ -2654,171 +2634,49 @@ function initAssetPicker() {
   });
 }
 
-async function openAssetPicker(type, input) {
-  const pickerType = type === "video" ? "video" : "image";
-  const overlay = document.createElement("div");
-  overlay.className = "asset-picker";
-  overlay.innerHTML = `
-    <div class="asset-picker__dialog" role="dialog" aria-modal="true" aria-label="Select ${pickerType}">
-      <div class="asset-picker__header">
-        <div>
-          <strong>Select ${pickerType === "video" ? "video" : "image"}</strong>
-          <span>Choose an existing file. Files used by website JSON are Protected Asset by default and cannot be unprotected.</span>
-        </div>
-        <div class="asset-picker__actions">
-          <label class="asset-picker__upload">
-            Upload ${pickerType === "video" ? "video" : "image"}
-            <input type="file" data-asset-upload accept="${pickerType === "video" ? ".mp4,.webm,.mov,.m4v,video/*" : ".jpg,.jpeg,.png,.webp,.svg,image/*"}">
-          </label>
-          <button class="asset-picker__refresh" type="button">Refresh</button>
-          <button class="asset-picker__close" type="button" aria-label="Close asset picker">Close</button>
-        </div>
-      </div>
-      <div class="asset-picker__content">
-        <p class="asset-picker__status">Loading assets...</p>
-      </div>
-    </div>
-  `;
-  document.body.append(overlay);
-
-  const closePicker = () => overlay.remove();
-  overlay
-    .querySelector(".asset-picker__close")
-    ?.addEventListener("click", closePicker);
-  overlay
-    .querySelector(".asset-picker__refresh")
-    ?.addEventListener("click", () => {
-      renderAssetPickerItems(overlay, pickerType, input);
-    });
-  overlay
-    .querySelector("[data-asset-upload]")
-    ?.addEventListener("change", async (event) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      await uploadAssetFile(overlay, pickerType, input, file);
-    });
-  overlay.addEventListener("click", (event) => {
-    if (event.target === overlay) closePicker();
-  });
-
-  renderAssetPickerItems(overlay, pickerType, input);
+function closeAssetPicker(overlay) {
+  if(overlay.tagName==='DIALOG')overlay.close();else overlay.remove();
 }
-
-async function renderAssetPickerItems(overlay, pickerType, input) {
-  if (overlay.dataset.manager)
-    return renderManagedAssets(overlay, pickerType, input);
-  const content = overlay.querySelector(".asset-picker__content");
-  if (!content) return;
-  const uploadsOnly = overlay.dataset.uploadsOnly === "true";
-  content.innerHTML = `<p class="asset-picker__status">Loading latest assets...</p>`;
-
+function refreshMediaSurface(overlay,type,input) {
+  if(overlay.id==='asset-manager')return renderManagedAssets(overlay,type,input);
+  overlay.assetLibraryPromise=null;
+  return renderAssetPickerItems(overlay,type,input);
+}
+async function openAssetPicker(type,input) {
+  const pickerType=type==='video'?'video':'image',opener=document.activeElement,overlay=document.createElement('dialog');
+  overlay.className='asset-picker asset-picker--modal';overlay.setAttribute('aria-label','Select '+pickerType);
+  overlay.innerHTML=`<div class="asset-picker__dialog"><div class="asset-picker__header"><div><strong>Choose your ${pickerType}</strong><span>Search your library or upload a new file.</span></div><div class="asset-picker__actions"><label class="asset-picker__upload">Upload ${pickerType}<input type="file" data-asset-upload accept="${pickerType==='video'?'.mp4,.webm,.mov,.m4v,video/*':'.jpg,.jpeg,.png,.webp,.svg,image/*'}"></label><button type="button" class="asset-picker__refresh">Refresh</button><button type="button" class="asset-picker__close">Close</button></div></div><div class="asset-picker__filters"><label>Find a file<input type="search" data-picker-search placeholder="Search by file name" autofocus></label><label>Show<select data-picker-filter><option value="all">All files</option><option value="upload">Uploaded files</option><option value="unprotected">Unprotected files</option></select></label></div><div class="asset-picker__content" aria-live="polite"><p>Loading library…</p></div></div>`;
+  const previousOverflow=document.body.style.overflow;document.body.append(overlay);document.body.style.overflow='hidden';overlay.showModal();
+  overlay.addEventListener('close',()=>{document.body.style.overflow=previousOverflow;overlay.remove();if(opener?.isConnected)opener.focus();},{once:true});
+  overlay.querySelector('.asset-picker__close').addEventListener('click',()=>overlay.close());overlay.addEventListener('click',event=>{if(event.target===overlay)overlay.close();});
+  const reset=()=>{overlay.assetPage=0;renderAssetPickerItems(overlay,pickerType,input);};
+  overlay.querySelector('[data-picker-search]').addEventListener('input',reset);overlay.querySelector('[data-picker-filter]').addEventListener('change',reset);
+  overlay.querySelector('.asset-picker__refresh').addEventListener('click',()=>{overlay.assetLibraryPromise=null;reset();});
+  overlay.querySelector('[data-asset-upload]').addEventListener('change',async event=>{const file=event.target.files?.[0];if(file)await uploadAssetFile(overlay,pickerType,input,file);});
+  await renderAssetPickerItems(overlay,pickerType,input);
+}
+function pickerMatches(items,query,filter) {
+  const terms=String(query||'').toLowerCase().trim().split(/\s+/).filter(Boolean);
+  return items.filter(item=>terms.every(term=>String(item.name||'').toLowerCase().includes(term)) && (filter!=='upload'||item.source==='upload') && (filter!=='unprotected'||!item.protected));
+}
+async function renderAssetPickerItems(overlay,pickerType,input) {
+  if(overlay.id==='asset-manager')return renderManagedAssets(overlay,pickerType,input);
+  const content=overlay.querySelector('.asset-picker__content');if(!content)return;
+  const requestId=(overlay.assetRequestId||0)+1;overlay.assetRequestId=requestId;
   try {
-    const assets = await loadAdminAssets();
-    const allItems =
-      pickerType === "video" ? assets.videos || [] : assets.images || [];
-    const editableCount = allItems.filter((item) => !item.protected).length;
-    const items = uploadsOnly
-      ? allItems.filter((item) => !item.protected)
-      : allItems;
-    if (!items.length) {
-      content.innerHTML = `
-        <div class="asset-picker__toolbar">
-          <button class="asset-picker__toggle ${uploadsOnly ? "is-active" : ""}" type="button" data-uploads-toggle>
-            ${uploadsOnly ? "Show all assets" : `Show unprotected only (${editableCount})`}
-          </button>
-          <p class="asset-picker__hint">Protected Asset means the file is used by the website and cannot be removed.</p>
-        </div>
-        <p class="asset-picker__status">No ${uploadsOnly ? "unprotected " : ""}${pickerType}s found.</p>
-      `;
-      content
-        .querySelector("[data-uploads-toggle]")
-        ?.addEventListener("click", () => {
-          overlay.dataset.uploadsOnly = uploadsOnly ? "false" : "true";
-          renderAssetPickerItems(overlay, pickerType, input);
-        });
-      return;
-    }
-
-    content.innerHTML = `
-      <div class="asset-picker__toolbar">
-        <button class="asset-picker__toggle ${uploadsOnly ? "is-active" : ""}" type="button" data-uploads-toggle>
-          ${uploadsOnly ? "Show all assets" : `Show unprotected only (${editableCount})`}
-        </button>
-        <p class="asset-picker__hint">Images used by the website are protected. Unused files can be protected for future reuse or deleted.</p>
-      </div>
-      <div class="asset-picker__grid">
-        ${items
-          .map((item) => {
-            const preview =
-              pickerType === "video"
-                ? `<video src="${escapeAttribute(item.path)}" muted preload="metadata"></video>`
-                : `<img src="${escapeAttribute(item.path)}" alt="">`;
-            return `
-              <div class="asset-picker__item">
-                <button class="asset-picker__select" type="button" data-asset-path="${escapeAttribute(item.path)}">
-                  <span class="asset-picker__preview">${preview}</span>
-                  <span class="asset-picker__name">${escapeHtml(item.name)}</span>
-                  <span class="asset-picker__path">${escapeHtml(item.path)}</span>
-                </button>
-                ${renderAssetProtectionActions(item)}
-              </div>
-            `;
-          })
-          .join("")}
-      </div>
-    `;
-
-    content.querySelectorAll("[data-asset-path]").forEach((item) => {
-      item.addEventListener("click", () => {
-        input.value = item.dataset.assetPath || "";
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-        input.dispatchEvent(new Event("change", { bubbles: true }));
-        overlay.remove();
-      });
-    });
-    content
-      .querySelector("[data-uploads-toggle]")
-      ?.addEventListener("click", () => {
-        overlay.dataset.uploadsOnly = uploadsOnly ? "false" : "true";
-        renderAssetPickerItems(overlay, pickerType, input);
-      });
-    content.querySelectorAll("[data-asset-delete]").forEach((item) => {
-      item.addEventListener("click", async () => {
-        await deleteAssetFile(
-          overlay,
-          pickerType,
-          input,
-          item.dataset.assetDelete || "",
-        );
-      });
-    });
-    content.querySelectorAll("[data-asset-protect]").forEach((item) => {
-      item.addEventListener("click", async () => {
-        await updateAssetProtection(
-          overlay,
-          pickerType,
-          input,
-          item.dataset.assetProtect || "",
-          true,
-        );
-      });
-    });
-    content.querySelectorAll("[data-asset-unprotect]").forEach((item) => {
-      item.addEventListener("click", async () => {
-        await updateAssetProtection(
-          overlay,
-          pickerType,
-          input,
-          item.dataset.assetUnprotect || "",
-          false,
-        );
-      });
-    });
-  } catch (error) {
-    content.innerHTML = `<p class="asset-picker__status">Could not load assets. ${escapeHtml(error.message || "")}</p>`;
-  }
+    overlay.assetLibraryPromise ||= loadAdminAssets();const assets=await overlay.assetLibraryPromise;
+    if(!overlay.isConnected || requestId!==overlay.assetRequestId)return;
+    const all=pickerType==='video'?assets.videos||[]:assets.images||[];
+    const items=pickerMatches(all,overlay.querySelector('[data-picker-search]')?.value,overlay.querySelector('[data-picker-filter]')?.value);
+    const page=mediaPageWindow(items,overlay.assetPage);overlay.assetPage=page.index;
+    content.innerHTML=`<p class="asset-picker__status">${items.length} matching ${pickerType}${items.length===1?'':'s'} · ${all.length} in your library</p>${items.length?`<div class="asset-picker__grid">${page.items.map(item=>`<div class="asset-picker__item"><button class="asset-picker__select ${input.value===item.path?'is-selected':''}" type="button" data-asset-path="${escapeAttribute(item.path)}"><span class="asset-picker__preview">${pickerType==='video'?`<video src="${escapeAttribute(item.path)}" muted preload="metadata"></video>`:`<img src="${escapeAttribute(item.path)}" alt="" loading="lazy">`}</span><span class="asset-picker__name">${escapeHtml(item.name)}</span></button><details class="asset-picker-file-options"><summary>File options</summary>${renderAssetProtectionActions(item)}</details></div>`).join('')}</div><div class="media-pagination"><button type="button" class="btn btn--outline" data-picker-step="-1" ${page.index===0?'disabled':''}>← Previous</button><span data-picker-page-status tabindex="-1">${page.start+1}–${page.start+page.items.length} of ${items.length}</span><button type="button" class="btn btn--outline" data-picker-step="1" ${page.index===page.pages-1?'disabled':''}>Next →</button></div>`:'<p>No matching files. Try another name or filter.</p>'}`;
+    content.querySelectorAll('[data-asset-path]').forEach(button=>button.addEventListener('click',()=>{input.value=button.dataset.assetPath;input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));closeAssetPicker(overlay);}));
+    content.querySelectorAll('[data-picker-step]').forEach(button=>button.addEventListener('click',async()=>{overlay.assetPage=page.index+Number(button.dataset.pickerStep);await renderAssetPickerItems(overlay,pickerType,input);content.querySelector('[data-picker-page-status]')?.focus();}));
+    content.querySelectorAll('[data-asset-delete]').forEach(button=>button.addEventListener('click',()=>deleteAssetFile(overlay,pickerType,input,button.dataset.assetDelete)));
+    content.querySelectorAll('[data-asset-protect]').forEach(button=>button.addEventListener('click',()=>updateAssetProtection(overlay,pickerType,input,button.dataset.assetProtect,true)));
+    content.querySelectorAll('[data-asset-unprotect]').forEach(button=>button.addEventListener('click',()=>updateAssetProtection(overlay,pickerType,input,button.dataset.assetUnprotect,false)));
+  }catch(error){overlay.assetLibraryPromise=null;if(requestId===overlay.assetRequestId)content.innerHTML=`<p class="asset-picker__status">Could not load assets. ${escapeHtml(error.message||'')}</p>`;}
 }
-
 function renderAssetProtectionActions(item) {
   if (item.protection === "protected") {
     return `<span class="asset-picker__protected">Protected Asset</span>`;
@@ -2855,7 +2713,7 @@ async function updateAssetProtection(
       content.innerHTML = `<p class="asset-picker__status">Protection update failed. ${escapeHtml(payload.error || "")}</p>`;
     return;
   }
-  renderAssetPickerItems(overlay, pickerType, input);
+  refreshMediaSurface(overlay, pickerType, input);
 }
 
 async function deleteAssetFile(overlay, pickerType, input, path) {
@@ -2878,7 +2736,7 @@ async function deleteAssetFile(overlay, pickerType, input, path) {
     input.dispatchEvent(new Event("input", { bubbles: true }));
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }
-  renderAssetPickerItems(overlay, pickerType, input);
+  refreshMediaSurface(overlay, pickerType, input);
 }
 
 async function loadAdminAssets() {
@@ -2912,7 +2770,7 @@ async function uploadAssetFile(overlay, pickerType, input, file) {
     input.value = payload.path || "";
     input.dispatchEvent(new Event("input", { bubbles: true }));
     input.dispatchEvent(new Event("change", { bubbles: true }));
-    overlay.remove();
+    if(overlay.id==='asset-manager')await renderManagedAssets(overlay,pickerType,input);else closeAssetPicker(overlay);
   } catch (error) {
     if (content) {
       content.innerHTML = `<p class="asset-picker__status">Upload failed. ${escapeHtml(error.message || "")}</p>`;
@@ -3750,17 +3608,35 @@ function renderPastorProfile(id) {
     <div class="people-profile__copy"><p class="section-label">${escapeHtml(pastor.role)}</p><h1>${escapeHtml(pastor.name)}</h1><p class="pastor-introduction">${escapeHtml(pastor.intro || 'An introduction will be added soon.')}</p><a class="btn btn--gold" href="#/contact">Contact the church</a></div>
     </div></section>${renderFooter()}</article>`;
 }
+function pastorProfileGaps(person) {
+  return [['name','Name'],['role','Role'],['image','Photo'],['intro','Introduction']].filter(([key])=>!String(person[key]||'').trim()).map(([,label])=>label);
+}
+function initPastorCompletionQueue(form) {
+  const search=form.querySelector('#pastor-editor-query'),toggle=form.querySelector('#pastor-incomplete-filter');if(!search || !toggle)return;
+  const update=(filter=true)=>{
+    const cards=[...form.querySelectorAll('[data-pastor-id]')],terms=search.value.toLowerCase().trim().split(/\s+/).filter(Boolean);let missing=0,visible=0;
+    cards.forEach(card=>{const person=Object.fromEntries(['name','role','image','intro'].map(key=>[key,card.querySelector(`[name="${key}"]`)?.value || '']));const gaps=pastorProfileGaps(person);if(gaps.length)missing++;
+      const badge=card.querySelector('[data-pastor-completion]');badge.textContent=gaps.length?'Add: '+gaps.join(' · '):'Profile complete';badge.dataset.complete=String(!gaps.length);
+      if(filter)card.hidden=!(terms.every(term=>(person.name+' '+person.role).toLowerCase().includes(term)) && (!toggle.checked || gaps.length || card.open));
+      if(!card.hidden)visible++;
+    });
+    form.querySelector('[data-pastor-profile-count]').textContent=cards.length+' profiles · '+missing+' to complete';form.querySelector('[data-pastor-queue-empty]').hidden=visible>0;
+  };
+  search.addEventListener('input',()=>update());toggle.addEventListener('change',()=>update());form.addEventListener('input',()=>update(false));form.addEventListener('toggle',()=>update(),true);form.addEventListener('click',()=>queueMicrotask(()=>update()));update();
+}
+
 function renderPastorAdmin() {
   if (!adminSession.authenticated) return renderAdminLogin();
-  return `<section class="section pastor-admin-page"><div class="container"><a href="#/lpcadmin" class="admin-back-link">← Back to admin</a><div class="admin-panel__header"><div><h1 class="section-title">Associate Pastors</h1><p>Choose a pastor to edit their profile. Save all changes when ready.</p></div><a class="btn btn--outline" href="#/pastors">View website profiles</a></div><form class="admin-form" id="pastors-form"><div class="pastor-admin-toolbar"><span>${Object.keys(pastorConfig.people).length} pastor profiles</span><button type="button" class="btn btn--outline" id="add-pastor">+ Add pastor</button></div><div id="pastor-editor-list">${Object.entries(pastorConfig.people).map(([id,p]) => renderPastorFields(id,p)).join("")}</div><div class="admin-form__actions pastor-admin-savebar"><span data-pastor-save-status>All changes saved</span><button type="submit" class="btn btn--gold">Save all changes</button></div><p role="status" aria-live="polite" id="pastors-message"></p></form></div></section>${renderFooter()}`;
+  return `<section class="section pastor-admin-page"><div class="container"><a href="#/lpcadmin" class="admin-back-link">← Back to admin</a><div class="admin-panel__header"><div><h1 class="section-title">Associate Pastors</h1><p>Choose a pastor to edit their profile. Save all changes when ready.</p></div><a class="btn btn--outline" href="#/pastors">View website profiles</a></div><form class="admin-form" id="pastors-form"><div class="pastor-admin-toolbar"><span data-pastor-profile-count>${Object.keys(pastorConfig.people).length} pastor profiles</span><button type="button" class="btn btn--outline" id="add-pastor">+ Add pastor</button></div><div class="pastor-completion-filters"><label>Find a profile<input id="pastor-editor-query" type="search" placeholder="Search name or role"></label><label><input id="pastor-incomplete-filter" type="checkbox"> Only profiles to complete</label></div><p data-pastor-queue-empty hidden>No matching profiles. Clear the search or completion filter.</p><div id="pastor-editor-list">${Object.entries(pastorConfig.people).map(([id,p]) => renderPastorFields(id,p)).join("")}</div><div class="admin-form__actions pastor-admin-savebar"><span data-pastor-save-status>All changes saved</span><button type="submit" class="btn btn--gold">Save all changes</button></div><p role="status" aria-live="polite" id="pastors-message"></p></form></div></section>${renderFooter()}`;
 }
 function renderPastorFields(id, p) {
   const initials = (p.name || "New pastor").split(/\s+/).filter(Boolean).slice(0,2).map(word => word[0]).join("");
-  return `<details class="pastor-admin-card" data-pastor-id="${escapeAttribute(id)}" ${p.name ? "" : "open"}><summary><span class="pastor-admin-portrait"><img data-pastor-preview src="${escapeAttribute(p.image || "")}" alt="" ${p.image ? "" : "hidden"}><span data-pastor-initials ${p.image ? "hidden" : ""}>${escapeHtml(initials)}</span></span><span class="pastor-admin-identity"><strong data-pastor-title>${escapeHtml(p.name || "New associate pastor")}</strong><small data-pastor-role>${escapeHtml(p.role || "Associate Pastor")}</small></span><span class="pastor-admin-edit-label">Edit details</span></summary><div class="pastor-editor"><div class="pastor-admin-basics"><label>Name<input name="name" required maxlength="150" value="${escapeAttribute(p.name || "")}"></label><label>Role<input name="role" required maxlength="150" value="${escapeAttribute(p.role || "Associate Pastor")}"></label></div><label class="pastor-admin-photo-control">Profile photo${renderAssetPickerInput({ name: "image", value: p.image || "", placeholder: "Choose a photo" }).replace('type="text"', 'type="hidden"').replace("Browse images", "Change photo")}</label><label>Introduction<textarea name="intro" rows="3" maxlength="5000" placeholder="A short introduction for the website">${escapeHtml(p.intro || "")}</textarea></label><div class="pastor-admin-card-actions"><button type="button" class="btn btn--outline" data-remove-pastor>Remove profile</button><button type="button" class="btn btn--outline" data-close-pastor>Done editing</button></div></div></details>`;
+  return `<details class="pastor-admin-card" data-pastor-id="${escapeAttribute(id)}" ${p.name ? "" : "open"}><summary><span class="pastor-admin-portrait"><img data-pastor-preview src="${escapeAttribute(p.image || "")}" alt="" ${p.image ? "" : "hidden"}><span data-pastor-initials ${p.image ? "hidden" : ""}>${escapeHtml(initials)}</span></span><span class="pastor-admin-identity"><strong data-pastor-title>${escapeHtml(p.name || "New associate pastor")}</strong><small data-pastor-role>${escapeHtml(p.role || "Associate Pastor")}</small><small data-pastor-completion>${escapeHtml(pastorProfileGaps({...p,role:p.role || "Associate Pastor"}).join(" · ") || "Profile complete")}</small></span><span class="pastor-admin-edit-label">Edit details</span></summary><div class="pastor-editor"><div class="pastor-admin-basics"><label>Name<input name="name" required maxlength="150" value="${escapeAttribute(p.name || "")}"></label><label>Role<input name="role" required maxlength="150" value="${escapeAttribute(p.role || "Associate Pastor")}"></label></div><label class="pastor-admin-photo-control">Profile photo${renderAssetPickerInput({ name: "image", value: p.image || "", placeholder: "Choose a photo" }).replace('type="text"', 'type="hidden"').replace("Browse images", "Change photo")}</label><label>Introduction<textarea name="intro" rows="3" maxlength="5000" placeholder="A short introduction for the website">${escapeHtml(p.intro || "")}</textarea></label><div class="pastor-admin-card-actions"><button type="button" class="btn btn--outline" data-remove-pastor>Remove profile</button><button type="button" class="btn btn--outline" data-close-pastor>Done editing</button></div></div></details>`;
 }
 function initPastorAdmin() {
   const form = document.getElementById("pastors-form");
   if (!form) return;
+  initPastorCompletionQueue(form);
   const dirty = () => { form.querySelector('[data-pastor-save-status]').textContent = "Unsaved changes"; };
   form.addEventListener("input", event => {
     const card = event.target.closest('[data-pastor-id]');

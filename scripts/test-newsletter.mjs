@@ -31,6 +31,41 @@ test('Pastoral hierarchy includes every current profile beneath the president an
 });
 const defaults={kicker:'Newsletter',title:'News & updates from LPC',body:'',author:'',date:'',image:'',imageAlt:'',ctaText:'',ctaHref:''};
 const escape=v=>String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
+test('Calendar agenda sorts events chronologically, shows London time and escapes event content',()=>{
+ const render=source.slice(source.indexOf('function calendarAgendaRows('),source.indexOf('function openCalendarAgenda('));
+ const events=[{title:'Later',start:'2026-11-02T12:00:00Z'},{title:'<script>early</script>',start:'2026-11-01T09:30:00Z',location:'Main & Hall'},{title:'All day',start:'2026-11-01T00:00:00Z',allDay:true}];
+ const html=runInNewContext(render+';calendarAgendaRows(events)',{events,escapeHtml:escape,escapeAttribute:escape,Intl});
+ assert(html.indexOf('All day')<html.indexOf('&lt;script>early'));assert(html.indexOf('&lt;script>early')<html.indexOf('Later'));assert(html.includes('09:30'));assert(!html.includes('<script>'));assert(html.includes('data-agenda-event="1"'));
+});
+test('Media chooser filters multiple words and separates uploads from protected packaged assets',()=>{
+ const helper=source.slice(source.indexOf('function pickerMatches('),source.indexOf('async function renderAssetPickerItems('));
+ const match=runInNewContext(helper+';pickerMatches');
+ const files=[{name:'Church Sunday.jpg',source:'upload',protected:true},{name:'Church youth.png',source:'packaged',protected:false}];
+ assert.equal(match(files,'CHURCH sunday','all').length,1);assert.equal(match(files,'','upload').length,1);assert.equal(match(files,'','unprotected')[0].name,'Church youth.png');assert.equal(match(files,'no match','all').length,0);
+});
+test('A library upload refreshes the manager instead of removing its controls',async()=>{
+ const upload=source.slice(source.indexOf('async function uploadAssetFile('),source.indexOf('function initSiteSettingsAdmin('));
+ let refreshed=0,closed=0;const input={dispatchEvent(){}},overlay={id:'asset-manager',querySelector:()=>({})};
+ const f=runInNewContext(upload+';uploadAssetFile',{FormData:class{append(){}},fetch:async()=>({ok:true,status:200,json:async()=>({path:'/uploads/new.jpg'})}),escapeHtml:escape,Event:class{},renderManagedAssets:async()=>refreshed++,closeAssetPicker:()=>closed++});
+ await f(overlay,'image',input,{name:'new.jpg'});assert.equal(input.value,'/uploads/new.jpg');assert.equal(refreshed,1);assert.equal(closed,0);
+});
+test('Hero preview uses the selected device image and framing regardless of browser viewport',()=>{
+ const render=source.slice(source.indexOf('function renderHeroPreviewWorkspace('),source.indexOf('function renderHeroImageEditorForm('));
+ const config={desktopImage:'wide.jpg',mobileImage:'phone.jpg',desktopFit:'cover',mobileFit:'contain',desktopFocal:'left',mobileFocal:'right',desktopScale:'1',mobileScale:'1.3'};
+ const f=runInNewContext(render+';renderHeroPreviewTile',{escapeAttribute:escape,heroLabel:()=> 'About'});
+ const phone=f('about',true,config,'phone');assert(phone.includes('phone.jpg'));assert(!phone.includes('wide.jpg'));assert(phone.includes('--tile-fit:contain'));assert(phone.includes('--tile-scale:1.3'));assert(!phone.includes('href='));
+ const desktop=f('about',true,config,'desktop');assert(desktop.includes('wide.jpg'));assert(!desktop.includes('phone.jpg'));
+});
+test('About page retains the full founder welcome inside a disclosure and offers a first-visit action',()=>{
+ const render=source.slice(source.indexOf('function renderAboutHub('),source.indexOf('function renderYouthHub('));
+ const page=runInNewContext(render+';renderAboutHub()',{renderSubPage:p=>p,seniorPastor:{image:'sam.jpg'},escapeAttribute:escape});
+ assert(page.actions.some(a=>a[1]==='#/plan-your-visit'));assert(page.body.includes('<details>'));assert(page.body.includes('Thank you for taking time'));assert(page.body.includes('If you are looking for a place to connect'));assert(page.body.includes('Pastor and Founder'));
+});
+test('Pastor completion checks track editable essentials without treating optional roles as required',()=>{
+ const helper=source.slice(source.indexOf('function pastorProfileGaps('),source.indexOf('function initPastorCompletionQueue('));
+ const gaps=runInNewContext(helper+';pastorProfileGaps');
+ assert.deepEqual(Array.from(gaps({name:'Pastor',role:'Associate',image:'photo.jpg',intro:' '})),['Introduction']);assert.equal(gaps({name:'Pastor',role:'Associate',image:'photo.jpg',intro:'Hello'}).length,0);
+});
 test('Public church links preserve the selected church without rerendering or storing account data',()=>{
  const helpers=source.slice(source.indexOf('function publicChurchChoice()'),source.indexOf('function publicLinkControl('));
  let replaced='';const window={location:{hash:'#/watch?church=south%20london',pathname:'/',search:''},history:{replaceState:(_a,_b,url)=>replaced=url}};
