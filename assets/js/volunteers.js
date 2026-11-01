@@ -800,16 +800,34 @@ window.LPCVolunteers = (() => {
       state.members.find((m) => m.id === id)?.availability?.[s.id] || "unsure";
     return `<small class="vs-status ${v === "available" ? "vs-ok" : v === "unavailable" ? "vs-warning" : ""}">${v === "unsure" ? "No availability response yet" : v === "available" ? "✓ Available to serve" : "Cannot attend"}</small>`;
   }
-  function memberChoices(query = "") {
+  function memberMatchesAccess(member,group='all') {
+    if(group==='scheduler')return member.active && !!member.manage?.length;
+    if(group==='login')return member.active && !!member.username && !member.manage?.length;
+    if(group==='profile')return member.active && !member.username;
+    if(group==='inactive')return !member.active;
+    return true;
+  }
+  function memberChoices(query = "",group='all') {
     const search = query.trim().toLocaleLowerCase();
-    return state.members.filter(m => !search || [m.name, m.username, m.email].some(value => String(value || "").toLocaleLowerCase().includes(search))).slice().sort((a,b) => a.name.localeCompare(b.name)).map(m => [m.id, m.name + ' · ' + (m.username || 'Profile only') + (m.active ? '' : ' · Inactive')]);
+    return state.members.filter(m => memberMatchesAccess(m,group) && (!search || [m.name, m.username, m.email].some(value => String(value || "").toLocaleLowerCase().includes(search)))).slice().sort((a,b) => a.name.localeCompare(b.name)).map(m => [m.id, m.name + ' · ' + (m.username || 'Profile only') + (m.active ? '' : ' · Inactive')]);
+  }
+  function selectedUserPreview(id) {
+    const member=state.members.find(m=>m.id===id);
+    if(!member)return '<div class="vs-selected-user-empty">Choose a person to preview their roles and scheduling access.'+btn('Edit selected user','edit-selected-user','disabled')+'</div>';
+    const access=(member.manage||[]).map(role=>role==='ministry'?'Pastoral scheduler':role==='service'?'Choir & media scheduler':role);
+    return `<article class="vs-selected-user"><header><div><small>Selected profile</small><h3>${esc(member.name)}</h3></div><span class="vs-badge ${member.active?'vs-green':''}">${member.active?'Active':'Inactive'}</span></header><div class="vs-selected-user-facts"><div><strong>Login name</strong><span>${esc(member.username || 'Profile only · no login name')}</span></div><div><strong>Scheduling access</strong><span>${access.length?access.map(esc).join(' · '):'No scheduling permissions'}</span></div><div><strong>Serving roles</strong><span>${(member.skills||[]).length?member.skills.map(role=>esc(roleLabel(role))).join(' · '):'No serving roles recorded'}</span></div><div><strong>Branches</strong><span>${(member.branches||[]).map(esc).join(' · ') || 'No branches recorded'}</span></div></div>${btn('Edit selected user','edit-selected-user')}</article>`;
+  }
+  function refreshUserChoices() {
+    const list=memberChoices(root.querySelector('[data-user-search]').value,root.querySelector('[data-user-group]').value),select=root.querySelector('[data-user-select]');
+    select.innerHTML=options(list,'',list.length?'Choose a user…':'No matching users');select.disabled=!list.length;
+    root.querySelector('[data-user-preview]').innerHTML=selectedUserPreview('');root.querySelector('[data-user-results]').textContent=list.length+' matching '+(list.length===1?'person':'people');
   }
   function members() {
     const list = memberChoices();
     return '<section class="vs-card vs-user-picker"><div class="vs-header"><div><h2>Select or add a user</h2><p>Choose one person to view or edit their profile, serving roles and access.</p></div>' + btn('Add new user', 'member') + '</div>' +
-      field('Search users', '<input type="search" data-user-search placeholder="Search by name or username" autocomplete="off" aria-controls="existing-user">') +
+      '<div class="vs-user-filters">'+field('Search users', '<input type="search" data-user-search placeholder="Name, username or email" autocomplete="off" aria-controls="existing-user">') + field('Access group','<select data-user-group>'+[['all','All people'],['scheduler','Schedulers'],['login','Volunteers with login'],['profile','Profiles without login'],['inactive','Inactive people']].map(([value,label])=>`<option value="${value}">${label} (${state.members.filter(m=>memberMatchesAccess(m,value)).length})</option>`).join('')+'</select>')+'</div>'+
       field('Select existing user', '<select id="existing-user" data-user-select ' + (!list.length ? 'disabled' : '') + '>' + options(list, '', list.length ? 'Choose a user…' : 'No users yet') + '</select>') +
-      '<div class="vs-actions">' + btn('Edit selected user', 'edit-selected-user', 'disabled') + '</div>' +
+      '<div data-user-preview>'+selectedUserPreview('')+'</div>' +
       '<p class="vs-help" data-user-results role="status">' + list.length + ' user' + (list.length === 1 ? '' : 's') + '. Select a person, then choose Edit selected user.</p></section>' +
       (state.pendingAccounts?.length ? '<details class="vs-user-tools"><summary>Invitations awaiting approval (' + state.pendingAccounts.length + ')</summary>' + pendingAccounts() + '</details>' : '') +
       '<details class="vs-user-tools"><summary>Invitations & role settings</summary><div class="vs-actions">' + (accountEmailEnabled ? btn('Invite team member','invite-account','',true) : '<p class="vs-help">Email invitations are unavailable. Use Add new user to create a selected account.</p>') + btn('Manage serving roles','roles','',true) + '</div></details>' +
@@ -1628,9 +1646,10 @@ window.LPCVolunteers = (() => {
     root.innerHTML = window.LPCTeamAuth.navigation(null) + '<p>Loading team access…</p>';
     root.onclick = click;
     root.onchange = async (e) => {
+      if (e.target.matches('[data-user-group]')) { refreshUserChoices();return; }
       if (e.target.matches('[data-meeting-recurrence], [data-series-length], [name="startDate"], [name="dayCount"]')) return refreshMeetingPattern();
       if (e.target.matches("[data-user-select]")) {
-        root.querySelector('[data-vs="edit-selected-user"]').disabled = !e.target.value;
+        root.querySelector('[data-user-preview]').innerHTML=selectedUserPreview(e.target.value);
         return;
       }
       if (e.target.matches("[data-view-volunteer]")) {
@@ -1692,12 +1711,7 @@ window.LPCVolunteers = (() => {
     root.oninput = (e) => {
       if (e.target.matches('dialog [name="startDate"], dialog [name="dayCount"]')) return refreshMeetingPattern();
       if (e.target.matches("[data-user-search]")) {
-        const list = memberChoices(e.target.value);
-        const select = root.querySelector("[data-user-select]");
-        select.innerHTML = options(list, "", list.length ? "Choose a user…" : "No matching users");
-        select.disabled = !list.length;
-        root.querySelector('[data-vs="edit-selected-user"]').disabled = true;
-        root.querySelector("[data-user-results]").textContent = list.length + " matching user" + (list.length === 1 ? "" : "s");
+        refreshUserChoices();
         return;
       }
       if (e.target.matches("dialog [name=team]")) refreshMeetingSchedulers();

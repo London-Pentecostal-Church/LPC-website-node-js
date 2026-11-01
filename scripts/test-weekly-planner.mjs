@@ -6,6 +6,12 @@ const demo = JSON.parse(
   readFileSync(new URL("./fixtures/weekly-demo.json", import.meta.url), "utf8"),
 );
 const admin = { id: "admin", name: "Test administrator", admin: true };
+test('User access groups use scheduling permission rather than serving skills',async()=>{
+ const {runInNewContext}=await import('node:vm');const js=readFileSync(new URL('../assets/js/volunteers.js',import.meta.url),'utf8');
+ const helper=js.slice(js.indexOf('  function memberMatchesAccess('),js.indexOf('  function memberChoices('));const match=runInNewContext(helper+';memberMatchesAccess');
+ const volunteer={active:true,username:'volunteer',skills:['Ministry volunteer'],manage:[]};assert.equal(match(volunteer,'scheduler'),false);assert.equal(match(volunteer,'login'),true);
+ assert.equal(match({...volunteer,manage:['ministry']},'scheduler'),true);assert.equal(match({...volunteer,username:''},'profile'),true);assert.equal(match({...volunteer,active:false},'scheduler'),false);assert.equal(match({...volunteer,active:false},'inactive'),true);
+});
 test('Planner action board recalculates filtered worklists and separates critical pastor gaps from local team duties',async()=>{
   const {runInNewContext}=await import('node:vm');
   const js=readFileSync(new URL('../assets/js/volunteers.js',import.meta.url),'utf8');

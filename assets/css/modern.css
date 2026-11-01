@@ -3365,6 +3365,53 @@ dialog.asset-picker--modal:not([open]) { display:none; }
   .pastor-completion-filters { gap:12px; }
 }
 
+.admin-task-switcher { display:flex;align-items:center;justify-content:space-between;gap:20px;padding-block:16px;border-bottom:1px solid #d9e5eb;background:#fff; }
+.admin-task-switcher>a { color:#24516a;font-size:.85rem;font-weight:700;white-space:nowrap; }
+.admin-task-switcher label { display:flex;align-items:center;gap:12px;font-size:.8rem;color:#547382; }
+.admin-task-switcher select { min-width:220px;padding:10px 12px;border:1px solid #bdcfd9;border-radius:8px;background:#fff;color:#173c52;font:inherit; }
+.branch-completion-filters { display:flex;align-items:end;gap:24px;flex-wrap:wrap;margin-bottom:16px; }
+.branch-completion-filters label:first-child { flex:1;min-width:180px; }
+.branch-completion-filters label:last-child { display:flex;align-items:center;gap:8px;padding-bottom:12px;font-size:.85rem; }
+.branch-completion-filters input[type="checkbox"] { width:18px;height:18px; }
+[data-branch-queue-count] { font-size:.85rem;color:#55717f;margin:0 0 20px; }
+.branch-editor-card[hidden],[data-branch-queue-empty][hidden] { display:none!important; }
+.header-message-layout { display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:28px;align-items:start; }
+.header-message-layout>div>p { margin-top:12px;font-size:.85rem;color:#557180; }
+.header-message-layout [data-header-counter] { color:#5e7986;font-size:.75rem; }
+.header-preview-devices { display:flex;gap:8px;margin-bottom:16px; }
+.header-preview-devices button { padding:10px 16px;border:1px solid #b9d0db;border-radius:8px;background:#fff;color:#245169;cursor:pointer; }
+.header-preview-devices button[aria-pressed="true"] { color:#007780;background:#e1f0ef;border-color:#007f88; }
+.header-message-preview { border:1px solid #bcd1dc;border-radius:14px;overflow:hidden;background:#fff; }
+.header-message-preview>p { background:#0b2a40;color:#fff;font-size:.85rem;padding:12px 16px;text-align:center;margin:0;overflow-wrap:anywhere; }
+.header-message-preview>div { display:flex;align-items:center;gap:12px;padding:18px; }
+.header-message-preview img { width:42px;height:42px;object-fit:contain; }
+.header-message-preview strong { font-size:.9rem;line-height:1.3; }
+.header-message-preview>div>span { font-size:26px;margin-left:auto; }
+.header-message-preview[data-device="phone"] { max-width:280px;margin:auto;border:8px solid #183b50;border-radius:24px; }
+.header-message-preview[data-device="phone"]>p { font-size:.8rem; }
+.header-preview-note { color:#607b88;font-size:.75rem;display:block;margin-top:12px; }
+.header-publish-bar { display:flex;justify-content:space-between;align-items:center;gap:16px;border-top:1px solid #d5e3e9;padding-top:20px;margin-top:28px; }
+.header-publish-bar [data-header-status] { font-size:.8rem;color:#50717c;margin:6px 0 0; }
+.newsletter-checklist { margin:0 0 18px;padding:14px;background:#f0f6f7;border:1px solid #d4e3e8;border-radius:12px; }
+.newsletter-checklist>div { display:flex;justify-content:space-between;align-items:center;gap:12px; }
+.newsletter-checklist strong { font-size:.85rem; }
+.newsletter-checklist small { color:#617987;font-size:.72rem; }
+.newsletter-checklist ul { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));list-style:none;gap:8px 12px;padding:0;margin:12px 0 0; }
+.newsletter-checklist li { font-size:.78rem;line-height:1.4; }
+.newsletter-checklist li>span { margin-right:6px; }
+.newsletter-checklist .is-complete { color:#28724d; }
+.newsletter-checklist .is-pending { color:#8c641b; }
+@media(max-width:760px) {
+ .admin-task-switcher { gap:12px;padding-block:12px; }
+ .admin-task-switcher>a { font-size:.72rem; }
+ .admin-task-switcher label { flex:1;min-width:0;display:block;font-size:.7rem; }
+ .admin-task-switcher select { width:100%;min-width:0;margin-top:4px;padding:10px 6px;font-size:.8rem; }
+ .header-message-layout { grid-template-columns:minmax(0,1fr);gap:20px; }
+ .header-publish-bar { flex-wrap:wrap; }
+ .newsletter-checklist>div { align-items:start;flex-direction:column;gap:4px; }
+ .newsletter-checklist ul { grid-template-columns:1fr; }
+}
+
 .youth-hub { padding-top:40px;padding-bottom:48px; }
 .youth-hub__lead { display:grid;grid-template-columns:1.1fr .9fr;gap:24px; }
 .youth-hub__visual { position:relative;overflow:hidden;border-radius:24px;min-height:480px;background:#092938; }

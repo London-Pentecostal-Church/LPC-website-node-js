@@ -156,22 +156,16 @@ test('First visit finder switches branch details and directions without inventin
  assert(details.innerHTML.includes('current service times'));
 });
 
-test('Role return navigation is restricted to admin screens during normal browsing', () => {
-  const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
-  const source=site.slice(site.indexOf('  // Public browsing stays public'),site.indexOf('  document.querySelectorAll(".primary-nav a")'));
-  let inserted=0,requests=0;
-  const app={querySelector:()=>null,querySelectorAll:()=>[],prepend:()=>inserted++};
-  const context={app,adminSession:{authenticated:true},window:{LPCTeamAuth:{navigation:()=>'<nav>Admin</nav>'}},
-    document:{createElement:()=>({contains:()=>false,querySelectorAll:()=>[],querySelector:()=>null})},
-    fetch:()=>{requests++;return Promise.resolve({ok:false});}};
-  for(const route of ['/home','/about','/ministries','/youth','/branches','/branches/chelmsford','/pastors','/watch','/contact','/plan-your-visit','/volunteers','/lpcadministrator']) {
-    runInNewContext(source,{...context,route});
-  }
-  assert.equal(inserted,0);assert.equal(requests,0);
-  for(const route of ['/lpcadmin','/lpcadmin/users','/lpcadmin/pastors'])runInNewContext(source,{...context,route});
-  assert.equal(inserted,3);assert.equal(requests,3);
+test('The task switcher stays inside authenticated website-admin editors and never enters public browsing',()=>{
+ const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
+ const helper=site.slice(site.indexOf('function initAdminTaskSwitcher('),site.indexOf('function renderRoute()'));
+ let inserted=0;const app={querySelector:()=>null,querySelectorAll:()=>[],prepend:()=>inserted++};
+ const context={adminSession:{authenticated:true},adminToolGroups:()=>[{tasks:[['pastors','Pastors']]}],escapeHtml:String,escapeAttribute:String,window:{location:{}},document:{createElement:()=>({setAttribute(){},querySelector:()=>({addEventListener(){}})})}};
+ const init=runInNewContext(helper+';initAdminTaskSwitcher',context);
+ for(const route of ['/home','/ministries','/youth','/volunteers','/lpcadmin'])init(app,route);assert.equal(inserted,0);
+ init(app,'/lpcadmin/pastors');assert.equal(inserted,1);
+ context.adminSession.authenticated=false;init(app,'/lpcadmin/pastors');assert.equal(inserted,1);
 });
-
 test('Participation dialog uses the selected planner and filters and exports the displayed dates', async () => {
   const source=ui.slice(ui.indexOf('  function participationChart('),ui.indexOf('  async function click('));
   for (const kind of ['ministry','service']) {
@@ -438,7 +432,7 @@ test('Failed logout or a retained session never switches to another account', as
 
 test('Main admin opens a dedicated, administrator-only user management route', () => {
   const site = readFileSync(new URL('../assets/js/site.js', import.meta.url), 'utf8');
-  const dashboardSource = site.slice(site.indexOf('function renderAdminPanel()'),site.indexOf('function initAdminWorkspace()'));
+  const dashboardSource = site.slice(site.indexOf('function adminToolGroups()'),site.indexOf('function initAdminWorkspace()'));
   const dashboard = runInNewContext(dashboardSource+';renderAdminPanel()', {adminSession:{authenticated:true},renderAdminReadiness:()=>'',branchCards:[],escapeAttribute:v=>String(v),renderFooter:()=>''});
   assert(dashboard.indexOf('href="#/lpcadmin/users"') >= 0);
   assert(dashboard.indexOf('href="#/lpcadmin/users"') < dashboard.indexOf('href="#/lpcadmin/volunteers"'));
@@ -498,46 +492,19 @@ test('Return destinations match each role and links work even when the URL alrea
   }
 });
 
-test('User management starts with a picker and opens only the selected profile', async () => {
-  const source = ui.slice(ui.indexOf('  function memberChoices('), ui.indexOf('  function pendingAccounts()'));
-  const members = [
-    {id:'z', name:'Zoe Example', username:'zoe', active:true},
-    {id:'a', name:'Alex Example', username:'alex', active:false},
-  ];
-  const context = {state:{members,pendingAccounts:[]},accountEmailEnabled:true,field:(label,html)=>label+html,
-    btn:(label,action)=>`<button data-vs="${action}">${label}</button>`,
-    options:values=>values.map(([id,label])=>`<option value="${id}">${label}</option>`).join(''),pendingAccounts:()=>''};
-  const result = runInNewContext(source+';({members,memberChoices})',context);
-  const html = result.members();
-  assert(html.includes('Select existing user')); assert(html.includes('Add new user'));
-  assert(!html.includes('<table')); assert(!html.includes('name="skills"')); assert(!html.includes('name="manage"'));
-  assert.deepEqual(Array.from(result.memberChoices('ALEX'),choice=>choice[0]),['a']);
-  assert.equal(result.memberChoices('nobody').length,0);
-  assert.deepEqual(Array.from(result.memberChoices(),choice=>choice[0]),['a','z']);
-  assert(html.includes('Edit selected user'));
-  const editButton = {disabled:true};
-  const picker = {value:'a'};
-  const root = {querySelector:selector=>selector==='[data-user-select]'?picker:editButton};
-  const opened=[];
-  const handler = ui.slice(ui.indexOf('    root.onchange = async (e) => {'),ui.indexOf('    root.oninput = (e) => {'));
-  runInNewContext(handler,{root,memberDialog:id=>opened.push(id)});
-  await root.onchange({target:{matches:selector=>selector==='[data-user-select]',value:'a'}});
-  assert.deepEqual(opened,[]);
-  assert.equal(editButton.disabled,false);
-  const clickStart=ui.indexOf('      if (a === "edit-selected-user")');
-  const clickEnd=ui.indexOf('      if (a === ',clickStart+10);
-  const reopen=()=>runInNewContext('(async()=>{'+ui.slice(clickStart,clickEnd)+'})()',{a:'edit-selected-user',root,memberDialog:id=>opened.push(id)});
-  await reopen();
-  await reopen();
-  assert.deepEqual(opened,['a','a']);
-  await root.onchange({target:{matches:selector=>selector==='[data-user-select]',value:''}});
-  assert.equal(editButton.disabled,true);
-  const results={textContent:''};
-  root.querySelector=selector=>selector==='[data-user-select]'?picker:selector==='[data-user-results]'?results:editButton;
-  const inputHandler=ui.slice(ui.indexOf('    root.oninput = (e) => {'),ui.indexOf('    try {',ui.indexOf('    root.oninput = (e) => {')));
-  runInNewContext(inputHandler,{root,memberChoices:result.memberChoices,options:()=>'',refreshMeetingSchedulers(){}});
-  editButton.disabled=false;
-  root.oninput({target:{matches:selector=>selector==='[data-user-search]',value:'nobody'}});
-  assert.equal(editButton.disabled,true);
-  assert.equal(picker.disabled,true);
+test('User management previews only the selected profile, filters access groups and reopens the same editor',async()=>{
+ const source=ui.slice(ui.indexOf('  function memberMatchesAccess('),ui.indexOf('  function pendingAccounts()'));
+ const people=[{id:'z',name:'Zoe Example',username:'zoe',active:true,manage:['service'],skills:[],branches:['Main Church']},{id:'a',name:'Alex Example',username:'alex',active:false,skills:[],branches:[]}];
+ const context={state:{members:people,pendingAccounts:[]},accountEmailEnabled:true,esc:String,roleLabel:String,field:(label,html)=>label+html,btn:(label,action,attrs='')=>`<button data-vs="${action}" ${attrs}>${label}</button>`,options:values=>values.map(([id,label])=>`<option value="${id}">${label}</option>`).join(''),pendingAccounts:()=>''};
+ const f=runInNewContext(source+';({members,memberChoices,selectedUserPreview,refreshUserChoices})',context);
+ const html=f.members();assert(html.includes('Select existing user'));assert(html.includes('Access group'));assert(!html.includes('name="manage"'));assert.deepEqual(Array.from(f.memberChoices('ALEX'),v=>v[0]),['a']);assert.deepEqual(Array.from(f.memberChoices('','scheduler'),v=>v[0]),['z']);
+ const preview={},picker={value:'a'},search={value:''},group={value:'all'},results={};
+ const root={querySelector:s=>s==='[data-user-select]'?picker:s==='[data-user-preview]'?preview:s==='[data-user-search]'?search:s==='[data-user-group]'?group:results};context.root=root;
+ const handler=ui.slice(ui.indexOf('    root.onchange = async (e) => {'),ui.indexOf('    root.oninput = (e) => {'));
+ runInNewContext(handler,{root,selectedUserPreview:f.selectedUserPreview,refreshUserChoices:f.refreshUserChoices});
+ await root.onchange({target:{matches:s=>s==='[data-user-select]',value:'a'}});assert(preview.innerHTML.includes('Alex Example'));
+ const opened=[],clickStart=ui.indexOf('      if (a === "edit-selected-user")'),clickEnd=ui.indexOf('      if (a === ',clickStart+10);
+ const reopen=()=>runInNewContext('(async()=>{'+ui.slice(clickStart,clickEnd)+'})()',{a:'edit-selected-user',root,memberDialog:id=>opened.push(id)});
+ await reopen();await reopen();assert.deepEqual(opened,['a','a']);
+ search.value='nobody';f.refreshUserChoices();assert(picker.disabled);assert(preview.innerHTML.includes('disabled'));assert(!preview.innerHTML.includes('Alex Example'));
 });

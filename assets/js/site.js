@@ -1194,9 +1194,7 @@ function renderAdminReadiness() {
   return `<section class="publication-readiness" aria-labelledby="publication-readiness-title"><div class="publication-readiness-heading"><div><p class="section-label">Before visitors arrive</p><h2 id="publication-readiness-title">Is your content ready?</h2></div><span>${complete} of ${checks.length} checks complete</span></div><div class="publication-checks">${checks.map(check=>`<a href="${check.href}" class="publication-check ${check.missing.length?'publication-check--attention':'publication-check--ready'}"><div><span aria-hidden="true">${check.missing.length?'!':'✓'}</span><strong>${check.title}</strong><span aria-hidden="true">↗</span></div><p>${check.missing.length?check.missing.length+' '+(check.title==='Home newsletter'?'update needed':'to complete'):'Ready'}</p><small>${check.missing.length?escapeHtml(check.missing.slice(0,2).join(' · '))+(check.missing.length>2?' + '+(check.missing.length-2)+' more':''):check.hint}</small></a>`).join('')}</div></section>`;
 }
 
-function renderAdminPanel() {
-  if (!adminSession.authenticated) return renderAdminLogin();
-  const groups = [
+function adminToolGroups() { return [
     {name:'People & schedules',tasks:[
       ['users','Users & access','Profiles, accounts and permissions','users members roles login account permissions'],
       ['volunteers','Weekly planner','Meetings and serving duties','pastoral choir media schedule rota meetings reports excel'],
@@ -1210,7 +1208,11 @@ function renderAdminPanel() {
       ['page-images','Images within pages','Choose images for page content','page pictures images content'],
       ['assets','Media library','Upload and reuse photos and videos','assets media library upload photos videos']
     ]}
-  ];
+  ]; }
+
+function renderAdminPanel() {
+  if (!adminSession.authenticated) return renderAdminLogin();
+  const groups = adminToolGroups();
   return `<article class="page page-admin-workspace"><section class="container admin-workspace"><header class="admin-workspace__heading"><div><p class="section-label">Website administrator</p><h1>What would you like to do?</h1></div><button class="btn btn--outline" type="button" data-admin-logout>Sign out</button></header>
     <label class="admin-task-search" for="admin-task-search">Find an admin tool<input id="admin-task-search" type="search" placeholder="Try users, newsletter or service times" autocomplete="off" aria-controls="admin-task-groups"></label>
     ${renderAdminReadiness()}
@@ -1309,20 +1311,26 @@ function renderAdminHomeHeroEditor() {
 }
 
 function renderSiteSettingsAdminFields() {
-  const settings = getSiteSettingsConfig();
-  return `
-    <form class="admin-form" id="site-settings-form">
-      <label>Top bar slogan
-        <input name="topbarSlogan" type="text" value="${escapeAttribute(settings.topbarSlogan)}" placeholder="Celebrating 25 Years of God's Faithfulness">
-        <span>This controls the small message above the main navigation.</span>
-      </label>
-      <div class="admin-form__actions">
-        <button class="btn btn--gold" type="submit">Save Header Message</button>
-      </div>
-    </form>
-  `;
+  const settings=getSiteSettingsConfig();
+  return `<form class="admin-form header-message-studio" id="site-settings-form"><div class="header-message-layout"><div><label>Top bar slogan<input name="topbarSlogan" type="text" value="${escapeAttribute(settings.topbarSlogan)}" placeholder="Celebrating 25 Years of God's Faithfulness"><small data-header-counter>${settings.topbarSlogan.length} characters</small></label><p class="vs-help">This appears above the main navigation on every public page. Leave blank to use the standard message.</p></div><aside><div class="header-preview-devices" role="group" aria-label="Header preview device"><button type="button" data-header-device="desktop" aria-pressed="true">Desktop</button><button type="button" data-header-device="phone" aria-pressed="false">Phone</button></div><div class="header-message-preview" data-header-preview data-device="desktop"><p data-header-preview-text>${escapeHtml(settings.topbarSlogan)}</p><div><img src="./assets/images/brand/lpc-logo.png" alt=""><strong>London Pentecostal Church</strong><span aria-hidden="true">☰</span></div></div><small class="header-preview-note">Preview of message wrapping · the public header keeps its own navigation.</small></aside></div><div class="header-publish-bar"><div><strong data-header-dirty>Saved version</strong><p data-header-status role="status"></p></div><button class="btn btn--gold" type="submit">Save Header Message</button></div></form>`;
 }
-
+function initHeaderMessageStudio(form) {
+  const input=form.querySelector('[name="topbarSlogan"]'),preview=form.querySelector('[data-header-preview]'),text=form.querySelector('[data-header-preview-text]'),dirty=form.querySelector('[data-header-dirty]');
+  if(!input || !preview)return;const normalized=()=>input.value.trim() || defaultSiteSettingsConfig.topbarSlogan;let saved=normalized();
+  const update=()=>{text.textContent=normalized();form.querySelector('[data-header-counter]').textContent=input.value.length+' characters';dirty.textContent=normalized()===saved?'Saved version':'Unpublished changes';};
+  input.addEventListener('input',update);form.addEventListener('header-published',event=>{saved=event.detail.topbarSlogan;update();});
+  const buttons=[...form.querySelectorAll('[data-header-device]')];buttons.forEach(button=>button.addEventListener('click',()=>{preview.dataset.device=button.dataset.headerDevice;buttons.forEach(b=>b.setAttribute('aria-pressed',String(b===button)));}));
+}
+function newsletterReview(draft) {
+  const words=String(draft.body||'').trim().split(/\s+/).filter(Boolean).length;
+  const checks=[{label:'Article heading',ok:!!String(draft.title||'').trim()},{label:'News text',ok:words>0},{label:'Link text and destination paired',ok:!!draft.ctaText===!!draft.ctaHref}];
+  if(draft.image)checks.push({label:'Image description',ok:!!String(draft.imageAlt||'').trim(),optional:true});
+  return {words,minutes:Math.max(1,Math.ceil(words/200)),checks};
+}
+function renderNewsletterChecklist(draft) {
+  const review=newsletterReview(draft);
+  return `<section class="newsletter-checklist" aria-label="Newsletter publishing checks"><div><strong>Before you publish</strong><small>${review.words?review.words+' words · about '+review.minutes+' min read':'No article text yet'}</small></div><ul>${review.checks.map(check=>`<li class="${check.ok?'is-complete':'is-pending'}"><span aria-hidden="true">${check.ok?'✓':'○'}</span>${check.label}${check.optional?' <small>(suggested)</small>':''}</li>`).join('')}</ul></section>`;
+}
 function renderNewsletterDraftPreview(draft) {
   return `<article class="newsletter-draft-card">${draft.image ? `<img src="${escapeAttribute(draft.image)}" alt="${escapeAttribute(draft.imageAlt || draft.title)}">` : ''}<div><p class="section-label">${escapeHtml(draft.kicker || 'Newsletter')}</p><h3>${escapeHtml(draft.title || 'Your headline')}</h3>${draft.author || draft.date ? `<p class="newsletter-draft-meta">${escapeHtml([draft.author,draft.date].filter(Boolean).join(' · '))}</p>` : ''}<p class="newsletter-draft-body">${escapeHtml(draft.body || 'Your news will appear here as you write.')}</p>${draft.ctaText ? `<span class="newsletter-draft-link">${escapeHtml(draft.ctaText)} →</span>` : ''}</div></article>`;
 }
@@ -1340,7 +1348,7 @@ function renderNewsletterAdminFields() {
       <label>Section label<input name="kicker" value="${escapeAttribute(thought.kicker)}" placeholder="Newsletter"></label>
       <div class="admin-hero-card__grid"><label>Published by (optional)<input name="author" value="${escapeAttribute(thought.author)}" placeholder="LPC office"></label><label>Date / edition (optional)<input name="date" value="${escapeAttribute(thought.date)}" placeholder="November 2026"></label></div>
       <label>Link text (optional)<input name="ctaText" value="${escapeAttribute(thought.ctaText)}" placeholder="Find out more"></label><label>Link destination (optional)<input name="ctaHref" value="${escapeAttribute(thought.ctaHref)}" placeholder="#/contact or https://..."></label></details>
-    </div><aside class="newsletter-studio-preview" aria-label="Newsletter preview"><div class="newsletter-preview-heading"><h2>Reader preview</h2><span>Updates as you type</span></div><div data-newsletter-preview>${renderNewsletterDraftPreview(thought)}</div><p class="newsletter-preview-note">Preview of your news content. The home page adapts the layout to the screen.</p></aside></div>
+    </div><aside class="newsletter-studio-preview" aria-label="Newsletter preview"><div class="newsletter-preview-heading"><h2>Reader preview</h2><span>Updates as you type</span></div><div data-newsletter-checklist>${renderNewsletterChecklist(thought)}</div><div data-newsletter-preview>${renderNewsletterDraftPreview(thought)}</div><p class="newsletter-preview-note">Preview of your news content. The home page adapts the layout to the screen.</p></aside></div>
     <div class="newsletter-publish-bar"><div><strong data-newsletter-dirty>Saved version</strong><p data-newsletter-status role="status" aria-live="polite"></p></div><button class="btn btn--gold" type="submit">Publish newsletter</button></div>
   </form>`;
 }
@@ -1350,10 +1358,11 @@ function initNewsletterStudio() {
   const preview = form?.querySelector('[data-newsletter-preview]');
   if (!preview) return;
   const dirty = form.querySelector('[data-newsletter-dirty]');
+  const checklist=form.querySelector('[data-newsletter-checklist]');
   const keys = ['kicker','title','body','image','imageAlt','author','date','ctaText','ctaHref'];
   const read = () => {const values = new FormData(form);return Object.fromEntries(keys.map(key=>[key,String(values.get(key)||'').trim() || (['image','imageAlt','date'].includes(key) ? '' : defaultNewsletterConfig[key] || '')]));};
   let saved = JSON.stringify(read());
-  const update = () => {const draft=read();preview.innerHTML=renderNewsletterDraftPreview(draft);dirty.textContent=JSON.stringify(draft)===saved ? 'Saved version' : 'Unpublished changes';};
+  const update = () => {const draft=read();preview.innerHTML=renderNewsletterDraftPreview(draft);dirty.textContent=JSON.stringify(draft)===saved ? 'Saved version' : 'Unpublished changes';if(checklist){const raw=new FormData(form);checklist.innerHTML=renderNewsletterChecklist(Object.fromEntries(keys.map(key=>[key,String(raw.get(key)||'').trim()])));}};
   form.addEventListener('input',update);
   form.addEventListener('change',update);
   form.addEventListener('newsletter-published',event=>{saved=JSON.stringify(Object.fromEntries(keys.map(key=>[key,event.detail[key]])));update();});
@@ -2309,6 +2318,15 @@ function normalizeRoute() {
   return route.startsWith("/") ? route : `/${route}`;
 }
 
+function initAdminTaskSwitcher(app,route) {
+  if(!adminSession.authenticated || route==='/lpcadmin' || !route.startsWith('/lpcadmin/') || app.querySelector('#volunteer-app'))return;
+  const tools=adminToolGroups().flatMap(group=>group.tasks),current=route.startsWith('/lpcadmin/hero/')?'appearance':route.split('/')[2];
+  app.querySelectorAll('a[href="#/lpcadmin"],a[href="#/lpcadmin/appearance"]').forEach(link=>link.remove());
+  const bar=document.createElement('nav');bar.className='container admin-task-switcher';bar.setAttribute('aria-label','Website admin tools');
+  bar.innerHTML=`<a href="#/lpcadmin">← Admin workspace</a><label>Switch tool<select aria-label="Switch admin tool"><option value="">Choose an admin tool</option>${tools.map(([path,title])=>`<option value="${escapeAttribute(path)}" ${path===current?'selected':''}>${escapeHtml(title)}</option>`).join('')}</select></label>`;
+  bar.querySelector('select').addEventListener('change',event=>{if(tools.some(([path])=>path===event.target.value))window.location.hash='#/lpcadmin/'+event.target.value;});app.prepend(bar);
+}
+
 function renderRoute() {
   document.querySelector('dialog.asset-picker[open]')?.close();
   document.querySelector('.calendar-event-dialog[open]')?.close();
@@ -2335,7 +2353,8 @@ function renderRoute() {
 
   // Public browsing stays public even when a planner account is signed in.
   // The planner owns its navigation; only website-admin routes need this return link.
-  if (/^\/lpcadmin(?:\/|$)/.test(route) && !app.querySelector('#volunteer-app')) {
+  if(adminSession.authenticated) initAdminTaskSwitcher(app,route);
+  else if (/^\/lpcadmin(?:\/|$)/.test(route) && !app.querySelector('#volunteer-app')) {
     const navigation = document.createElement('div');
     navigation.className = 'container route-return';
     const setReturnNavigation = actor => {
@@ -2782,6 +2801,7 @@ async function uploadAssetFile(overlay, pickerType, input, file) {
 function initSiteSettingsAdmin() {
   const form = document.getElementById("site-settings-form");
   if (!form) return;
+  initHeaderMessageStudio(form);
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -2791,8 +2811,10 @@ function initSiteSettingsAdmin() {
         String(data.get("topbarSlogan") || "").trim() ||
         defaultSiteSettingsConfig.topbarSlogan,
     };
-    await saveSiteSettingsConfig(config);
-    renderRoute();
+    const button=form.querySelector('[type="submit"]'),status=form.querySelector('[data-header-status]');button.disabled=true;status.textContent='Publishing header message…';
+    try { await saveSiteSettingsConfig(config);form.dispatchEvent(new CustomEvent('header-published',{detail:config}));status.textContent='Header message published.'; }
+    catch(error) { status.textContent=error.message; }
+    finally { button.disabled=false; }
   });
 }
 
@@ -3226,7 +3248,6 @@ async function saveNewsletterConfig(config) {
 }
 
 async function saveSiteSettingsConfig(config) {
-  siteSettingsConfig = config;
   const response = await fetch("/api/site-settings", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -3788,7 +3809,7 @@ function renderBranchAdmin() {
       renderFooter()
     );
   return (
-    '<section class="section branch-studio"><div class="container"><a class="admin-back-link" href="#/lpcadmin">← Admin workspace</a><header class="branch-studio-heading"><p class="section-label">Church information</p><h1 class="section-title">Make every visit easier.</h1><p>Choose a church. Complete its visitor details first, then update branding or media when needed.</p></header><details class="branch-data-tools"><summary>Backups &amp; data transfer</summary><button type="button" class="btn btn--outline" id="check-branch-recovery">Check backups for missing details</button><div id="branch-recovery" aria-live="polite"></div><div data-branch-transfer></div></details><form id="branches-form" class="admin-form"><div id="branch-editor-list">' +
+    '<section class="section branch-studio"><div class="container"><a class="admin-back-link" href="#/lpcadmin">← Admin workspace</a><header class="branch-studio-heading"><p class="section-label">Church information</p><h1 class="section-title">Make every visit easier.</h1><p>Choose a church. Complete its visitor details first, then update branding or media when needed.</p></header><details class="branch-data-tools"><summary>Backups &amp; data transfer</summary><button type="button" class="btn btn--outline" id="check-branch-recovery">Check backups for missing details</button><div id="branch-recovery" aria-live="polite"></div><div data-branch-transfer></div></details><form id="branches-form" class="admin-form"><div class="branch-completion-filters"><label>Find a church<input id="branch-editor-query" type="search" placeholder="Church, town or address"></label><label><input id="branch-incomplete-filter" type="checkbox"> Only missing visitor details</label></div><p data-branch-queue-count role="status"></p><p data-branch-queue-empty hidden>No matching churches. Clear the search or completion filter.</p><div id="branch-editor-list">' +
     Object.entries(branchConfig.branches)
       .map(([slug, b]) => renderBranchFields(slug, b))
       .join("") +
@@ -3798,6 +3819,16 @@ function renderBranchAdmin() {
 }
 function branchVisitGaps(branch) {
   return [['address','Address'],['services','Service times']].filter(([key])=>!String(branch[key] || '').trim()).map(([,label])=>label);
+}
+function initBranchCompletionQueue(form) {
+  const search=form.querySelector('#branch-editor-query'),toggle=form.querySelector('#branch-incomplete-filter');if(!search || !toggle)return;
+  const update=(filter=true)=>{
+    const rows=[...form.querySelectorAll('[data-branch-slug]')],terms=search.value.toLowerCase().trim().split(/\s+/).filter(Boolean);let missing=0,visible=0;
+    rows.forEach(row=>{const read=key=>row.querySelector(`[name="${key}"]`)?.value || '';const gaps=branchVisitGaps({address:read('address'),services:read('services')});if(gaps.length)missing++;
+      if(filter)row.hidden=!(terms.every(term=>[read('name'),read('churchName'),read('address'),read('services')].join(' ').toLowerCase().includes(term)) && (!toggle.checked || gaps.length || row.open));if(!row.hidden)visible++;
+    });form.querySelector('[data-branch-queue-count]').textContent='Showing '+visible+' of '+rows.length+' churches · '+missing+' need visitor details overall';form.querySelector('[data-branch-queue-empty]').hidden=visible>0;
+  };
+  search.addEventListener('input',()=>update());toggle.addEventListener('change',()=>update());form.addEventListener('input',()=>update(false));form.addEventListener('toggle',()=>update(),true);form.addEventListener('click',()=>queueMicrotask(()=>update()));form.addEventListener('invalid',()=>{search.value='';toggle.checked=false;update();},true);update();
 }
 
 function refreshBranchReadiness(row) {
@@ -3915,6 +3946,7 @@ function initPageImageAdmin() {
 function initBranchAdmin() {
   const form = document.getElementById("branches-form");
   if (!form) return;
+  initBranchCompletionQueue(form);
   const tools = document.createElement("div");
   tools.className = "admin-form__actions";
   tools.innerHTML =

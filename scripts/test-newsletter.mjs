@@ -31,6 +31,41 @@ test('Pastoral hierarchy includes every current profile beneath the president an
 });
 const defaults={kicker:'Newsletter',title:'News & updates from LPC',body:'',author:'',date:'',image:'',imageAlt:'',ctaText:'',ctaHref:''};
 const escape=v=>String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
+test('Newsletter checks separate required text and paired links from a suggested image description',()=>{
+ const helper=source.slice(source.indexOf('function newsletterReview('),source.indexOf('function renderNewsletterChecklist('));
+ const review=runInNewContext(helper+';newsletterReview');
+ const result=review({title:'News',body:'A short update',image:'poster.jpg',imageAlt:'',ctaText:'Read more',ctaHref:''});
+ assert.equal(result.words,3);assert.equal(result.checks.find(c=>c.label.includes('paired')).ok,false);assert.equal(result.checks.find(c=>c.optional).ok,false);
+ assert(review({title:'News',body:'Text only'}).checks.every(c=>c.ok));
+});
+test('Header studio updates phone preview and keeps later edits marked unpublished after a save',()=>{
+ const init=source.slice(source.indexOf('function initHeaderMessageStudio('),source.indexOf('function newsletterReview('));
+ const events={},input={value:'Original',addEventListener:(type,fn)=>events[type]=fn},preview={dataset:{}},text={},dirty={},counter={};
+ const buttons=['desktop','phone'].map(device=>({dataset:{headerDevice:device},setAttribute(k,v){this[k]=v},addEventListener:(_t,fn)=>events[device]=fn}));
+ const form={querySelector:s=>s.includes('name=')?input:s==='[data-header-preview]'?preview:s.includes('preview-text')?text:s.includes('dirty')?dirty:counter,querySelectorAll:()=>buttons,addEventListener:(type,fn)=>events[type]=fn};
+ runInNewContext(init+';initHeaderMessageStudio(form)',{form,defaultSiteSettingsConfig:{topbarSlogan:'Default'}});
+ input.value='<script>plain text</script>';events.input();assert.equal(text.textContent,input.value);assert.equal(dirty.textContent,'Unpublished changes');
+ events.phone();assert.equal(preview.dataset.device,'phone');assert.equal(buttons[1]['aria-pressed'],'true');
+ events['header-published']({detail:{topbarSlogan:'Older submission'}});assert.equal(dirty.textContent,'Unpublished changes');
+ events['header-published']({detail:{topbarSlogan:input.value}});assert.equal(dirty.textContent,'Saved version');
+});
+test('A failed header publish leaves the last saved configuration intact',async()=>{
+ const save=source.slice(source.indexOf('async function saveSiteSettingsConfig('),source.indexOf('async function hydrateYouTubePlayers('));let fail=true,applied=0;
+ const f=runInNewContext(save+';({saveSiteSettingsConfig,current:()=>siteSettingsConfig})',{siteSettingsConfig:{topbarSlogan:'Original'},fetch:async()=>({ok:!fail,json:async()=>({topbarSlogan:'Published'})}),applySiteSettings:()=>applied++});
+ await assert.rejects(f.saveSiteSettingsConfig({topbarSlogan:'Draft'}));assert.equal(f.current().topbarSlogan,'Original');assert.equal(applied,0);
+ fail=false;await f.saveSiteSettingsConfig({topbarSlogan:'Published'});assert.equal(f.current().topbarSlogan,'Published');assert.equal(applied,1);
+});
+test('Branch completion queue filters missing details while retaining open draft fields',()=>{
+ const init=source.slice(source.indexOf('function initBranchCompletionQueue('),source.indexOf('function refreshBranchReadiness('));
+ const callbacks={},search={value:'',addEventListener:(t,fn)=>callbacks.search=fn},toggle={checked:false,addEventListener:(t,fn)=>callbacks.toggle=fn},count={},empty={};
+ const row=(name,address,services)=>({open:false,fields:{name,churchName:name,address,services},querySelector(s){return {value:this.fields[s.match(/name="(.*?)"/)[1]]}}});
+ const rows=[row('Ready','Road','Sunday'),row('Missing','','Sunday')];
+ const form={querySelector:s=>s.includes('query')?search:s.includes('filter')?toggle:s.includes('count')?count:empty,querySelectorAll:()=>rows,addEventListener:(t,fn)=>callbacks[t]=fn};
+ runInNewContext(init+';initBranchCompletionQueue(form)',{form,branchVisitGaps:b=>!b.address||!b.services?['Missing']:[],queueMicrotask:fn=>fn()});
+ toggle.checked=true;callbacks.toggle();assert(rows[0].hidden);assert(!rows[1].hidden);assert(count.textContent.includes('1 need'));
+ rows[1].open=true;rows[1].fields.address='Draft road';callbacks.input();assert(!rows[1].hidden);assert(count.textContent.includes('0 need'));
+ rows[1].open=false;callbacks.toggle();assert(rows[1].hidden);assert.equal(empty.hidden,false);
+});
 test('Calendar agenda sorts events chronologically, shows London time and escapes event content',()=>{
  const render=source.slice(source.indexOf('function calendarAgendaRows('),source.indexOf('function openCalendarAgenda('));
  const events=[{title:'Later',start:'2026-11-02T12:00:00Z'},{title:'<script>early</script>',start:'2026-11-01T09:30:00Z',location:'Main & Hall'},{title:'All day',start:'2026-11-01T00:00:00Z',allDay:true}];
@@ -113,7 +148,7 @@ test('Newsletter studio tracks unpublished edits, switches phone views and prese
  const init=source.slice(source.indexOf('function initNewsletterStudio()'),source.indexOf('function renderAdminLogin()'));
  const fields={...defaults,title:'Original'},events={},preview={},dirty={};
  const buttons=['edit','preview'].map(view=>({dataset:{newsletterView:view},addEventListener:(type,fn)=>events[view]=fn,setAttribute(k,v){this[k]=v}}));
- const form={dataset:{},querySelector:s=>s.includes('preview')?preview:dirty,querySelectorAll:()=>buttons,addEventListener:(type,fn)=>events[type]=fn};
+ const form={dataset:{},querySelector:s=>s.includes('checklist')?null:s.includes('preview')?preview:dirty,querySelectorAll:()=>buttons,addEventListener:(type,fn)=>events[type]=fn};
  runInNewContext(init+';initNewsletterStudio()',{document:{getElementById:()=>form},FormData:class{get(k){return fields[k]}},defaultNewsletterConfig:defaults,renderNewsletterDraftPreview:d=>d.title});
  fields.title='Updated';events.input();assert.equal(preview.innerHTML,'Updated');assert.equal(dirty.textContent,'Unpublished changes');
  events.preview();assert.equal(form.dataset.newsletterMode,'preview');assert.equal(buttons[1]['aria-pressed'],'true');
