@@ -85,7 +85,7 @@ test('Visit planner updates the selected destination without borrowing another c
  const source=site.slice(site.indexOf('function renderVisitPlanDetails('),site.indexOf('function renderVisitDetails('));
  const events={},select={value:'second',addEventListener:(type,fn)=>events[type]=fn},details={};
  const branchCards=[{slug:'first',name:'First',address:'12 Church Road',services:'Sunday 10:00'},{slug:'second',name:'Second'}];
- const context={branchCards,escapeHtml:v=>String(v),escapeAttribute:v=>String(v),document:{getElementById:()=>select,querySelector:()=>details}};
+ const context={updatePublicChurchLink:()=>{},branchCards,escapeHtml:v=>String(v),escapeAttribute:v=>String(v),document:{getElementById:()=>select,querySelector:()=>details}};
  const html=runInNewContext(source+';renderVisitPlanDetails(branchCards[0])',context);
  assert(html.includes('Sunday 10:00'));assert(html.includes('query=12%20Church%20Road'));
  runInNewContext(source+';initVisitPlan()',context);events.change();
@@ -111,10 +111,13 @@ test('Watch stage selects one church, stops the previous iframe and supports key
  const frames=[frame(),frame()],rows=frames.map((f,i)=>({dataset:{watchOrder:String(i)},setAttribute(){},querySelectorAll:()=>[f]}));
  const tabs=[0,1].map(i=>({dataset:{watchSelect:String(i)},events:{},setAttribute(k,v){this[k]=v},addEventListener(k,v){this.events[k]=v},focus(){this.focused=true},click(){this.events.click()}}));
  const document={querySelector:()=>({querySelectorAll:()=>rows}),querySelectorAll:()=>tabs};
- runInNewContext(source+';initWatchStage()',{document,hydrateYouTubePlayers:()=>{}});
+ runInNewContext(source+';initWatchStage()',{document,publicChurchChoice:()=>'',updatePublicChurchLink:()=>{},hydrateYouTubePlayers:()=>{}});
  assert.equal(rows[0].hidden,false);assert.equal(rows[1].hidden,true);assert(frames[0].hasAttribute('src'));assert(!frames[1].hasAttribute('src'));
  tabs[1].click();assert.equal(rows[0].hidden,true);assert(!frames[0].hasAttribute('src'));assert(frames[1].hasAttribute('src'));
  tabs[1].events.keydown({key:'Home',preventDefault(){}});assert(tabs[0].focused);assert.equal(rows[0].hidden,false);assert.equal(tabs[0]['aria-selected'],'true');
+ rows.forEach((row,i)=>row.dataset.watchKey=i?'second':'first');
+ let shared='';runInNewContext(source+';initWatchStage()',{document,publicChurchChoice:()=> 'second',updatePublicChurchLink:(_route,key)=>shared=key,hydrateYouTubePlayers:()=>{}});
+ assert.equal(rows[1].hidden,false);assert.equal(rows[0].hidden,true);assert.equal(shared,'second');
 });
 
 test('A late YouTube response cannot create a player in a deselected church',()=>{
@@ -145,7 +148,7 @@ test('First visit finder switches branch details and directions without inventin
  const source=site.slice(site.indexOf('function renderVisitDetails('),site.indexOf('function renderHome()'));
  const events={},details={},select={value:'second',addEventListener:(type,fn)=>events[type]=fn};
  const branchCards=[{slug:'first',name:'First church',services:'Sunday 10:00',address:'12 Church Road'},{slug:'second',name:'Second church'}];
- const context={branchCards,escapeHtml:v=>String(v),escapeAttribute:v=>String(v),document:{getElementById:()=>select,querySelector:()=>details}};
+ const context={updatePublicChurchLink:()=>{},branchCards,escapeHtml:v=>String(v),escapeAttribute:v=>String(v),document:{getElementById:()=>select,querySelector:()=>details}};
  const html=runInNewContext(source+';renderVisitFinder()',context);
  assert(html.includes('Sunday 10:00'));assert(html.includes('query=12%20Church%20Road'));assert(html.includes('#/branches/first'));
  runInNewContext(source+';initVisitFinder()',context);events.change();
@@ -256,7 +259,7 @@ test('Watch lists playable videos ahead of collapsed coming-soon branches', () =
   const site=readFileSync(new URL('../assets/js/site.js',import.meta.url),'utf8');
   const source=site.slice(site.indexOf('function renderWatchHub()'),site.indexOf('function prioritiseWatchPlayer('));
   const entry=(label,videoUrl='',youtubeUrl='')=>({key:label,label,branchHref:'#/branches/'+label,source:{videoUrl,youtubeUrl,watchTitle:label,socials:[]}});
-  const context={mediaCollections:()=>[entry('Soon'),entry('Channel','','https://youtube.com/@example'),entry('Video','playable')],youtubeVideoId:v=>v==='playable'?'abc123':'',escapeHtml:v=>v,escapeAttribute:v=>v,collectionThemeStyle:()=>'',socialIcon:()=>''};
+  const context={publicLinkControl:()=>'',mediaCollections:()=>[entry('Soon'),entry('Channel','','https://youtube.com/@example'),entry('Video','playable')],youtubeVideoId:v=>v==='playable'?'abc123':'',escapeHtml:v=>v,escapeAttribute:v=>v,collectionThemeStyle:()=>'',socialIcon:()=>''};
   const html=runInNewContext(source+';renderWatchHub()',context);
   assert(html.indexOf('data-watch-priority="2"')<html.indexOf('data-watch-priority="1"'));
   assert(html.indexOf('data-watch-available')<html.indexOf('<details class="watch-coming-soon"'));
@@ -436,7 +439,7 @@ test('Failed logout or a retained session never switches to another account', as
 test('Main admin opens a dedicated, administrator-only user management route', () => {
   const site = readFileSync(new URL('../assets/js/site.js', import.meta.url), 'utf8');
   const dashboardSource = site.slice(site.indexOf('function renderAdminPanel()'),site.indexOf('function initAdminWorkspace()'));
-  const dashboard = runInNewContext(dashboardSource+';renderAdminPanel()', {adminSession:{authenticated:true},branchCards:[],escapeAttribute:v=>String(v),renderFooter:()=>''});
+  const dashboard = runInNewContext(dashboardSource+';renderAdminPanel()', {adminSession:{authenticated:true},renderAdminReadiness:()=>'',branchCards:[],escapeAttribute:v=>String(v),renderFooter:()=>''});
   assert(dashboard.indexOf('href="#/lpcadmin/users"') >= 0);
   assert(dashboard.indexOf('href="#/lpcadmin/users"') < dashboard.indexOf('href="#/lpcadmin/volunteers"'));
   const routeStart = site.indexOf('function getDynamicRouteRenderer(route)');

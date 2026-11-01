@@ -3283,6 +3283,80 @@ body.is-branch-page .site-search-trigger,body.is-red-header-sample .site-search-
 .pastoral-home .people-caption h3 { font-size:1.05rem;line-height:1.3;margin:0 0 6px; }
 @media(max-width:600px) { .pastoral-lead { margin:0 0 28px; } .pastoral-lead > .people-card { width:210px; } .pastoral-members.people-grid { grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 14px; } .pastoral-members .people-caption h2,.pastoral-home .people-caption h3 { font-size:.95rem; } }
 
+.youth-hub { padding-top:40px;padding-bottom:48px; }
+.youth-hub__lead { display:grid;grid-template-columns:1.1fr .9fr;gap:24px; }
+.youth-hub__visual { position:relative;overflow:hidden;border-radius:24px;min-height:480px;background:#092938; }
+.youth-hub__visual img,.youth-hub__visual video { width:100%;height:100%;position:absolute;inset:0;object-fit:var(--youth-fit,cover);object-position:var(--youth-position,center);transform:scale(var(--youth-scale,1)); }
+.youth-hub__visual::after { content:"";position:absolute;inset:0;background:linear-gradient(transparent 20%,#061c30ed); }
+.youth-hub__visual>div { position:absolute;bottom:32px;left:32px;right:24px;z-index:1;color:#fff; }
+.youth-hub__visual h1 { font-size:clamp(2.6rem,4.6vw,4.4rem);margin:12px 0 0; }
+.youth-hub__visual .section-label { color:#f5cc67; }
+.youth-hub__join { border-radius:24px;padding:32px;background:#f6f2e8;border:1px solid #e6dfcc;display:flex;flex-direction:column;justify-content:center; }
+.youth-hub__join h2 { font-size:2.2rem;margin:10px 0 16px; }
+.youth-hub__join>p:not(.section-label) { color:#496071;margin:0 0 18px; }
+.youth-hub__time { display:flex;gap:14px;align-items:center;background:#fff;border-radius:12px;padding:16px;margin:0 0 12px; }
+.youth-hub__time>span { font-size:30px;color:#65722f; }
+.youth-hub__time strong,.youth-hub__time small { display:block; }
+.youth-hub__time small { color:#536b7b;font-size:.8rem;margin-top:3px; }
+.youth-hub__join .youth-hub__note { font-size:.8rem; }
+.youth-hub__join .btn { display:flex;justify-content:space-between;gap:12px; }
+.youth-hub__watch { margin-top:16px;font-size:.9rem;text-align:center;color:#254c64;text-decoration:underline;text-underline-offset:4px; }
+.youth-hub__life { padding-top:36px; }
+.youth-hub__life>h2 { font-size:1.8rem;margin:0 0 20px; }
+.youth-hub__life>div { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px; }
+.youth-hub__life article { border-top:2px solid #d3b867;padding:18px 0; }
+.youth-hub__life article>span { font-size:.8rem;color:#7e6927;font-weight:700; }
+.youth-hub__life h3 { font-size:1.2rem;margin:12px 0 8px; }
+.youth-hub__life p { color:#4b6576;margin:0;font-size:.95rem; }
+.public-link-control { display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px; }
+.public-link-control .btn { font-size:.82rem;min-height:42px;padding:9px 16px; }
+.public-link-control>span { font-size:.8rem;color:#416c64; }
+.public-link-control [hidden] { display:none!important; }
+.public-link-control label { flex-basis:100%;font-size:.8rem; }
+.public-link-control input { display:block;width:100%;padding:10px;border:1px solid #b8cbd7;border-radius:6px; }
+.watch-hub>.public-link-control { justify-content:flex-end;margin:0 0 20px; }
+.pastor-directory-search { display:flex;align-items:end;gap:24px;justify-content:space-between;margin:0 0 30px; }
+.pastor-directory-search label { display:block;width:min(100%,520px);font-weight:700;font-size:.9rem; }
+.pastor-directory-search input { display:block;width:100%;padding:13px 16px;margin-top:8px;border:1px solid #becfd9;border-radius:9px;background:#fff;font:inherit;font-weight:400; }
+.pastor-directory-search>span { font-size:.85rem;color:#516b7c;padding-bottom:12px;white-space:nowrap; }
+.people-card[hidden],.pastoral-lead[hidden] { display:none!important; }
+.pastor-search-empty { text-align:center;padding:36px;background:#fff;border-radius:12px;color:#526a7b; }
+.publication-readiness { margin:24px 0 32px;padding:22px;background:#f4f7f8;border:1px solid #dce6ec;border-radius:18px; }
+.publication-readiness-heading { display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px; }
+.publication-readiness-heading h2 { font-size:1.5rem;margin:6px 0 0; }
+.publication-readiness-heading .section-label { font-size:.65rem; }
+.publication-readiness-heading>span { font-size:.8rem;color:#54717c; }
+.publication-checks { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px; }
+.publication-check { padding:16px;background:#fff;border:1px solid #d5e2e6;border-radius:12px;color:#203b4d;min-width:0; }
+.publication-check>div { display:flex;gap:10px;align-items:center;font-size:.9rem; }
+.publication-check>div>span:first-child { display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#fff0cf;color:#886111;font-weight:700; }
+.publication-check--ready>div>span:first-child { background:#def2e4;color:#256541; }
+.publication-check>div>span:last-child { margin-left:auto; }
+.publication-check p { font-size:1.1rem;font-weight:700;margin:12px 0 6px; }
+.publication-check small { color:#617681;display:block;line-height:1.5;overflow-wrap:anywhere; }
+@media(max-width:760px) {
+  .youth-hub { padding-top:20px; }
+  .youth-hub__lead { grid-template-columns:1fr;gap:14px; }
+  .youth-hub__visual { min-height:230px; }
+  .youth-hub__visual img,.youth-hub__visual video { object-fit:var(--youth-mobile-fit,cover);object-position:var(--youth-mobile-position,center);transform:scale(var(--youth-mobile-scale,1)); }
+  .youth-hub__visual>div { left:20px;bottom:20px; }
+  .youth-hub__visual h1 { font-size:2.2rem; }
+  .youth-hub__join { padding:22px; }
+  .youth-hub__join h2 { font-size:1.7rem; }
+  .youth-hub__join .btn { order:1;margin-bottom:16px; }
+  .youth-hub__time { order:2; }
+  .youth-hub__join .youth-hub__note { order:3; }
+  .youth-hub__watch { order:4; }
+  .youth-hub__life>div { grid-template-columns:1fr;gap:0; }
+  .pastor-directory-search { align-items:start;flex-direction:column;gap:4px; }
+  .pastor-directory-search>span { padding-bottom:0; }
+  .publication-readiness { padding:16px; }
+  .publication-readiness-heading { align-items:start;flex-direction:column;gap:8px; }
+  .publication-checks { grid-template-columns:1fr; }
+  .publication-check { padding:14px; }
+  .publication-check p { margin:8px 0 4px;font-size:1rem; }
+}
+
 .page-image-studio.section { padding-top:28px; }
 .page-image-studio header { margin:16px 0 20px; }
 .page-image-studio header h1 { font-size:clamp(1.8rem,3vw,2.8rem);margin:8px 0 12px; }

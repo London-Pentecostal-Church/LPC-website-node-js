@@ -31,6 +31,38 @@ test('Pastoral hierarchy includes every current profile beneath the president an
 });
 const defaults={kicker:'Newsletter',title:'News & updates from LPC',body:'',author:'',date:'',image:'',imageAlt:'',ctaText:'',ctaHref:''};
 const escape=v=>String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
+test('Public church links preserve the selected church without rerendering or storing account data',()=>{
+ const helpers=source.slice(source.indexOf('function publicChurchChoice()'),source.indexOf('function publicLinkControl('));
+ let replaced='';const window={location:{hash:'#/watch?church=south%20london',pathname:'/',search:''},history:{replaceState:(_a,_b,url)=>replaced=url}};
+ const f=runInNewContext(helpers+';({publicChurchChoice,updatePublicChurchLink})',{window,URLSearchParams});
+ assert.equal(f.publicChurchChoice(),'south london');f.updatePublicChurchLink('/plan-your-visit','church/a');assert.equal(replaced,'/#/plan-your-visit?church=church%2Fa');
+});
+test('Sharing offers a selectable link when clipboard access is unavailable',async()=>{
+ const init=source.slice(source.indexOf('function initPublicLinkControls()'),source.indexOf('function renderVisitPlanDetails('));
+ let click;const status={},input={focus(){this.focused=true},select(){this.selected=true}},fallback={hidden:true,querySelector:()=>input};
+ const control={querySelector:s=>s.includes('status')?status:fallback},button={closest:()=>control,addEventListener:(_t,fn)=>click=fn};
+ runInNewContext(init+';initPublicLinkControls()',{document:{querySelectorAll:()=>[button]},navigator:{clipboard:{writeText:async()=>{throw Error('Denied')}}},window:{location:{href:'https://example.com/#/watch?church=one'}}});
+ await click();assert.equal(fallback.hidden,false);assert(input.focused&&input.selected);assert.equal(input.value,'https://example.com/#/watch?church=one');
+});
+test('Publication checks require only editable branch facts, associate profile content and newsletter text',()=>{
+ const helper=source.slice(source.indexOf('function publicationChecks('),source.indexOf('function renderAdminReadiness('));
+ const checks=runInNewContext(helper+';publicationChecks(branches,people,news)',{branches:[{name:'Ready',address:'Road',services:'Sunday'},{name:'Missing',address:' '}],people:[{name:'Ready',image:'image.jpg',intro:'Hello'},{name:'Missing',image:'image.jpg',intro:''}],news:{title:'News',body:'Update',image:''}});
+ assert.equal(checks[0].missing.length,1);assert.equal(checks[1].missing.length,1);assert.equal(checks[2].missing.length,0);
+});
+test('Pastor directory matches name and role, collapses the hidden president space and restores the team',()=>{
+ const init=source.slice(source.indexOf('function initPastorDirectory()'),source.indexOf('function renderPastorProfile('));
+ let search;const cards=[{dataset:{pastorSearch:'pr sam john president'}},{dataset:{pastorSearch:'pr tiju thomas youth pastor'}}],count={},empty={},lead={querySelector:()=>cards[0].hidden?null:cards[0]};
+ const gallery={querySelectorAll:()=>cards,querySelector:s=>s.includes('lead')?lead:s.includes('count')?count:empty};
+ const input={value:'tiju youth',closest:()=>gallery,addEventListener:(_t,fn)=>search=fn};
+ runInNewContext(init+';initPastorDirectory()',{document:{getElementById:()=>input}});search();assert(cards[0].hidden&&!cards[1].hidden);assert(lead.hidden);assert.equal(count.textContent,'1 pastor found');
+ input.value='unknown';search();assert.equal(empty.hidden,false);input.value='';search();assert(cards.every(c=>!c.hidden));assert.equal(lead.hidden,false);
+});
+test('Youth entry keeps media modes and gives a contextual email path instead of a generic contact detour',()=>{
+ const render=source.slice(source.indexOf('function renderYouthHub()'),source.indexOf('function renderMinistryExplorer('));
+ const context={getHeroImageConfig:()=>({desktopImage:'youth.jpg',mobileImage:'phone.jpg'}),escapeAttribute:escape,renderFooter:()=>'',videoType:()=> 'video/mp4'};
+ let html=runInNewContext(render+';renderYouthHub()',context);assert(html.includes('phone.jpg'));assert(html.includes('Joining%20LPC%20Youth'));assert(html.includes('Friday · 7:00 pm'));
+ context.getHeroImageConfig=()=>({desktopImage:'poster.jpg',video:'youth.mp4'});html=runInNewContext(render+';renderYouthHub()',context);assert(html.includes('<video'));assert(html.includes('youth.mp4'));
+});
 const getter=source.slice(source.indexOf('function getNewsletterConfig()'),source.indexOf('function getSiteSettingsConfig()'));
 const render=source.slice(source.indexOf('function renderNewsletterSection('),source.indexOf('function videoType('));
 const context=config=>({newsletterConfig:config,defaultNewsletterConfig:defaults,escapeHtml:escape,escapeAttribute:escape});
