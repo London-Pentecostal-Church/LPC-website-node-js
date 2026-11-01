@@ -426,6 +426,17 @@ test("Node HTTP adapter persists private data and protects static paths", async 
       }),
     });
     assert.equal(r.status, 200, await r.text());
+    const reportQuery='?kind=service&start=2032-01-01&end=2032-02-01';
+    const reportResponse=await fetch(base+'/api/volunteers/report'+reportQuery,{headers:{cookie}});
+    assert.equal(reportResponse.status,200);
+    assert.equal((await reportResponse.json()).start,'2032-01-01');
+    const workbookResponse=await fetch(base+'/api/volunteers/report'+reportQuery+'&format=xlsx',{headers:{cookie}});
+    assert.equal(workbookResponse.status,200);
+    const workbook=new DataView(await workbookResponse.arrayBuffer());
+    assert.equal(workbook.getUint32(0,true),0x04034b50);
+    assert.equal(workbook.getUint32(workbook.byteLength-22,true),0x06054b50);
+    const centralOffset=workbook.getUint32(workbook.byteLength-6,true);
+    assert.equal(workbook.getUint32(centralOffset,true),0x02014b50,'HTTP adapter must preserve binary workbook bytes');
     assert.equal(
       (await fetch(base + "/.private-volunteers/state.json")).status,
       404,

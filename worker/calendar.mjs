@@ -47,9 +47,14 @@ export async function calendarEvents(feedUrl = defaultCalendarUrl){
   if(!feedUrl)return {configured:false,events:[]};
   const url=validateCalendarUrl(feedUrl),previous=cache.get(url);
   if(previous&&previous.expires>Date.now())return previous.result;
-  const response=await fetch(url,{redirect:'error',signal:AbortSignal.timeout(10000),headers:{accept:'text/calendar'}});
-  if(!response.ok)throw new Error('Calendar unavailable');
-  const text=await response.text();if(text.length>5*1024*1024)throw new Error('Calendar too large');
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),10000);
+  let text;
+  try {
+    const response=await fetch(url,{redirect:'manual',signal:controller.signal,headers:{accept:'text/calendar'}});
+    if(!response.ok)throw new Error('Calendar unavailable (HTTP '+response.status+')');
+    text=await response.text();if(text.length>5*1024*1024)throw new Error('Calendar too large');
+  } finally { clearTimeout(timeout); }
   const result={configured:true,events:parseCalendar(text)};
   cache.set(url,{result,expires:Date.now()+300000});return result;
 }

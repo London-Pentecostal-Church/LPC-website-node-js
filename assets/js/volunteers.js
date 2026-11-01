@@ -23,6 +23,7 @@ window.LPCVolunteers = (() => {
     busy = false,
     weekStart = "";
   let clashDraft = null;
+  let plannerFocus = 'all';
   let quickAddDraft = null;
   let accountEmailEnabled = false;
   const branchColours = new Map();
@@ -240,7 +241,30 @@ window.LPCVolunteers = (() => {
       e.preventDefault();
       callback(new FormData(e.target), e.target);
     };
+    if(['Edit user','Add new user'].includes(title)) sectionAdminDialog(dialog,'user');
+    if(['Edit meeting details','Add a church meeting'].includes(title)) sectionAdminDialog(dialog,'meeting');
     dialog.showModal();
+  }
+  function dialogSectionKey(element,type) {
+    if(type==='user') {
+      if(element.querySelector('[name="manage"]'))return 'access';
+      if(element.querySelector('[name="skills"],[name="teams"],[name="branches"]'))return 'serving';
+      return 'profile';
+    }
+    if(element.querySelector('[name="recurrence"],[data-meeting-pattern],[name="duration"]') || (element.matches('[data-meeting-dates]') || element.matches('[data-meeting-date-preview]')))return 'when';
+    if(element.querySelector('[name="pastorLeadId"],[name="choirLeadId"]') || element.matches('.vs-callout'))return 'responsibility';
+    return 'details';
+  }
+  function sectionAdminDialog(dialog,type) {
+    const body=dialog.querySelector('.vs-dialog-body'),children=[...body.children];
+    const sections=type==='user'?[['profile','Profile & login'],['serving','Serving roles'],['access','Scheduling access']]:[['details','Meeting details'],['when','Dates & time'],['responsibility','Responsibility']];
+    const tabs=document.createElement('div');tabs.className='vs-editor-tabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label',type==='user'?'User editor sections':'Meeting editor sections');
+    const panels=Object.fromEntries(sections.map(([key,label],i)=>{const panel=document.createElement('section');panel.dataset.dialogSection=key;panel.id='vs-editor-panel-'+key;panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby','vs-editor-tab-'+key);panel.hidden=i!==0;
+      tabs.insertAdjacentHTML('beforeend',`<button type="button" role="tab" id="vs-editor-tab-${key}" aria-controls="${panel.id}" aria-selected="${i===0}" tabindex="${i===0?'0':'-1'}" data-editor-section="${key}">${label}</button>`);return [key,panel];}));
+    children.forEach(element=>panels[dialogSectionKey(element,type)].append(element));body.replaceChildren(tabs,...Object.values(panels));
+    const buttons=[...tabs.querySelectorAll('button')],select=key=>{buttons.forEach(button=>{const active=button.dataset.editorSection===key;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;});Object.entries(panels).forEach(([name,panel])=>panel.hidden=name!==key);body.scrollTop=0;};
+    buttons.forEach((button,i)=>{button.addEventListener('click',()=>select(button.dataset.editorSection));button.addEventListener('keydown',event=>{const next=event.key==='ArrowRight'?(i+1)%buttons.length:event.key==='ArrowLeft'?(i+buttons.length-1)%buttons.length:event.key==='Home'?0:event.key==='End'?buttons.length-1:-1;if(next<0)return;event.preventDefault();buttons[next].focus();select(buttons[next].dataset.editorSection);});});
+    dialog.querySelector('form').addEventListener('invalid',event=>{const panel=event.target.closest('[data-dialog-section]');if(panel)select(panel.dataset.dialogSection);},true);
   }
   const checks = (key, values, chosen) =>
     `<div class="vs-chips">${values.map((v) => `<label class="vs-chip"><input type="checkbox" name="${key}" value="${esc(v)}" ${chosen.includes(v) ? "checked" : ""}>${esc(key === "skills" ? roleLabel(v) : key === "manage" ? (v === "ministry" ? "Pastoral admin" : "Choir & media admin") : v)}</label>`).join("")}</div>`;
@@ -290,9 +314,9 @@ window.LPCVolunteers = (() => {
     const accessRole = state.actor.admin ? "Site administrator" : state.actor.manage?.length ? state.actor.manage.map(k => k === "ministry" ? "Pastoral scheduler" : "Choir & media scheduler").join(" · ") : "Volunteer";
     const unread = state.notifications.filter((n) => !n.read).length;
     root.className = "container vs-app wp-app" + (usersPage ? " wp-users-page" : "");
-    root.innerHTML = `${window.LPCTeamAuth.navigation(state.actor, true)}<header class="wp-heading"><div><p class="vs-eyebrow">London Pentecostal Church</p><h1>${usersPage ? "Users & access" : "Church Weekly Planner"}</h1><p>${usersPage ? "Manage selected team accounts, serving roles and scheduling permissions." : "One meeting schedule. Clear responsibilities."}</p></div><div class="wp-account"><span>${esc(state.actor.name)}<small class="wp-account-role">${esc(accessRole)}</small></span>${btn("Sign out", "logout", "", true)}${state.actor.admin && state.pendingAccounts?.length ? btn("Invited accounts awaiting approval (" + state.pendingAccounts.length + ")", "tab", 'data-tab="members"') : ""}${usersPage ? "" : btn("Updates" + (unread ? " (" + unread + ")" : ""), "tab", 'data-tab="updates"', true)}<details class="wp-menu"><summary>My account</summary><div>${!state.actor.admin ? btn("Backup recovery code (optional)", "recovery-code", "", true) + btn("Change password", "password", "", true) : '<a href="#/lpcadmin">Website admin</a>'}${btn("Sign in as another account", "logout", "", true)}${btn("Refresh", "refresh", "", true)}</div></details>${
+    root.innerHTML = `${usersPage ? window.LPCTeamAuth.navigation(state.actor, true) : ""}<header class="wp-heading"><div><p class="vs-eyebrow">London Pentecostal Church</p><h1>${usersPage ? "Users & access" : "Church Weekly Planner"}</h1><p>${usersPage ? "Manage selected team accounts, serving roles and scheduling permissions." : "One meeting schedule. Clear responsibilities."}</p></div><div class="wp-account"><span class="wp-account-identity" role="group" aria-label="Signed-in account"><strong class="wp-account-name">${esc(state.actor.name)}</strong><small class="wp-account-role"><b>Role:</b> ${esc(accessRole)}</small></span>${btn("Sign out", "logout", "", true)}${state.actor.admin && state.pendingAccounts?.length ? btn("Invited accounts awaiting approval (" + state.pendingAccounts.length + ")", "tab", 'data-tab="members"') : ""}${usersPage ? "" : btn("Updates" + (unread ? " (" + unread + ")" : ""), "tab", 'data-tab="updates"', true)}<details class="wp-menu"><summary>My account</summary><div>${!state.actor.admin ? btn("Backup recovery code (optional)", "recovery-code", "", true) + btn("Change password", "password", "", true) : usersPage ? '' : '<a href="#/lpcadmin">Website admin</a>'}${btn("Refresh", "refresh", "", true)}</div></details>${
       isCoordinator() && !usersPage
-        ? `<details class="wp-menu"><summary>Coordinator settings</summary><div>${btn("Church meetings", "tab", 'data-tab="meetings"', true)}${state.actor.admin ? btn("Members & skills", "tab", 'data-tab="members"', true) : ""}${[
+        ? `<details class="wp-menu"><summary>Coordinator settings</summary><div>${state.actor.admin ? btn("Members & skills", "tab", 'data-tab="members"', true) : ""}${[
             "service",
           ]
             .filter((k) => state.actor.admin || state.actor.manage?.includes(k))
@@ -336,9 +360,9 @@ window.LPCVolunteers = (() => {
               ? history()
               : weekly();
   }
-  function weekControls() {
+  function weekControls(filters = '') {
     const end = addDays(weekStart, 6);
-    return `<div class="wp-weekbar"><div class="wp-week-nav">${btn("← Previous week", "week", 'data-step="-1" aria-label="Previous week"', true)}<div aria-live="polite"><strong>${shortDate(weekStart)} – ${shortDate(end)}</strong><small>${end.slice(0, 4)}</small></div>${btn("Next week →", "week", 'data-step="1" aria-label="Next week"', true)}</div><div class="wp-date-tools">${btn("This week", "this-week", "", true)}${field("Go to date", `<input type="date" data-filter="week" value="${weekStart}" aria-label="Go to date">`)}</div></div>`;
+    return `<div class="wp-weekbar${filters?' wp-weekbar--filtered':''}"><div class="wp-week-nav">${btn('<span aria-hidden="true">←</span><span class="wp-week-word"> Previous week</span>', "week", 'data-step="-1" aria-label="Previous week"', true)}<div aria-live="polite"><strong>${shortDate(weekStart)} – ${shortDate(end)}</strong><small>${end.slice(0, 4)}</small></div>${btn('<span class="wp-week-word">Next week </span><span aria-hidden="true">→</span>', "week", 'data-step="1" aria-label="Next week"', true)}</div><div class="wp-date-tools">${btn("This week", "this-week", "", true)}<details class="wp-date-picker"><summary>Go to date</summary>${field("Choose date", `<input type="date" data-filter="week" value="${weekStart}" aria-label="Go to date">`)}</details></div>${filters}</div>`;
   }
   function selectedSessions() {
     return state.sessions
@@ -352,6 +376,19 @@ window.LPCVolunteers = (() => {
       .sort((a, b) =>
         (a.date + a.time + a.branch).localeCompare(b.date + b.time + b.branch),
       );
+  }
+  function plannerWorklists(list, view) {
+    const active=list.filter(s=>!s.cancelled);
+    return {
+      all:list,
+      pastor:active.filter(s=>!readiness(s).pastorId),
+      covered:active.filter(s=>!!readiness(s).pastorId),
+      team:view==='choir' ? active.filter(s=>choirTeamGapCount(s)>0) : [],
+    };
+  }
+  function plannerActionBoard(lists, view) {
+    const choices=[['all','All meetings','all'],['pastor','Pastor needed','critical'],view==='pastoral'?['covered','Pastor assigned','covered']:['team','Arrange team locally','local']];
+    return `<section class="wp-action-board" aria-label="Planner action board"><div class="wp-action-board-heading"><h3>This week’s focus</h3><span>Tap a tile to filter</span></div><div class="wp-action-tiles">${choices.map(([key,label,tone])=>`<button type="button" data-vs="planner-focus" data-focus="${key}" aria-pressed="${plannerFocus===key}" aria-controls="wp-focus-agenda" class="wp-action-tile wp-action-tile--${tone}"><span class="wp-action-count">${lists[key].length}</span><span>${label}</span><span class="wp-action-arrow" aria-hidden="true">↗</span></button>`).join('')}</div>${view==='choir'?'<p class="wp-action-note">Pastor assignment is critical. Choir and media gaps can be arranged locally.</p>':''}</section>`;
   }
   function weekly() {
     if (tab === "pastoral") kind = "ministry";
@@ -368,15 +405,19 @@ window.LPCVolunteers = (() => {
         return true;
       });
     } else list = list.filter((s) => s.kind === kind);
+    const focusedPlanner=['pastoral','choir'].includes(tab) && manager();
+    if (focusedPlanner && !['all','pastor',tab==='pastoral'?'covered':'team'].includes(plannerFocus)) plannerFocus='all';
+    const worklists=focusedPlanner ? plannerWorklists(list,tab) : null;
+    const visibleList=worklists ? worklists[plannerFocus] || list : list;
     const titles = {
-      "my-week": ["My Week", "All your duties and meetings you lead, across every branch and service team."],
+      "my-week": ["My Week", "Your duties and lineups across all teams."],
       pastoral: [
         "Pastoral Planner",
-        "Arrange the pastor for each meeting. Review pastoral gaps, optional reserves and local prayer leaders.",
+        "Arrange pastors and resolve pastoral gaps.",
       ],
       choir: [
         "Choir & Media Planner",
-        "Arrange worship leadership, singers, musicians and the technical team. Other vacancies can be arranged locally.",
+        "Arrange worship, music and the technical team.",
       ],
       meetings: [
         "Church Meetings",
@@ -385,13 +426,14 @@ window.LPCVolunteers = (() => {
     };
     const [title, description] = titles[tab] || titles["my-week"];
     const filters = `<div class="wp-filters">${field("Branch", `<select data-filter="branch">${options(branches, branch, "All branches")}</select>`)}${field("Language / team", `<select data-filter="team">${options(teams(), team, "All teams")}</select>`)}</div>`;
-    return `<div class="wp-section-heading"><div><h2>${title}</h2><p>${description}</p></div>${tab === "meetings" && canMeetings() ? btn("+ Add meeting", "meeting") : ""}</div>${weekControls()}${tab === "my-week" ? personalProfileControl() : filters}
+    return `<div class="wp-section-heading"><div><h2>${title}</h2><p>${description}</p></div>${['pastoral','choir'].includes(tab) && manager() ? btn("Participation & Excel", "participation-report", "", true) : tab === "meetings" && canMeetings() ? btn("+ Add meeting", "meeting") : ""}</div>${tab === "meetings" && isCoordinator() ? meetingCatalog() : ""}${weekControls(tab === "my-week" ? '' : filters)}${tab === "my-week" ? personalProfileControl() : ''}
+    ${focusedPlanner ? plannerActionBoard(worklists,tab) : ''}
     ${
       tab === "my-week"
         ? `<div class="wp-personal">${list.length ? list.map((s) => personalMeetingCard(s)).join("") : `<div class="wp-empty"><h3>${state.actor.admin && !personalId() ? "Choose your volunteer profile above" : "No duties assigned this week"}</h3><p>${state.actor.admin && !personalId() ? "Your website admin account is separate from the person on the rota. Choose your name once to see your weekly duties." : "This includes every branch and service team. Use Previous week or Next week to browse other weeks."}</p></div>`}</div>`
-        : weekAgenda(list, title)
+        : `<div id="wp-focus-agenda">${focusedPlanner && plannerFocus!=='all' && !visibleList.length ? `<div class="wp-focus-clear" role="status"><span aria-hidden="true">✓</span><h3>${plannerFocus==='pastor'?'No meetings need a pastor.':plannerFocus==='team'?'No choir or media gaps to arrange.':'No pastors assigned in this selection yet.'}</h3><p>For the selected week, branch and team. Choose All meetings to see the full schedule.</p></div>` : weekAgenda(visibleList, title)}</div>`
     }
-    ${tab === "meetings" && isCoordinator() ? `<details class="wp-recurring"><summary>Regular weekly meetings</summary><p>Meetings appear automatically when you browse each upcoming week.</p>${(state.meetings || []).map((m) => `<div class="wp-regular-row"><div><strong>${esc(m.name)}</strong><small>${esc(m.branch)} · ${["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][m.day]} ${esc(m.time)} · ${esc(m.team)}</small></div><div>${canMeetings() ? btn("Edit meeting", "meeting", `data-id="${m.id}"`, true) + btn("Delete series", "delete-meeting-series", `data-id="${m.id}"`, true) : ""}</div></div>`).join("") || "<p>No regular meetings yet. Add your first meeting above.</p>"}</details>` : ""}${tab === "meetings" ? archivedSeries() : ""}`;
+    ${tab === "meetings" ? archivedSeries() : ""}`;
   }
   function personalMeetings(sessions) {
     const mine = sessions.filter(s => ownDuty(s) || (personalId() && s.leadId === personalId()));
@@ -471,8 +513,11 @@ window.LPCVolunteers = (() => {
     if (tab !== "choir" || s.cancelled) return { label: r.label, className: r.code === "ready" ? "vs-green" : r.code === "pastor-needed" ? "vs-red" : "" };
     return { label: r.pastorId ? 'Pastor in charge: ' + name(r.pastorId) : 'Pastor in charge: Not assigned — action needed', className: r.pastorId ? 'vs-green' : 'vs-red' };
   }
+  function choirTeamGapCount(s) {
+    return s.slots.filter(slot => !["Ministry volunteer", "Branch prayer leader"].includes(slot.role)).filter(slot => !slot.main || !canServe(state.members.find(m => m.id === slot.main), s, slot.role) || state.members.find(m => m.id === slot.main)?.availability?.[s.id] === "unavailable").length;
+  }
   function choirTeamBadge(s) {
-    const gaps = s.slots.filter(slot => !["Ministry volunteer", "Branch prayer leader"].includes(slot.role)).filter(slot => !slot.main || !canServe(state.members.find(m => m.id === slot.main), s, slot.role) || state.members.find(m => m.id === slot.main)?.availability?.[s.id] === "unavailable").length;
+    const gaps = choirTeamGapCount(s);
     return { label: gaps ? gaps + ' choir/media place' + (gaps === 1 ? '' : 's') + ' to arrange' : 'Choir & media assigned', className: gaps ? '' : 'vs-green' };
   }
   function emergencyFields(s, edit) {
@@ -539,6 +584,7 @@ window.LPCVolunteers = (() => {
       ${draft?.notice ? `<p class="vs-callout" role="status">${esc(draft.notice)}</p>` : ""}
       ${needsReview(s) ? '<p class="vs-callout">An assigned volunteer no longer meets the active, role, service team or branch requirements. Replace or clear the marked assignment before saving.</p>' : ""}
       ${!pastoral ? '<p class="vs-help">One volunteer may cover several roles here if they have the skills. Main and reserve for the same role must be different people.</p>' : ""}
+      ${edit ? '<p class="vs-help">Different branches need 1 hour between events, measured from finish to next start. Main duties cannot overlap. Overlapping reserve cover is allowed only at the same premises/branch.</p>' : ''}
       <div class="vs-table-wrap"><table class="wp-detail-table"><thead><tr>${singlePastor ? "" : `<th>${pastoral ? "Duty" : "Role"}</th>`}<th>${pastoral ? "Pastor" : "Main volunteer"}</th><th>${pastoral ? "Reserve (optional)" : "Backup"}</th></tr></thead><tbody>${s.slots.map((slot) => `<tr data-slot="${slot.id}">${singlePastor ? "" : `<th>${esc(roleLabel(slot.role))}</th>`}${["main", "backup"].map((position) => `<td data-label="${position === "main" ? (pastoral ? "Pastor" : "Main volunteer") : (pastoral ? "Reserve (optional)" : "Backup (optional)")}">${edit ? `<select data-position="${position}" data-last-value="${esc(slot[position])}" aria-label="${esc(roleLabel(slot.role))} ${position}">${memberOptions(s, slot, slot[position])}</select>` : `<strong>${slot[position] ? esc(name(slot[position])) : "Not assigned"}</strong>`}${slot[position] ? availabilityLabel(s, slot[position]) : ""}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
       ${
         edit && manager()
@@ -579,7 +625,28 @@ window.LPCVolunteers = (() => {
     if (a.meetingId && a.meetingId === b.meetingId && title(a.name) === title(b.name)) return true;
     return !!title(a.name) && title(a.name) === title(b.name);
   }
-  function refreshAssignmentChoices() {
+  function bookingRestriction(a, b, aPosition = 'main', bPosition = 'main') {
+    const start = session => {
+      const wall = Date.parse(session.date+'T'+session.time+':00Z');
+      const format = new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+      let utc=wall;
+      for(let i=0;i<3;i++) {
+        const parts=format.formatToParts(new Date(utc)), value=key=>Number(parts.find(p=>p.type===key).value);
+        const local=Date.UTC(value('year'),value('month')-1,value('day'),value('hour'),value('minute'));
+        utc+=wall-local;
+      }
+      return utc;
+    };
+    const aStart=start(a),bStart=start(b),aEnd=aStart+a.duration*60000,bEnd=bStart+b.duration*60000;
+    const branch=value=>String(value||'').trim().toLowerCase().replace(/\s+/g,' ');
+    const sameBranch=branch(a.branch)===branch(b.branch);
+    if(aStart<bEnd && bStart<aEnd)return sameBranch && (aPosition==='backup' || bPosition==='backup') ? null : {type:'overlap',gapMinutes:0,requiredMinutes:0};
+    if(sameBranch)return null;
+    const gap=aEnd<=bStart?bStart-aEnd:aStart-bEnd;
+    if(gap>=60*60000)return null;
+    return {type:'travel',gapMinutes:Math.round(gap/60000),requiredMinutes:60,earliestStart:new Date((aEnd<=bStart?aEnd:bEnd)+60*60000).toISOString()};
+  }
+    function refreshAssignmentChoices() {
     const selects = [...root.querySelectorAll('dialog [data-slot] select[data-position]')];
     const assigned = new Set(selects.map(select => select.value).filter(Boolean));
     const emergency = root.querySelector('[name="emergency-mode"]')?.checked && root.querySelector('[name="emergency-member"]')?.value;
@@ -587,6 +654,25 @@ window.LPCVolunteers = (() => {
     const emergencySelect = root.querySelector('[name="emergency-member"]');
     if (emergencySelect) for (const option of emergencySelect.options) option.disabled = !!option.value && option.value !== emergencySelect.value && assigned.has(option.value);
     const session = state.sessions.find(s => s.id === selected);
+    const showBookingWarning=select=>{
+      select.parentElement.querySelector('[data-overlap-warning]')?.remove();
+      if(!session || !select.value)return;
+      const position=select.dataset.position || 'main';
+      const restriction=other=>bookingRestriction(session,other,position,other.emergencyCover?.memberId===select.value || other.slots.some(slot=>slot.main===select.value)?'main':'backup');
+      const clashes=state.sessions.filter(other=>!sameMeetingOccurrence(other,session) && !other.cancelled && !other.deleted && !other.deletedAt && (other.emergencyCover?.memberId===select.value || other.slots.some(slot=>slot.main===select.value || slot.backup===select.value)) && restriction(other));
+      if(!clashes.length)return;
+      const warning=document.createElement('small');warning.dataset.overlapWarning='';warning.className='vs-warning';warning.setAttribute('role','status');
+      warning.append(document.createTextNode('Booking restriction: '));
+      for(const [index,other] of clashes.entries()) {
+        if(index)warning.append(document.createTextNode('; '));
+        const link=document.createElement('a');link.href='#/volunteers';link.dataset.vs='open-clash';link.dataset.id=other.id;
+        link.textContent=`${other.branch} · ${other.name} · ${other.date} ${other.time} (${other.duration} min)`;warning.append(link);
+        const rule=restriction(other);
+        warning.append(document.createTextNode(rule.type==='travel'?` — only ${rule.gapMinutes} min between events; 60 min travel time is required between branches.`:' — event times overlap.'));
+      }
+      warning.append(document.createTextNode(' Choose another person or change the event time. Reserve overlaps are allowed only at the same premises/branch.'));
+      select.parentElement.append(warning);
+    };
     for (const select of selects) {
       for (const option of select.options) {
         const paired = selects.find(other => other !== select && other.closest('[data-slot]') === select.closest('[data-slot]'));
@@ -595,27 +681,9 @@ window.LPCVolunteers = (() => {
         option.hidden = taken;
         option.disabled = taken || option.hasAttribute("data-ineligible");
       }
-      select.parentElement.querySelector('[data-overlap-warning]')?.remove();
-      if (session && select.value) {
-        const start = Date.parse(`${session.date}T${session.time}:00Z`);
-        const clashes = state.sessions.filter(other => !sameMeetingOccurrence(other, session) && !other.cancelled && Date.parse(`${other.date}T${other.time}:00Z`) < start + session.duration * 60000 && Date.parse(`${other.date}T${other.time}:00Z`) + other.duration * 60000 > start && (other.emergencyCover?.memberId === select.value || other.slots.some(slot => slot.main === select.value || slot.backup === select.value)));
-        if (clashes.length) {
-          const warning = document.createElement('small');
-          warning.dataset.overlapWarning = '';
-          warning.className = 'vs-warning';
-          warning.append(document.createTextNode("Also scheduled at "));
-          clashes.forEach((other, index) => {
-            if (index) warning.append(document.createTextNode("; "));
-            const link = document.createElement("a");
-            link.href = "#/volunteers"; link.dataset.vs = "open-clash"; link.dataset.id = other.id;
-            link.textContent = `${other.branch} · ${other.name} ${other.time}`;
-            warning.append(link);
-          });
-          warning.append(document.createTextNode(select.dataset.position === 'backup' ? '. Reserve overlap is allowed; check cover before calling them.' : '. Only overlapping primary duties are blocked.'));
-          select.parentElement.append(warning);
-        }
-      }
+      showBookingWarning(select);
     }
+    if(emergencySelect)showBookingWarning(emergencySelect);
   }
   async function openClash(id) {
     if (!clashDraft || selected === clashDraft.id) {
@@ -755,18 +823,38 @@ window.LPCVolunteers = (() => {
       state.members.find((m) => m.id === id)?.availability?.[s.id] || "unsure";
     return `<small class="vs-status ${v === "available" ? "vs-ok" : v === "unavailable" ? "vs-warning" : ""}">${v === "unsure" ? "No availability response yet" : v === "available" ? "✓ Available to serve" : "Cannot attend"}</small>`;
   }
-  function memberChoices(query = "") {
+  function memberMatchesAccess(member,group='all') {
+    if(group==='scheduler')return member.active && !!member.manage?.length;
+    if(group==='login')return member.active && !!member.username && !member.manage?.length;
+    if(group==='profile')return member.active && !member.username;
+    if(group==='inactive')return !member.active;
+    return true;
+  }
+  function memberChoices(query = "",group='all') {
     const search = query.trim().toLocaleLowerCase();
-    return state.members.filter(m => !search || [m.name, m.username, m.email].some(value => String(value || "").toLocaleLowerCase().includes(search))).slice().sort((a,b) => a.name.localeCompare(b.name)).map(m => [m.id, m.name + ' · ' + (m.username || 'Profile only') + (m.active ? '' : ' · Inactive')]);
+    return state.members.filter(m => memberMatchesAccess(m,group) && (!search || [m.name, m.username, m.email].some(value => String(value || "").toLocaleLowerCase().includes(search)))).slice().sort((a,b) => a.name.localeCompare(b.name)).map(m => [m.id, m.name + ' · ' + (m.username || 'Profile only') + (m.active ? '' : ' · Inactive')]);
+  }
+  function selectedUserPreview(id) {
+    const member=state.members.find(m=>m.id===id);
+    if(!member)return '<div class="vs-selected-user-empty">Choose a person to preview their roles and scheduling access.'+btn('Edit selected user','edit-selected-user','disabled')+'</div>';
+    const access=(member.manage||[]).map(role=>role==='ministry'?'Pastoral scheduler':role==='service'?'Choir & media scheduler':role);
+    return `<article class="vs-selected-user"><header><div><small>Selected profile</small><h3>${esc(member.name)}</h3></div><span class="vs-badge ${member.active?'vs-green':''}">${member.active?'Active':'Inactive'}</span></header><div class="vs-selected-user-facts"><div><strong>Login name</strong><span>${esc(member.username || 'Profile only · no login name')}</span></div><div><strong>Scheduling access</strong><span>${access.length?access.map(esc).join(' · '):'No scheduling permissions'}</span></div><div><strong>Serving roles</strong><span>${(member.skills||[]).length?member.skills.map(role=>esc(roleLabel(role))).join(' · '):'No serving roles recorded'}</span></div><div><strong>Branches</strong><span>${(member.branches||[]).map(esc).join(' · ') || 'No branches recorded'}</span></div></div>${btn('Edit selected user','edit-selected-user')}</article>`;
+  }
+  function refreshUserChoices() {
+    const list=memberChoices(root.querySelector('[data-user-search]').value,root.querySelector('[data-user-group]').value),select=root.querySelector('[data-user-select]');
+    select.innerHTML=options(list,'',list.length?'Choose a user…':'No matching users');select.disabled=!list.length;
+    root.querySelector('[data-user-preview]').innerHTML=selectedUserPreview('');root.querySelector('[data-user-results]').textContent=list.length+' matching '+(list.length===1?'person':'people');
   }
   function members() {
     const list = memberChoices();
     return '<section class="vs-card vs-user-picker"><div class="vs-header"><div><h2>Select or add a user</h2><p>Choose one person to view or edit their profile, serving roles and access.</p></div>' + btn('Add new user', 'member') + '</div>' +
-      field('Search users', '<input type="search" data-user-search placeholder="Search by name or username" autocomplete="off" aria-controls="existing-user">') +
+      '<div class="vs-user-filters">'+field('Search users', '<input type="search" data-user-search placeholder="Name, username or email" autocomplete="off" aria-controls="existing-user">') + field('Access group','<select data-user-group>'+[['all','All people'],['scheduler','Schedulers'],['login','Volunteers with login'],['profile','Profiles without login'],['inactive','Inactive people']].map(([value,label])=>`<option value="${value}">${label} (${state.members.filter(m=>memberMatchesAccess(m,value)).length})</option>`).join('')+'</select>')+'</div>'+
       field('Select existing user', '<select id="existing-user" data-user-select ' + (!list.length ? 'disabled' : '') + '>' + options(list, '', list.length ? 'Choose a user…' : 'No users yet') + '</select>') +
-      '<p class="vs-help" data-user-results role="status">' + list.length + ' user' + (list.length === 1 ? '' : 's') + '. Select a person to open their details.</p></section>' +
+      '<div data-user-preview>'+selectedUserPreview('')+'</div>' +
+      '<p class="vs-help" data-user-results role="status">' + list.length + ' user' + (list.length === 1 ? '' : 's') + '. Select a person, then choose Edit selected user.</p></section>' +
       (state.pendingAccounts?.length ? '<details class="vs-user-tools"><summary>Invitations awaiting approval (' + state.pendingAccounts.length + ')</summary>' + pendingAccounts() + '</details>' : '') +
-      '<details class="vs-user-tools"><summary>Invitations & role settings</summary><div class="vs-actions">' + (accountEmailEnabled ? btn('Invite team member','invite-account','',true) : '<p class="vs-help">Email invitations are unavailable. Use Add new user to create a selected account.</p>') + btn('Manage serving roles','roles','',true) + '</div></details>';
+      '<details class="vs-user-tools"><summary>Invitations & role settings</summary><div class="vs-actions">' + (accountEmailEnabled ? btn('Invite team member','invite-account','',true) : '<p class="vs-help">Email invitations are unavailable. Use Add new user to create a selected account.</p>') + btn('Manage serving roles','roles','',true) + '</div></details>' +
+      '<details class="vs-user-tools"><summary>Private backup & local sync</summary><p>Includes all planner users, password hashes, roles, meetings, assignments and responses. Keep this private file outside GitHub. Website-admin hosting credentials are configured separately.</p><a class="vs-btn vs-secondary" href="/api/volunteers/backup" download="lpc-private-planner-backup.json">Download private planner backup</a><p class="vs-help">Stop the local server, then restore with: npm run data:import -- path-to-backup.json. The existing local planner is backed up first.</p></details>';
   }
   function pendingAccounts() {
     if (!state.actor.admin) return "";
@@ -893,6 +981,48 @@ window.LPCVolunteers = (() => {
     const time = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date());
     return `${session.date}T${session.time}` >= `${today()}T${time}`;
   }
+  function meetingPatternLabel(m) {
+    if (m.recurrence === "once") return "One-off · " + date(m.startDate) + " · " + m.time;
+    if (m.recurrence === "daily") return "Daily · " + date(m.startDate) + " – " + date(m.endDate) + " · " + m.time;
+    return "Weekly · " + ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][m.day] + " · " + m.time;
+  }
+  function meetingCatalog() {
+    const meetings=state.meetings||[];
+    return `<details class="wp-meeting-catalog"><summary>Find &amp; edit a meeting <small>${meetings.length} patterns &amp; special dates</small></summary><div class="wp-catalog-tools">${field('Find meeting', '<input type="search" data-meeting-search placeholder="Name, branch or team">')}${field('Meeting pattern','<select data-meeting-pattern-filter><option value="">All patterns</option><option value="weekly">Weekly</option><option value="once">One-off</option><option value="daily">Daily series</option></select>')}</div><p data-meeting-catalog-count role="status">${meetings.length} meetings</p><div class="wp-catalog-results">${meetings.map(m=>`<div class="wp-regular-row" data-catalog-meeting data-search="${esc([m.name,m.branch,m.team].join(' ').toLowerCase())}" data-pattern="${esc(m.recurrence||'weekly')}"><div><strong>${esc(m.name)}</strong><small>${esc(m.branch)} · ${esc(meetingPatternLabel(m))} · ${esc(m.team)}</small></div><div>${canMeetings()?btn('Edit meeting','meeting',`data-id="${m.id}"`,true)+btn('Delete series','delete-meeting-series',`data-id="${m.id}"`,true):''}</div></div>`).join('')}</div></details>`;
+  }
+  function refreshMeetingCatalog() {
+    const catalog=root.querySelector('.wp-meeting-catalog');if(!catalog)return;
+    const query=catalog.querySelector('[data-meeting-search]').value.trim().toLowerCase(),pattern=catalog.querySelector('[data-meeting-pattern-filter]').value;
+    let visible=0;catalog.querySelectorAll('[data-catalog-meeting]').forEach(row=>{row.hidden=!(row.dataset.search.includes(query)&&(!pattern||row.dataset.pattern===pattern));if(!row.hidden)visible++;});
+    catalog.querySelector('[data-meeting-catalog-count]').textContent=visible?visible+' matching '+(visible===1?'meeting':'meetings'):'No matching meetings. Try another name or pattern.';
+  }
+  function meetingDatePreview(pattern,start,days,day) {
+    if(pattern==='weekly')return '<div class="wp-date-week">'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((label,index)=>'<span class="'+(index===Number(day)?'is-selected':'')+'">'+label+'</span>').join('')+'</div>';
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(start)||!Number.isInteger(days)||days<1||days>90)return '';
+    const parsed=new Date(start+'T12:00:00Z');if(!Number.isFinite(parsed.getTime())||parsed.toISOString().slice(0,10)!==start)return '';
+    const indexes=Array.from({length:days},(_,i)=>i).filter(i=>days<=14||i<7||i>=days-7);
+    return '<div class="wp-date-chips">'+indexes.map((index,i)=>(i===7&&days>14?'<span class="wp-date-gap">+'+(days-14)+' days</span>':'')+'<span><small>Day '+(index+1)+'</small>'+esc(date(addDays(start,index)))+'</span>').join('')+'</div>';
+  }
+  function refreshMeetingPattern() {
+    const dialog = root.querySelector("dialog");
+    const pattern = dialog?.querySelector('[name="recurrence"]')?.value;
+    if (!pattern) return;
+    dialog.querySelectorAll('[data-meeting-pattern]').forEach(group => {
+      const show = group.dataset.meetingPattern === pattern || (group.dataset.meetingPattern === 'dated' && pattern !== 'weekly');
+      group.hidden = !show;
+      group.querySelectorAll('input, select').forEach(control => control.disabled = !show || control.hasAttribute('data-fixed-pattern'));
+    });
+    const length = dialog.querySelector('[name="seriesLength"]');
+    const custom = dialog.querySelector('[data-custom-days]');
+    custom.hidden = pattern !== 'daily' || length.value !== 'custom';
+    custom.querySelector('input').disabled = custom.hidden || custom.querySelector('input').hasAttribute('data-fixed-pattern');
+    const start = dialog.querySelector('[name="startDate"]').value;
+    const days = pattern === 'once' ? 1 : Number(length.value === 'custom' ? custom.querySelector('input').value : length.value);
+    const preview=dialog.querySelector('[data-meeting-date-preview]');
+    if(preview)preview.innerHTML=meetingDatePreview(pattern,start,days,dialog.querySelector('[name="day"]').value);
+    const note = dialog.querySelector('[data-meeting-dates]');
+    note.textContent = pattern === 'weekly' ? 'Repeats every week on the selected day.' : /^\d{4}-\d{2}-\d{2}$/.test(start) && Number.isInteger(days) && days >= 1 && days <= 90 ? (pattern === 'once' ? 'One meeting on ' + date(start) + '.' : days + ' daily meetings: ' + date(start) + ' to ' + date(addDays(start, days - 1)) + ', inclusive. Ends automatically.') : 'Choose a date and a series length from 1 to 90 days.';
+  }
   function archivedSeries() {
     if (!state.actor.admin || !state.archivedSeries?.length) return "";
     return `<details class="wp-recurring"><summary>Ended series · preserved history</summary><p>Past meetings are kept for review. Permanently remove a series here only for an explicit test-data cleansing request.</p>${state.archivedSeries.map(m => `<div class="wp-regular-row"><div><strong>${esc(m.name)}</strong><small>${esc(m.branch)} · ${esc(m.team)} · ${m.pastDates} past dates</small></div>${btn("Cleanse past test data", "cleanse-series", `data-id="${m.id}"`, true)}</div>`).join("")}</details>`;
@@ -913,7 +1043,7 @@ window.LPCVolunteers = (() => {
     const dates = [...new Set(sessions.map(s => s.date))].sort();
     const assigned = sessions.reduce((count, s) => count + s.slots.reduce((n, slot) => n + !!slot.main + !!slot.backup, 0), 0);
     modal("Delete upcoming meeting series?",
-      `<p><strong>${esc(meeting.name)}</strong><br>${esc(meeting.branch)} · ${esc(meeting.team)}</p><p>This ends the weekly pattern and removes <strong>${dates.length} upcoming dates</strong> from both planners. Past meetings and assignments are preserved.</p>${dates.length ? `<p>${esc(date(dates[0]))} to ${esc(date(dates.at(-1)))} · ${assigned} upcoming assignments</p>` : ""}<p>Related future cover requests and availability will be removed. Affected volunteers will receive an update.</p><label><input type="checkbox" required> End this series and remove its upcoming meetings.</label>`,
+      `<p><strong>${esc(meeting.name)}</strong><br>${esc(meeting.branch)} · ${esc(meeting.team)}</p><p>This ends the meeting pattern and removes <strong>${dates.length} upcoming dates</strong> from both planners. Past meetings and assignments are preserved.</p>${dates.length ? `<p>${esc(date(dates[0]))} to ${esc(date(dates.at(-1)))} · ${assigned} upcoming assignments</p>` : ""}<p>Related future cover requests and availability will be removed. Affected volunteers will receive an update.</p><label><input type="checkbox" required> End this series and remove its upcoming meetings.</label>`,
       "Delete upcoming dates", () => save({ action: "delete-meeting-series", meetingId: id, confirm: true }));
   }
   function churchMeetingDialog(id) {
@@ -927,6 +1057,9 @@ window.LPCVolunteers = (() => {
       time: "09:30",
       duration: 120,
     };
+    const recurrence = m.recurrence || 'weekly';
+    const days = m.startDate && m.endDate ? Math.round((Date.parse(m.endDate) - Date.parse(m.startDate)) / 86400000) + 1 : 7;
+    const fixed = id ? 'disabled data-fixed-pattern' : '';
     modal(
       id ? "Edit meeting details" : "Add a church meeting",
       field(
@@ -948,7 +1081,8 @@ window.LPCVolunteers = (() => {
             .map((t) => `<option value="${esc(t)}">`)
             .join("")}</datalist>`,
         ) +
-        `<div class="vs-form-grid">${field(
+        field('Meeting pattern', `<select name="recurrence" data-meeting-recurrence ${fixed}>${options([['weekly','Weekly meeting'],['once','One-off meeting'],['daily','Daily series · fasting prayer']], recurrence)}</select>`) +
+        `<div class="vs-form-grid"><div data-meeting-pattern="weekly">${field(
           "Day",
           `<select name="day">${options(
             [
@@ -962,7 +1096,7 @@ window.LPCVolunteers = (() => {
             ].map((d, i) => [String(i), d]),
             String(m.day),
           )}</select>`,
-        )}${timeField(m.time)}${field("Duration · minutes", input("duration", m.duration, "number", 'required min="15" max="720"'))}</div>` +
+        )}</div><div data-meeting-pattern="dated">${field('Meeting date / start date', input('startDate', m.startDate || today(), 'date', 'required ' + fixed))}</div><div data-meeting-pattern="daily">${field('Number of consecutive days', `<select name="seriesLength" data-series-length ${fixed}>${options([['3','3 days'],['7','7 days'],['21','21 days'],['custom','Custom length']], [3,7,21].includes(days) ? String(days) : 'custom')}</select>`)}<div data-custom-days>${field('Custom number of days', input('dayCount', days, 'number', 'required min="1" max="90" ' + fixed))}</div></div>${timeField(m.time)}${field("Duration · minutes", input("duration", m.duration, "number", 'required min="15" max="720"'))}</div><p class="vs-help" data-meeting-dates role="status"></p><div data-meeting-date-preview aria-label="Meeting date preview"></div>` +
         (!id
           ? field(
               "Pastoral scheduler",
@@ -973,10 +1107,13 @@ window.LPCVolunteers = (() => {
               `<select name="choirLeadId">${leadOptions({ ...m, kind: "service" })}</select>`,
             )
           : "") +
-        `<p class="vs-callout">Enter the meeting once. It appears in both planners. Saving updates all upcoming dates in both planners, including already-created dates. Past records stay unchanged. Changed assignments return to draft for review; cancellations remain cancelled.</p>`,
+        `<p class="vs-callout">${id ? 'Saving updates upcoming details in both planners. Past records stay unchanged; changed assignments return to draft and cancellations remain cancelled. Meeting type and one-off/daily date ranges are fixed after creation. Move or cancel an individual date from its card.' : 'Enter the meeting once. It appears in both planners. One-off and daily meetings are created immediately for the selected dates; daily series end automatically.'}</p>`,
       "Save meeting",
-      (f) =>
-        save({
+      (f) => {
+        const pattern = f.get('recurrence') || recurrence;
+        const startDate = f.get('startDate') || m.startDate;
+        const count = id ? days : Number(f.get('seriesLength') === 'custom' ? f.get('dayCount') : f.get('seriesLength'));
+        return save({
           action: "meeting",
           meeting: {
             ...m,
@@ -984,14 +1121,18 @@ window.LPCVolunteers = (() => {
             branch: f.get("branch"),
             team: f.get("team"),
             day: Number(f.get("day")),
+            recurrence: pattern,
+            ...(pattern !== 'weekly' ? { startDate, endDate: pattern === 'once' ? startDate : addDays(startDate, count - 1) } : {}),
             time: timeValue(f),
             duration: Number(f.get("duration")),
             pastorLeadId: f.get("pastorLeadId"),
             choirLeadId: f.get("choirLeadId"),
           },
 
-        }),
+        });
+      },
     );
+    refreshMeetingPattern();
   }
   function swaps() {
     const list = state.swaps.filter(
@@ -1175,12 +1316,87 @@ window.LPCVolunteers = (() => {
         }),
     );
   }
+  function participationChart(report, role, needsOnly = false, search = '', page = 0) {
+    let cohort=report.participation.filter(r=>(!role || r.role===role) && r.eligible>0);
+    if (!role) {
+      const people=new Map();
+      for (const row of cohort) {
+        const key=row.memberId || row.name;
+        const person=people.get(key) || {name:row.name,memberId:key,past:0,upcoming:0,confirmed:0,draft:0,reserve:0,eligible:0,unknown:0,expected:0,last:'',next:''};
+        for(const field of ['past','upcoming','confirmed','draft','reserve','eligible','unknown']) person[field]+=Number(row[field]) || 0;
+        person.expected+=(Number(row.average) || 0)*row.eligible;
+        if(row.last && row.last>person.last)person.last=row.last;
+        if(row.next && (!person.next || row.next<person.next))person.next=row.next;
+        people.set(key,person);
+      }
+      cohort=[...people.values()].map(person=>({...person,rate:person.confirmed/person.eligible,suggestion:person.confirmed===0?'No confirmed opportunities':person.confirmed+0.0001<person.expected?'Consider next':'In line with rotation'}));
+    }
+    const needs=r=>['No confirmed opportunities','Consider next'].includes(r.suggestion);
+    const matches=cohort.filter(r=>(!needsOnly || needs(r)) && r.name.toLowerCase().includes(search.trim().toLowerCase())).sort((a,b)=>a.rate-b.rate || a.confirmed-b.confirmed || a.name.localeCompare(b.name));
+    const max=Math.max(1,...cohort.map(r=>r.confirmed));
+    const totalPages=Math.max(1,Math.ceil(matches.length/8)); page=Math.min(Math.max(0,page),totalPages-1);
+    const metric=(value,label)=>`<div><strong>${value}</strong><span>${label}</span></div>`;
+    return `<div class="wp-report-metrics">${metric(cohort.length,'Eligible people')}${metric(cohort.reduce((n,r)=>n+r.confirmed,0),'Confirmed duties')}${metric(cohort.filter(needs).length,'Need opportunity')}</div><div class="wp-report-chart-head"><h3>Allocation balance</h3><span class="wp-report-legend"><span><i class="wp-report-past"></i>Past</span><span><i class="wp-report-future"></i>Upcoming</span></span></div><p class="wp-report-chart-hint">${role?'Primary allocations':'All roles · duties combined'} · fewest opportunities first · tap a name for detail</p><div class="wp-report-bars" role="group" aria-label="Confirmed allocations by person">${matches.slice(page*8,page*8+8).map(r=>{
+      const status=r.confirmed===0?'No allocations':needs(r)?'Below average':'';
+      return `<details class="wp-report-person${needs(r)?' needs-opportunity':''}"><summary><span class="wp-report-person-name">${esc(r.name)}${status?`<small>${status}</small>`:''}</span><span class="wp-report-bar" aria-hidden="true"><i class="wp-report-past" style="width:${100*r.past/max}%"></i><i class="wp-report-future" style="width:${100*r.upcoming/max}%"></i></span><strong class="wp-report-total" aria-label="${r.confirmed} confirmed allocations">${r.confirmed}<span aria-hidden="true">⌄</span></strong></summary><div class="wp-report-person-detail">${metric(r.past,'Past confirmed')}${metric(r.upcoming,'Upcoming')}${metric(r.draft,'Draft')}${metric(r.reserve,'Reserve')}${metric(r.eligible,role?'Eligible meetings':'Eligible role opportunities')}${metric(r.unknown,role?'Availability to check':'Availability checks')}<p>Last: ${esc(r.last || 'None in period')} · Next: ${esc(r.next || 'Not booked')}</p></div></details>`;
+    }).join('') || '<p class="wp-report-empty">No matching people for this view.</p>'}</div><div class="wp-report-pagination"><span>${matches.length?`${page*8+1}–${Math.min((page+1)*8,matches.length)} of ${matches.length}`:'0 people'}</span><button type="button" class="vs-btn vs-secondary" data-report-page="${page-1}" ${page===0?'disabled':''} aria-label="Previous people">←</button><button type="button" class="vs-btn vs-secondary" data-report-page="${page+1}" ${page>=totalPages-1?'disabled':''} aria-label="Next people">→</button></div>`;
+  }
+  function bindParticipationDashboard(report) {
+    const dialog=root.querySelector('dialog');
+    if (!dialog) return;
+    dialog.classList.add('wp-report-dialog');
+    const dashboard=dialog.querySelector('[data-participation-dashboard]');
+    const form=dialog.querySelector('form'), chart=dashboard.querySelector('[data-report-chart]'), status=dialog.querySelector('[data-report-status]'), caption=dialog.querySelector('[data-report-scope]'), download=dialog.querySelector('[data-report-download]'), error=dialog.querySelector('[data-dialog-error]');
+    let page=0, version=0, timer, valid=true;
+    const refresh=()=>{chart.innerHTML=participationChart(report,dashboard.querySelector('[data-report-role]').value,dashboard.querySelector('[data-report-needs]').checked,dashboard.querySelector('[data-report-search]').value,page);chart.hidden=!valid;};
+    const invalidate=()=>{version++;valid=false;chart.hidden=true;download.hidden=true;error.textContent='';status.textContent='Updating date range…';caption.textContent=`${report.branch || 'All branches'} · ${report.team || 'All teams'}`;};
+    const updateDates=async()=>{
+      clearTimeout(timer);
+      if(!dialog.isConnected)return;
+      const start=form.querySelector('[name="start"]').value,end=form.querySelector('[name="end"]').value;
+      if(valid && start===report.start && end===report.end)return;
+      invalidate(); const requestVersion=version;
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end) || end<start || (Date.parse(end)-Date.parse(start))/86400000>366){status.textContent='Choose valid dates, up to one year apart.';return;}
+      try {
+        const params=new URLSearchParams({kind:report.kind,start,end,branch:report.branch || '',team:report.team || ''});
+        const next=await api('/report?'+params);
+        if(requestVersion!==version || !dialog.isConnected)return;
+        report=next;valid=true;page=0;
+        const select=dashboard.querySelector('[data-report-role]'), previousRole=select.value;
+        const roles=[...new Set([...(report.roleNames || []),...report.participation.map(r=>r.role)])].filter(role=>report.participation.some(r=>r.role===role));
+        select.innerHTML='<option value="">All roles</option>'+roles.map(role=>`<option value="${esc(role)}">${esc(role)}</option>`).join('');select.value=roles.includes(previousRole)?previousRole:'';
+        caption.textContent=`${report.branch || 'All branches'} · ${report.team || 'All teams'} · ${report.meetings} meetings`;
+        download.setAttribute('href','/api/volunteers/report?'+params+'&format=xlsx');download.hidden=false;
+        status.textContent=`Showing ${report.start} to ${report.end}`;refresh();
+      } catch(problem){if(requestVersion===version && dialog.isConnected){status.textContent='';error.textContent=problem.message;}}
+    };
+    form.addEventListener('input',e=>{if(e.target.matches('[name="start"], [name="end"]')){clearTimeout(timer);invalidate();timer=setTimeout(updateDates,250);}});
+    form.addEventListener('change',async e=>{if(e.target.matches('[name="start"], [name="end"]'))await updateDates();});
+    form.onsubmit=e=>{e.preventDefault();return updateDates();};
+    form.querySelector('footer button[type="submit"]').hidden=true;
+    dashboard.onchange=()=>{page=0;refresh();};
+    dashboard.oninput=e=>{if(e.target.matches('[data-report-search]')){page=0;refresh();}};
+    dashboard.onclick=e=>{const button=e.target.closest('[data-report-page]');if(button&&!button.disabled){page=Number(button.dataset.reportPage);refresh();}};
+  }
+  async function participationReport(range = {}) {
+    if (!manager()) return;
+    const params = new URLSearchParams({kind,start:range.start || addDays(today(),-84),end:range.end || addDays(today(),28),branch,team});
+    const report = await api('/report?' + params);
+    const rows = report.participation;
+    const roles=[...new Set([...(report.roleNames || []),...rows.map(r=>r.role)])].filter(role=>rows.some(r=>r.role===role));
+    const role=roles.includes(range.role)?range.role:'';
+    modal(kind==='ministry'?'Pastoral participation report':'Choir & media participation report',
+      `<p class="vs-help" data-report-scope>${esc(branch || 'All branches')} · ${esc(team || 'All teams')} · ${report.meetings} meetings</p><div class="wp-report-toolbar"><div class="wp-report-dates">${field('From',input('start',report.start,'date','required'))}${field('To',input('end',report.end,'date','required'))}</div><a class="vs-btn" data-report-download href="/api/volunteers/report?${esc(params.toString())}&amp;format=xlsx" download>Download Excel (.xlsx)</a></div><p class="vs-help wp-report-status" data-report-status role="status" aria-live="polite">Dates update automatically.</p><section data-participation-dashboard class="wp-participation-dashboard"><div class="wp-report-filters">${field('Compare roles',`<select name="report-role" data-report-role><option value="" ${role?'':'selected'}>All roles</option>${roles.map(r=>`<option value="${esc(r)}" ${r===role?'selected':''}>${esc(r)}</option>`).join('')}</select>`)}<label class="wp-report-needs"><input type="checkbox" data-report-needs>Needs opportunity</label>${field('Find a person','<input type="search" data-report-search placeholder="Search name">')}</div><div data-report-chart>${participationChart(report,role)}</div></section><details class="wp-report-method"><summary>How the comparison works</summary><p class="vs-help">All roles combines duties per person. Fairness is compared with the expected opportunities for their eligible role mix.</p><p class="vs-help">${report.notes.map(esc).join('</p><p class="vs-help">')}</p></details>`,
+      'Update report',async data=>{try{await participationReport({start:data.get('start'),end:data.get('end'),role:data.get('report-role')});}catch(error){const errorBox=root.querySelector('[data-dialog-error]');if(errorBox)errorBox.textContent=error.message;}});
+    bindParticipationDashboard(report);
+  }
   async function click(e) {
     const b = e.target.closest("[data-vs]");
     if (!b || busy) return;
     const a = b.dataset.vs;
 
     try {
+      if (a === 'participation-report') return await participationReport();
       if (a === "landing") {
         e.preventDefault();
         close();
@@ -1259,7 +1475,16 @@ window.LPCVolunteers = (() => {
         return chooseCoverDuty();
       }
       if (a === "own-week") { viewedMemberId = null; return render(); }
+      if (a === 'planner-focus') {
+        if (!['pastoral','choir'].includes(tab) || !manager()) return;
+        if (!['all','pastor',tab==='pastoral'?'covered':'team'].includes(b.dataset.focus)) return;
+        plannerFocus=b.dataset.focus;
+        render();
+        root.querySelector(`[data-vs="planner-focus"][data-focus="${plannerFocus}"]`)?.focus({preventScroll:true});
+        return;
+      }
       if (a === "tab") {
+        plannerFocus='all';
         if (b.dataset.tab === "my-week") viewedMemberId = null;
         tab = b.dataset.tab;
         return render();
@@ -1312,6 +1537,11 @@ window.LPCVolunteers = (() => {
           },
         );
       if (a === "member") return memberDialog(b.dataset.id);
+      if (a === "edit-selected-user") {
+        const id = root.querySelector("[data-user-select]")?.value;
+        if (id) return memberDialog(id);
+        return;
+      }
       if (a === "roles")
         return modal(
           "Manage roles",
@@ -1458,7 +1688,14 @@ window.LPCVolunteers = (() => {
     root.innerHTML = window.LPCTeamAuth.navigation(null) + '<p>Loading team access…</p>';
     root.onclick = click;
     root.onchange = async (e) => {
-      if (e.target.matches("[data-user-select]") && e.target.value) return memberDialog(e.target.value);
+      if(e.target.matches('[data-meeting-pattern-filter]'))return refreshMeetingCatalog();
+      if(e.target.matches('dialog [name="day"]'))return refreshMeetingPattern();
+      if (e.target.matches('[data-user-group]')) { refreshUserChoices();return; }
+      if (e.target.matches('[data-meeting-recurrence], [data-series-length], [name="startDate"], [name="dayCount"]')) return refreshMeetingPattern();
+      if (e.target.matches("[data-user-select]")) {
+        root.querySelector('[data-user-preview]').innerHTML=selectedUserPreview(e.target.value);
+        return;
+      }
       if (e.target.matches("[data-view-volunteer]")) {
         viewedMemberId = e.target.value || null;
         return render();
@@ -1516,12 +1753,10 @@ window.LPCVolunteers = (() => {
       }
     };
     root.oninput = (e) => {
+      if(e.target.matches('[data-meeting-search]'))return refreshMeetingCatalog();
+      if (e.target.matches('dialog [name="startDate"], dialog [name="dayCount"]')) return refreshMeetingPattern();
       if (e.target.matches("[data-user-search]")) {
-        const list = memberChoices(e.target.value);
-        const select = root.querySelector("[data-user-select]");
-        select.innerHTML = options(list, "", list.length ? "Choose a user…" : "No matching users");
-        select.disabled = !list.length;
-        root.querySelector("[data-user-results]").textContent = list.length + " matching user" + (list.length === 1 ? "" : "s");
+        refreshUserChoices();
         return;
       }
       if (e.target.matches("dialog [name=team]")) refreshMeetingSchedulers();

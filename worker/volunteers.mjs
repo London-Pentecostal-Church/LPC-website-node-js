@@ -1,3 +1,4 @@
+import { plannerReport, reportWorkbook } from './planner-report.mjs';
 // Shared scheduling API: used by the Node server and Worker adapter.
 const roles = [
   "Lead singer",
@@ -109,9 +110,11 @@ const upcoming = (session, now = londonNow()) => `${session.date}T${session.time
 function syncUpcomingSeries(state, meeting, actor) {
   const changes = state.sessions.filter(s => s.meetingId === meeting.id && upcoming(s)).map(session => {
     const base = new Date((session.scheduledDate || session.date) + "T12:00:00Z");
-    base.setUTCDate(base.getUTCDate() + (meeting.day - base.getUTCDay() + 7) % 7);
-    const date = base.toISOString().slice(0, 10);
-    const next = { ...session, name: meeting.name, branch: meeting.branch, team: meeting.team, time: meeting.time, duration: meeting.duration, date, scheduledDate: date, occurrenceId: meeting.id + ":" + date };
+    const weekly = !meeting.recurrence || meeting.recurrence === "weekly";
+    if (weekly) base.setUTCDate(base.getUTCDate() + (meeting.day - base.getUTCDay() + 7) % 7);
+    const date = weekly ? base.toISOString().slice(0, 10) : session.date;
+    const scheduledDate = weekly ? date : session.scheduledDate || session.date;
+    const next = { ...session, name: meeting.name, branch: meeting.branch, team: meeting.team, time: meeting.time, duration: meeting.duration, date, scheduledDate, occurrenceId: weekly ? meeting.id + ":" + date : session.occurrenceId || meeting.id + ":" + scheduledDate };
     if (!upcoming(next)) fail("This change would move an upcoming meeting into the past. Change that date individually instead.");
     return { session, next, before: structuredClone(session) };
   });
@@ -158,25 +161,57 @@ function sameMeetingOccurrence(a, b) {
   if (a.meetingId && a.meetingId === b.meetingId && title(a.name) === title(b.name)) return true;
   return !!title(a.name) && title(a.name) === title(b.name);
 }
-function conflicting(state, session, memberId, exclude = []) {
-  const start = Date.parse(`${session.date}T${session.time}:00Z`),
-    end = start + session.duration * 60000;
+function bookingRestriction(a, b, aPosition = 'main', bPosition = 'main') {
+  const start = session => {
+    const wall = Date.parse(session.date+'T'+session.time+':00Z');
+    const format = new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+    let utc=wall;
+    for(let i=0;i<3;i++) {
+      const parts=format.formatToParts(new Date(utc)), value=key=>Number(parts.find(p=>p.type===key).value);
+      const local=Date.UTC(value('year'),value('month')-1,value('day'),value('hour'),value('minute'));
+      utc+=wall-local;
+    }
+    return utc;
+  };
+  const aStart=start(a),bStart=start(b),aEnd=aStart+a.duration*60000,bEnd=bStart+b.duration*60000;
+  const branch=value=>String(value||'').trim().toLowerCase().replace(/\s+/g,' ');
+  const sameBranch=branch(a.branch)===branch(b.branch);
+  if(aStart<bEnd && bStart<aEnd)return sameBranch && (aPosition==='backup' || bPosition==='backup') ? null : {type:'overlap',gapMinutes:0,requiredMinutes:0};
+  if(sameBranch)return null;
+  const gap=aEnd<=bStart?bStart-aEnd:aStart-bEnd;
+  if(gap>=60*60000)return null;
+  return {type:'travel',gapMinutes:Math.round(gap/60000),requiredMinutes:60,earliestStart:new Date((aEnd<=bStart?aEnd:bEnd)+60*60000).toISOString()};
+}
+function conflicting(state, session, memberId, exclude = [], position = 'main') {
   return state.sessions.find(
     (s) =>
       !sameMeetingOccurrence(s, session) &&
       existingSession(state, s) &&
       !exclude.includes(s.id) &&
       !s.cancelled &&
-      Date.parse(`${s.date}T${s.time}:00Z`) < end &&
-      Date.parse(`${s.date}T${s.time}:00Z`) + s.duration * 60000 > start &&
       (s.emergencyCover?.memberId === memberId || s.slots.some(
-        (slot) => slot.main === memberId,
-      )),
+        (slot) => slot.main === memberId || slot.backup === memberId,
+      )) && bookingRestriction(session,s,position,s.emergencyCover?.memberId===memberId || s.slots.some(slot=>slot.main===memberId)?'main':'backup'),
   );
 }
-function releasedPrimaryExclusions(state, sessionId, slotId, position, memberId) {
+function validateBooking(state, session, memberId, exclude = [], position = 'main') {
+  if(!memberId)return;
+  const clash=conflicting(state,session,memberId,exclude,position);
+  if(!clash)return;
+  const restriction=bookingRestriction(session,clash,position,clash.emergencyCover?.memberId===memberId || clash.slots.some(slot=>slot.main===memberId)?'main':'backup');
+  const who=state.members.find(m=>m.id===memberId)?.name || 'This person';
+  const when=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',dateStyle:'medium',timeStyle:'short'});
+  const reason=restriction.type==='travel'
+    ? `Only ${restriction.gapMinutes} minutes separate these events. At least 60 minutes are required from the end of one event to the start of the next at a different branch. The later event must start at ${when.format(new Date(restriction.earliestStart))} (London) or later.`
+    : 'The event times overlap. Two main duties cannot overlap; reserve overlap is allowed only at the same premises/branch.';
+  fail(`${who} is already booked for ${clash.name} at ${clash.branch} on ${clash.date} at ${clash.time} (${clash.duration} minutes). ${reason} Choose another person or adjust the event time.`,400,{conflict:{sessionId:clash.id,...restriction}});
+}
+function validateSessionBookings(state, sessions) {
+  for(const session of sessions.filter(s=>!s.cancelled))for(const memberId of new Set([session.emergencyCover?.memberId,...session.slots.flatMap(slot=>[slot.main,slot.backup])].filter(Boolean)))validateBooking(state,session,memberId,[],session.emergencyCover?.memberId===memberId || session.slots.some(slot=>slot.main===memberId)?'main':'backup');
+}
+function releasedBookingExclusions(state, sessionId, slotId, position, memberId) {
   const session = state.sessions.find(s => s.id === sessionId);
-  if (!session || session.emergencyCover?.memberId === memberId || session.slots.some(slot => slot.main === memberId && !(slot.id === slotId && position === "main"))) return [];
+  if (!session || session.emergencyCover?.memberId === memberId || session.slots.some(slot => ['main','backup'].some(p=>slot[p]===memberId && !(slot.id===slotId && position===p)))) return [];
   return [sessionId];
 }
 function validateSelection(state, session, slot, memberId, exclude = [], position = "main") {
@@ -187,8 +222,7 @@ function validateSelection(state, session, slot, memberId, exclude = [], positio
     );
   if (available(state, session, memberId) === "unavailable")
     fail("This volunteer is unavailable for this service.");
-  const clash = position === "main" && conflicting(state, session, memberId, exclude);
-  if (clash) fail(`${currentMember(state, memberId).name} is already assigned as primary for ${clash.name} at ${clash.branch} on ${clash.date} at ${clash.time}. Choose another primary volunteer; reserve overlaps are allowed.`, 400, { conflict: { sessionId: clash.id } });
+  validateBooking(state,session,memberId,exclude,position);
 }
 function notify(state, recipient, message, sessionId) {
   state.notifications.push({
@@ -251,14 +285,20 @@ function pendingGuard(state, sessionId) {
       409,
     );
 }
-function createOccurrences(state, service, start, weeks) {
+function createOccurrences(state, service, start, weeks, futureOnly = false) {
   if (service.archived || (state.meetings || []).some(m => m.id === service.meetingId && m.archived)) fail("This meeting series has ended; new dates cannot be created.");
   if (!validDate(start) || !Number.isInteger(weeks) || weeks < 1 || weeks > 26)
     fail("Choose a start date and between 1 and 26 weeks.");
-  let d = new Date(start + "T12:00:00Z");
-  d.setUTCDate(d.getUTCDate() + ((service.day - d.getUTCDay() + 7) % 7));
-  for (let i = 0; i < weeks; i++) {
+  const bounded = service.recurrence === "once" || service.recurrence === "daily";
+  const end = new Date(start + "T12:00:00Z");
+  end.setUTCDate(end.getUTCDate() + weeks * 7 - 1);
+  let d = new Date((bounded && service.startDate > start ? service.startDate : start) + "T12:00:00Z");
+  if (!bounded) d.setUTCDate(d.getUTCDate() + ((service.day - d.getUTCDay() + 7) % 7));
+  for (; d <= end; d.setUTCDate(d.getUTCDate() + (bounded ? 1 : 7))) {
     const date = d.toISOString().slice(0, 10);
+    if (bounded && (!validDate(service.startDate) || !validDate(service.endDate))) fail("This meeting needs valid start and end dates.");
+    if (bounded && date > service.endDate) break;
+    if (futureOnly && !upcoming({ date, time: service.time })) continue;
     if (
       !state.sessions.some(
         (s) =>
@@ -296,7 +336,6 @@ function createOccurrences(state, service, start, weeks) {
         ),
       });
     }
-    d.setUTCDate(d.getUTCDate() + 7);
   }
 }
 const slotList = (service) =>
@@ -539,6 +578,15 @@ export async function handleVolunteers(request, store, adminActor = null) {
         currentMember(state, session.memberId));
     if (actor && !actor.admin)
       actor = { ...cleanMember(actor), name: actor.name };
+    if (route === "/backup") {
+      if (!actor?.admin) fail("Only the website administrator can export private planner data.", 403);
+      if (request.method !== "GET") return reply({error:"Method not allowed"},405);
+      if (request.headers.get("sec-fetch-site") === "cross-site") fail("Open backups from the website admin screen.",403);
+      return reply({format:"lpc-private-planner",version:1,exportedAt:new Date().toISOString(),data:state},200,{
+        "content-disposition":'attachment; filename="lpc-private-planner-backup.json"',
+        "x-content-type-options":"nosniff", "x-robots-tag":"noindex, nofollow",
+      });
+    }
     if (route === "/account-options") return reply({ emailEnabled: !!store.emailReady, registrationEnabled: false });
     const emailAddress = value => {
       const email = String(value || "").trim().toLowerCase();
@@ -680,6 +728,17 @@ export async function handleVolunteers(request, store, adminActor = null) {
     }
     if (route === "/session") return reply({ actor: actor || null, emailEnabled: !!store.emailReady, registrationEnabled: false });
     if (!actor) fail("Please sign in.", 401);
+    if (route === '/report' && request.method === 'GET') {
+      const kind = url.searchParams.get('kind');
+      if (!['ministry','service'].includes(kind)) fail('Choose a planner.');
+      if (!manager(actor, kind)) fail('Only the scheduler for this planner can download its report.', 403);
+      let report;
+      try { report = plannerReport({...state, sessions:state.sessions.filter(s=>existingSession(state,s))}, Object.fromEntries(url.searchParams)); }
+      catch(error) { fail(error.message); }
+      if (report.schedule.length > 100000) fail('This report is too large. Choose a shorter date range.');
+      if (url.searchParams.get('format') === 'xlsx') return new Response(reportWorkbook(report), {headers:{'content-type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','content-disposition':`attachment; filename="lpc-${kind}-${report.start}-${report.end}.xlsx"`,'cache-control':'no-store','x-content-type-options':'nosniff'}});
+      return reply(report);
+    }
     if (route === "/audit-export" && request.method === "GET") {
       if (!actor.admin) fail("Only the website administrator can archive audit history.", 403);
       return reply({ format: "lpc-audit-archive-v1", exportedAt: new Date().toISOString(), revision: state.revision, retentionDays: retentionDays(state), volunteers: state.members.map(m => ({ id: m.id, name: m.name })), history: state.history });
@@ -931,12 +990,21 @@ export async function handleVolunteers(request, store, adminActor = null) {
       const m = input.meeting || {},
         previous = state.meetings.find((x) => x.id === m.id);
       if (previous?.archived) fail("This series has ended. Create a new meeting instead.");
+      const recurrence = m.recurrence || previous?.recurrence || "weekly";
+      if (!["weekly", "once", "daily"].includes(recurrence)) fail("Choose a weekly meeting, one-off meeting or daily series.");
+      const bounded = recurrence !== "weekly";
+      const startDate = m.startDate ?? previous?.startDate;
+      const endDate = recurrence === "once" ? startDate : m.endDate ?? previous?.endDate;
+      if (bounded && (!validDate(startDate) || !validDate(endDate) || endDate < startDate || (Date.parse(endDate) - Date.parse(startDate)) / 86400000 >= 90)) fail("Choose valid dates for a meeting or daily series of 1 to 90 days.");
+      if (previous && ((previous.recurrence || "weekly") !== recurrence || (bounded && (startDate !== previous.startDate || endDate !== previous.endDate)))) fail("Keep the existing meeting pattern and date range. Change an individual date from its meeting card, or create a new series.");
       const meeting = {
         id: previous?.id || id(),
         name: text(m.name, 100),
         branch: text(m.branch, 100),
         team: text(m.team, 100),
-        day: Number(m.day),
+        recurrence,
+        ...(bounded ? { startDate, endDate } : {}),
+        day: bounded ? new Date(startDate + "T12:00:00Z").getUTCDay() : Number(m.day),
         time: text(m.time, 5),
         duration: Number(m.duration),
       };
@@ -981,10 +1049,16 @@ export async function handleVolunteers(request, store, adminActor = null) {
           };
           state.services.push(service);
         }
-        if (input.start)
+        if (bounded && !previous) {
+          const days = (Date.parse(endDate) - Date.parse(startDate)) / 86400000 + 1;
+          createOccurrences(state, service, startDate, Math.ceil(days / 7));
+        } else if (input.start)
           createOccurrences(state, service, input.start, Number(input.weeks));
       }
-      if (previous) syncUpcomingSeries(state, meeting, actor);
+      if (previous) {
+        syncUpcomingSeries(state, meeting, actor);
+        validateSessionBookings(state,state.sessions.filter(s=>s.meetingId===meeting.id && upcoming(s)));
+      }
       audit(state, actor, "Church meeting settings updated", {
         meetingId: meeting.id,
       });
@@ -993,9 +1067,7 @@ export async function handleVolunteers(request, store, adminActor = null) {
       const before = state.sessions.length;
       for (const meeting of (state.meetings || []).filter(m => !m.archived)) {
         for (const service of state.services.filter(s => s.meetingId === meeting.id && !s.archived)) {
-          const candidate = new Date(input.start + "T12:00:00Z");
-          candidate.setUTCDate(candidate.getUTCDate() + (service.day - candidate.getUTCDay() + 7) % 7);
-          if (upcoming({ date: candidate.toISOString().slice(0,10), time: service.time })) createOccurrences(state, service, input.start, 1);
+          createOccurrences(state, service, input.start, 1, true);
         }
       }
       if (state.sessions.length === before) return reply(view(state, actor));
@@ -1152,7 +1224,8 @@ export async function handleVolunteers(request, store, adminActor = null) {
         session.status = "draft";
       }
       for (const { session, before } of changes) {
-        // Restore and date changes save drafts; validate assignments on confirmation.
+        // A move cannot create an impossible booking, even while the plan is a draft.
+        validateSessionBookings(state,[session]);
         updateStamp(session, actor);
         audit(state, actor, "Shared meeting changed", {
           sessionId: session.id,
@@ -1363,6 +1436,7 @@ export async function handleVolunteers(request, store, adminActor = null) {
           validateSelection(state, s, slot, slot.main);
           validateSelection(state, s, slot, slot.backup, [], "backup");
         }
+      validateSessionBookings(state,[s]);
       updateStamp(s, actor);
       audit(state, actor, "Service occurrence updated", {
         sessionId: s.id,
@@ -1402,7 +1476,7 @@ export async function handleVolunteers(request, store, adminActor = null) {
         s,
         slot,
         target,
-        input.exchangeSessionId ? releasedPrimaryExclusions(state, input.exchangeSessionId, input.exchangeSlotId, input.exchangePosition, target) : [],
+        input.exchangeSessionId ? releasedBookingExclusions(state, input.exchangeSessionId, input.exchangeSlotId, input.exchangePosition, target) : [],
         input.position,
       );
       if (slot[input.position === "main" ? "backup" : "main"] === target)
@@ -1423,7 +1497,7 @@ export async function handleVolunteers(request, store, adminActor = null) {
           other.id === s.id
         )
           fail("Choose a valid allocation to exchange.");
-        validateSelection(state, other, otherSlot, actor.id, releasedPrimaryExclusions(state, s.id, slot.id, input.position, actor.id), input.exchangePosition);
+        validateSelection(state, other, otherSlot, actor.id, releasedBookingExclusions(state, s.id, slot.id, input.position, actor.id), input.exchangePosition);
         if (
           otherSlot[input.exchangePosition === "main" ? "backup" : "main"] === actor.id
         )
@@ -1489,7 +1563,7 @@ export async function handleVolunteers(request, store, adminActor = null) {
             s,
             slot,
             swap.to,
-            swap.exchangeSessionId ? releasedPrimaryExclusions(state, swap.exchangeSessionId, swap.exchangeSlotId, swap.exchangePosition, swap.to) : [],
+            swap.exchangeSessionId ? releasedBookingExclusions(state, swap.exchangeSessionId, swap.exchangeSlotId, swap.exchangePosition, swap.to) : [],
             swap.position,
           );
           if (slot[swap.position === "main" ? "backup" : "main"] === swap.to)
@@ -1504,7 +1578,7 @@ export async function handleVolunteers(request, store, adminActor = null) {
               otherSlot?.[swap.exchangePosition] !== swap.to
             )
               fail("The other allocation has changed.", 409);
-            validateSelection(state, other, otherSlot, swap.from, releasedPrimaryExclusions(state, s.id, slot.id, swap.position, swap.from), swap.exchangePosition);
+            validateSelection(state, other, otherSlot, swap.from, releasedBookingExclusions(state, s.id, slot.id, swap.position, swap.from), swap.exchangePosition);
             if (
               otherSlot[swap.exchangePosition === "main" ? "backup" : "main"] === swap.from
             )

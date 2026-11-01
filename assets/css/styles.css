@@ -2702,6 +2702,8 @@ textarea {
   font-weight: 600;
   color: var(--navy-900);
 }
+.contact-form [hidden] { display: none !important; }
+.contact-email-address { overflow-wrap: anywhere; }
 
 .contact-form input,
 .contact-form textarea {

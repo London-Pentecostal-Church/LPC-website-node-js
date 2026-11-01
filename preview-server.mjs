@@ -59,9 +59,9 @@ createServer(async (request, response) => {
       let raw; try { raw=['GET','HEAD'].includes(request.method)?undefined:await readLimitedBody(request,150000); } catch {sendJson(response,413,{error:'Request too large'});return;}
       const headers=new Headers(request.headers); headers.delete('cf-connecting-ip'); headers.set('x-volunteer-client',request.socket.remoteAddress||'unknown');
       const protocol=request.socket.encrypted?'https:':(process.env.PUBLIC_ORIGIN?new URL(process.env.PUBLIC_ORIGIN).protocol:request.headers['x-forwarded-proto']==='https'?'https:':'http:');
-      const apiRequest=new Request(protocol+'//'+request.headers.host+url.pathname,{method:request.method,headers,body:raw});
+      const apiRequest=new Request(protocol+'//'+request.headers.host+url.pathname+url.search,{method:request.method,headers,body:raw});
       const execute=()=>handleVolunteers(apiRequest,{emailReady:accountMailConfigured(process.env),sendAccountMail:message=>sendAccountMail(process.env,message),getState:()=>volunteerRead('state'),saveState:async(value,expected)=>{const previous=await volunteerRead('state');if((previous?.revision||0)!==expected)throw Object.assign(new Error('Schedule changed. Reload before saving.'),{status:409});await volunteerWrite('state',value);},getKey:volunteerRead,putKey:volunteerWrite},isAuthenticated(request)?{id:'admin',name:adminUsername,admin:true}:null);
-      const result=await (volunteerQueue=volunteerQueue.catch(()=>{}).then(execute)); response.writeHead(result.status,Object.fromEntries(result.headers));response.end(await result.text());return;
+      const result=await (volunteerQueue=volunteerQueue.catch(()=>{}).then(execute)); response.writeHead(result.status,Object.fromEntries(result.headers));response.end(Buffer.from(await result.arrayBuffer()));return;
     }
     if(url.pathname==='/api/contact'){
       if(request.method!=='POST'){sendJson(response,405,{error:'Method not allowed'});return;}
@@ -883,16 +883,15 @@ function summarizeConfigBackup(type, config) {
 
 function normalizePastorThoughtConfig(config) {
   return {
-    kicker: String(config?.kicker || "Pastor's Thought").trim(),
-    title: String(config?.title || "A word of encouragement for this week.").trim(),
-    author: String(config?.author || "LPC Pastoral Team").trim(),
+    kicker: String(config?.kicker || "Newsletter").trim(),
+    title: String(config?.title || "News & updates from LPC").trim(),
+    author: String(config?.author || "").trim(),
     date: String(config?.date || "").trim(),
-    body: String(
-      config?.body ||
-        "Use this space to share a short pastoral reflection, Scripture encouragement, or thought connected to the messages and worship life of the church.",
-    ).trim(),
-    ctaText: String(config?.ctaText || "Watch Sermons").trim(),
-    ctaHref: String(config?.ctaHref || "#/watch").trim(),
+    body: String(config?.body || "").trim(),
+    image: String(config?.image || "").trim(),
+    imageAlt: String(config?.imageAlt || "").trim(),
+    ctaText: String(config?.ctaText || "").trim(),
+    ctaHref: String(config?.ctaHref || "").trim(),
   };
 }
 
