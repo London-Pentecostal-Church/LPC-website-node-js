@@ -1177,3 +1177,9 @@ test('Volunteers see their own meeting lineups, not unrelated branch schedules; 
   const pastoralScheduler={...volunteer,manage:['ministry']};
   assert.equal((await h.call({action:'allocation',sessionId:choir.id,slots:choir.slots,status:'confirmed'},pastoralScheduler)).status,403);
 });
+
+test('Meeting date preview handles year boundaries, caps long sequences and rejects impossible dates',async()=>{
+ const {runInNewContext}=await import('node:vm');const js=readFileSync(new URL('../assets/js/volunteers.js',import.meta.url),'utf8');const helper=js.slice(js.indexOf('  function meetingDatePreview('),js.indexOf('  function refreshMeetingPattern('));
+ const f=runInNewContext(helper+';meetingDatePreview',{esc:String,date:String,addDays:(start,n)=>{const d=new Date(start+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}});
+ assert(f('daily','2026-12-30',3).includes('2027-01-01'));assert(!f('once','2026-11-01',1).includes('Day 2'));const long=f('daily','2026-11-01',90);assert.equal((long.match(/<small>Day /g)||[]).length,14);assert(long.includes('+76 days'));assert(long.includes('Day 90'));assert.equal(f('daily','2026-02-30',3),'');assert.equal(f('daily','2026-11-01',91),'');assert(f('weekly','',0,2).includes('is-selected">Tue'));
+});

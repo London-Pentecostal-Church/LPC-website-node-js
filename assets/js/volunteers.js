@@ -251,7 +251,7 @@ window.LPCVolunteers = (() => {
       if(element.querySelector('[name="skills"],[name="teams"],[name="branches"]'))return 'serving';
       return 'profile';
     }
-    if(element.querySelector('[name="recurrence"],[data-meeting-pattern],[name="duration"]') || element.matches('[data-meeting-dates]'))return 'when';
+    if(element.querySelector('[name="recurrence"],[data-meeting-pattern],[name="duration"]') || (element.matches('[data-meeting-dates]') || element.matches('[data-meeting-date-preview]')))return 'when';
     if(element.querySelector('[name="pastorLeadId"],[name="choirLeadId"]') || element.matches('.vs-callout'))return 'responsibility';
     return 'details';
   }
@@ -426,14 +426,14 @@ window.LPCVolunteers = (() => {
     };
     const [title, description] = titles[tab] || titles["my-week"];
     const filters = `<div class="wp-filters">${field("Branch", `<select data-filter="branch">${options(branches, branch, "All branches")}</select>`)}${field("Language / team", `<select data-filter="team">${options(teams(), team, "All teams")}</select>`)}</div>`;
-    return `<div class="wp-section-heading"><div><h2>${title}</h2><p>${description}</p></div>${['pastoral','choir'].includes(tab) && manager() ? btn("Participation & Excel", "participation-report", "", true) : tab === "meetings" && canMeetings() ? btn("+ Add meeting", "meeting") : ""}</div>${weekControls(tab === "my-week" ? '' : filters)}${tab === "my-week" ? personalProfileControl() : ''}
+    return `<div class="wp-section-heading"><div><h2>${title}</h2><p>${description}</p></div>${['pastoral','choir'].includes(tab) && manager() ? btn("Participation & Excel", "participation-report", "", true) : tab === "meetings" && canMeetings() ? btn("+ Add meeting", "meeting") : ""}</div>${tab === "meetings" && isCoordinator() ? meetingCatalog() : ""}${weekControls(tab === "my-week" ? '' : filters)}${tab === "my-week" ? personalProfileControl() : ''}
     ${focusedPlanner ? plannerActionBoard(worklists,tab) : ''}
     ${
       tab === "my-week"
         ? `<div class="wp-personal">${list.length ? list.map((s) => personalMeetingCard(s)).join("") : `<div class="wp-empty"><h3>${state.actor.admin && !personalId() ? "Choose your volunteer profile above" : "No duties assigned this week"}</h3><p>${state.actor.admin && !personalId() ? "Your website admin account is separate from the person on the rota. Choose your name once to see your weekly duties." : "This includes every branch and service team. Use Previous week or Next week to browse other weeks."}</p></div>`}</div>`
         : `<div id="wp-focus-agenda">${focusedPlanner && plannerFocus!=='all' && !visibleList.length ? `<div class="wp-focus-clear" role="status"><span aria-hidden="true">✓</span><h3>${plannerFocus==='pastor'?'No meetings need a pastor.':plannerFocus==='team'?'No choir or media gaps to arrange.':'No pastors assigned in this selection yet.'}</h3><p>For the selected week, branch and team. Choose All meetings to see the full schedule.</p></div>` : weekAgenda(visibleList, title)}</div>`
     }
-    ${tab === "meetings" && isCoordinator() ? `<details class="wp-recurring"><summary>Meeting patterns &amp; special dates</summary><p>Weekly meetings repeat automatically. One-off meetings and daily series stay within their selected dates.</p>${(state.meetings || []).map((m) => `<div class="wp-regular-row"><div><strong>${esc(m.name)}</strong><small>${esc(m.branch)} · ${esc(meetingPatternLabel(m))} · ${esc(m.team)}</small></div><div>${canMeetings() ? btn("Edit meeting", "meeting", `data-id="${m.id}"`, true) + btn("Delete series", "delete-meeting-series", `data-id="${m.id}"`, true) : ""}</div></div>`).join("") || "<p>No regular meetings yet. Add your first meeting above.</p>"}</details>` : ""}${tab === "meetings" ? archivedSeries() : ""}`;
+    ${tab === "meetings" ? archivedSeries() : ""}`;
   }
   function personalMeetings(sessions) {
     const mine = sessions.filter(s => ownDuty(s) || (personalId() && s.leadId === personalId()));
@@ -986,6 +986,23 @@ window.LPCVolunteers = (() => {
     if (m.recurrence === "daily") return "Daily · " + date(m.startDate) + " – " + date(m.endDate) + " · " + m.time;
     return "Weekly · " + ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][m.day] + " · " + m.time;
   }
+  function meetingCatalog() {
+    const meetings=state.meetings||[];
+    return `<details class="wp-meeting-catalog"><summary>Find &amp; edit a meeting <small>${meetings.length} patterns &amp; special dates</small></summary><div class="wp-catalog-tools">${field('Find meeting', '<input type="search" data-meeting-search placeholder="Name, branch or team">')}${field('Meeting pattern','<select data-meeting-pattern-filter><option value="">All patterns</option><option value="weekly">Weekly</option><option value="once">One-off</option><option value="daily">Daily series</option></select>')}</div><p data-meeting-catalog-count role="status">${meetings.length} meetings</p><div class="wp-catalog-results">${meetings.map(m=>`<div class="wp-regular-row" data-catalog-meeting data-search="${esc([m.name,m.branch,m.team].join(' ').toLowerCase())}" data-pattern="${esc(m.recurrence||'weekly')}"><div><strong>${esc(m.name)}</strong><small>${esc(m.branch)} · ${esc(meetingPatternLabel(m))} · ${esc(m.team)}</small></div><div>${canMeetings()?btn('Edit meeting','meeting',`data-id="${m.id}"`,true)+btn('Delete series','delete-meeting-series',`data-id="${m.id}"`,true):''}</div></div>`).join('')}</div></details>`;
+  }
+  function refreshMeetingCatalog() {
+    const catalog=root.querySelector('.wp-meeting-catalog');if(!catalog)return;
+    const query=catalog.querySelector('[data-meeting-search]').value.trim().toLowerCase(),pattern=catalog.querySelector('[data-meeting-pattern-filter]').value;
+    let visible=0;catalog.querySelectorAll('[data-catalog-meeting]').forEach(row=>{row.hidden=!(row.dataset.search.includes(query)&&(!pattern||row.dataset.pattern===pattern));if(!row.hidden)visible++;});
+    catalog.querySelector('[data-meeting-catalog-count]').textContent=visible?visible+' matching '+(visible===1?'meeting':'meetings'):'No matching meetings. Try another name or pattern.';
+  }
+  function meetingDatePreview(pattern,start,days,day) {
+    if(pattern==='weekly')return '<div class="wp-date-week">'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((label,index)=>'<span class="'+(index===Number(day)?'is-selected':'')+'">'+label+'</span>').join('')+'</div>';
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(start)||!Number.isInteger(days)||days<1||days>90)return '';
+    const parsed=new Date(start+'T12:00:00Z');if(!Number.isFinite(parsed.getTime())||parsed.toISOString().slice(0,10)!==start)return '';
+    const indexes=Array.from({length:days},(_,i)=>i).filter(i=>days<=14||i<7||i>=days-7);
+    return '<div class="wp-date-chips">'+indexes.map((index,i)=>(i===7&&days>14?'<span class="wp-date-gap">+'+(days-14)+' days</span>':'')+'<span><small>Day '+(index+1)+'</small>'+esc(date(addDays(start,index)))+'</span>').join('')+'</div>';
+  }
   function refreshMeetingPattern() {
     const dialog = root.querySelector("dialog");
     const pattern = dialog?.querySelector('[name="recurrence"]')?.value;
@@ -1001,6 +1018,8 @@ window.LPCVolunteers = (() => {
     custom.querySelector('input').disabled = custom.hidden || custom.querySelector('input').hasAttribute('data-fixed-pattern');
     const start = dialog.querySelector('[name="startDate"]').value;
     const days = pattern === 'once' ? 1 : Number(length.value === 'custom' ? custom.querySelector('input').value : length.value);
+    const preview=dialog.querySelector('[data-meeting-date-preview]');
+    if(preview)preview.innerHTML=meetingDatePreview(pattern,start,days,dialog.querySelector('[name="day"]').value);
     const note = dialog.querySelector('[data-meeting-dates]');
     note.textContent = pattern === 'weekly' ? 'Repeats every week on the selected day.' : /^\d{4}-\d{2}-\d{2}$/.test(start) && Number.isInteger(days) && days >= 1 && days <= 90 ? (pattern === 'once' ? 'One meeting on ' + date(start) + '.' : days + ' daily meetings: ' + date(start) + ' to ' + date(addDays(start, days - 1)) + ', inclusive. Ends automatically.') : 'Choose a date and a series length from 1 to 90 days.';
   }
@@ -1077,7 +1096,7 @@ window.LPCVolunteers = (() => {
             ].map((d, i) => [String(i), d]),
             String(m.day),
           )}</select>`,
-        )}</div><div data-meeting-pattern="dated">${field('Meeting date / start date', input('startDate', m.startDate || today(), 'date', 'required ' + fixed))}</div><div data-meeting-pattern="daily">${field('Number of consecutive days', `<select name="seriesLength" data-series-length ${fixed}>${options([['3','3 days'],['7','7 days'],['21','21 days'],['custom','Custom length']], [3,7,21].includes(days) ? String(days) : 'custom')}</select>`)}<div data-custom-days>${field('Custom number of days', input('dayCount', days, 'number', 'required min="1" max="90" ' + fixed))}</div></div>${timeField(m.time)}${field("Duration · minutes", input("duration", m.duration, "number", 'required min="15" max="720"'))}</div><p class="vs-help" data-meeting-dates role="status"></p>` +
+        )}</div><div data-meeting-pattern="dated">${field('Meeting date / start date', input('startDate', m.startDate || today(), 'date', 'required ' + fixed))}</div><div data-meeting-pattern="daily">${field('Number of consecutive days', `<select name="seriesLength" data-series-length ${fixed}>${options([['3','3 days'],['7','7 days'],['21','21 days'],['custom','Custom length']], [3,7,21].includes(days) ? String(days) : 'custom')}</select>`)}<div data-custom-days>${field('Custom number of days', input('dayCount', days, 'number', 'required min="1" max="90" ' + fixed))}</div></div>${timeField(m.time)}${field("Duration · minutes", input("duration", m.duration, "number", 'required min="15" max="720"'))}</div><p class="vs-help" data-meeting-dates role="status"></p><div data-meeting-date-preview aria-label="Meeting date preview"></div>` +
         (!id
           ? field(
               "Pastoral scheduler",
@@ -1669,6 +1688,8 @@ window.LPCVolunteers = (() => {
     root.innerHTML = window.LPCTeamAuth.navigation(null) + '<p>Loading team access…</p>';
     root.onclick = click;
     root.onchange = async (e) => {
+      if(e.target.matches('[data-meeting-pattern-filter]'))return refreshMeetingCatalog();
+      if(e.target.matches('dialog [name="day"]'))return refreshMeetingPattern();
       if (e.target.matches('[data-user-group]')) { refreshUserChoices();return; }
       if (e.target.matches('[data-meeting-recurrence], [data-series-length], [name="startDate"], [name="dayCount"]')) return refreshMeetingPattern();
       if (e.target.matches("[data-user-select]")) {
@@ -1732,6 +1753,7 @@ window.LPCVolunteers = (() => {
       }
     };
     root.oninput = (e) => {
+      if(e.target.matches('[data-meeting-search]'))return refreshMeetingCatalog();
       if (e.target.matches('dialog [name="startDate"], dialog [name="dayCount"]')) return refreshMeetingPattern();
       if (e.target.matches("[data-user-search]")) {
         refreshUserChoices();

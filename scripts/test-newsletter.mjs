@@ -53,8 +53,8 @@ test('Hero publication stays in the editor and emits the submitted snapshot',asy
 });
 test('Video inspection uses controlled playback without image framing controls',()=>{
  const inspector=source.slice(source.indexOf('function openMediaInspector('),source.indexOf('async function renderManagedAssets('));
- const close={addEventListener(){}},dialog={setAttribute(){},showModal(){this.open=true},addEventListener(){},querySelector:s=>s==='[data-media-close]'?close:null};
- runInNewContext(inspector+';openMediaInspector({},"video",{},asset,{})',{asset:{name:'service.mp4',path:'/service.mp4',size:1024},document:{createElement:()=>dialog,body:{style:{},append(){}}},escapeHtml:escape,escapeAttribute:escape,formatAssetSize:()=> '1 KB',renderAssetProtectionActions:()=>''});
+ const close={addEventListener(){}},dialog={setAttribute(){},showModal(){this.open=true},addEventListener(){},querySelectorAll:()=>[],querySelector:s=>s==='[data-media-close]'?close:null};
+ runInNewContext(inspector+';openMediaInspector({},"video",{},asset,{})',{asset:{name:'service.mp4',path:'/service.mp4',size:1024},document:{createElement:()=>dialog,body:{style:{},append(){}}},escapeHtml:escape,escapeAttribute:escape,formatAssetSize:()=> '1 KB',renderAssetProtectionActions:()=>'',renderMediaReferences:()=>''});
  assert(dialog.innerHTML.includes('<video'));assert(dialog.innerHTML.includes('controls playsinline'));assert(!dialog.innerHTML.includes('data-media-frame'));assert(dialog.open);
 });
 test('Newsletter checks separate required text and paired links from a suggested image description',()=>{
@@ -172,15 +172,15 @@ test('Newsletter studio preview escapes text and supports image and text announc
 
 test('Newsletter studio tracks unpublished edits, switches phone views and preserves edits made while publishing',()=>{
  const init=source.slice(source.indexOf('function initNewsletterStudio()'),source.indexOf('function renderAdminLogin()'));
- const fields={...defaults,title:'Original'},events={},preview={},dirty={};
+ const fields={...defaults,title:'Original'},events={},preview={},dirty={},review={addEventListener:(_type,fn)=>events.review=fn},undo={addEventListener:(_type,fn)=>events.undo=fn};
  const buttons=['edit','preview'].map(view=>({dataset:{newsletterView:view},addEventListener:(type,fn)=>events[view]=fn,setAttribute(k,v){this[k]=v}}));
- const form={dataset:{},querySelector:s=>s.includes('checklist')?null:s.includes('preview')?preview:dirty,querySelectorAll:()=>buttons,addEventListener:(type,fn)=>events[type]=fn};
+ const form={dataset:{},elements:{namedItem:key=>({set value(value){fields[key]=value}})},querySelector:s=>s.includes('review')&&!s.includes('preview')?review:s.includes('undo')?undo:s.includes('checklist')?null:s.includes('preview')?preview:dirty,querySelectorAll:()=>buttons,addEventListener:(type,fn)=>events[type]=fn};
  runInNewContext(init+';initNewsletterStudio()',{document:{getElementById:()=>form},FormData:class{get(k){return fields[k]}},defaultNewsletterConfig:defaults,renderNewsletterDraftPreview:d=>d.title});
  fields.title='Updated';events.input();assert.equal(preview.innerHTML,'Updated');assert.equal(dirty.textContent,'Unpublished changes');
  events.preview();assert.equal(form.dataset.newsletterMode,'preview');assert.equal(buttons[1]['aria-pressed'],'true');
  events.invalid();assert.equal(form.dataset.newsletterMode,'edit');assert.equal(buttons[0]['aria-pressed'],'true');
  const submitted={...fields};fields.title='Changed during save';events['newsletter-published']({detail:submitted});assert.equal(dirty.textContent,'Unpublished changes');
- fields.title='Updated';events.input();assert.equal(dirty.textContent,'Saved version');
+ fields.title='Updated';events.input();assert.equal(dirty.textContent,'Saved version');fields.title='Unwanted edit';events.input();events.undo();assert.equal(fields.title,'Updated');assert.equal(dirty.textContent,'Saved version');
 });
 test('Newsletter preserves legacy content and renders a text broadcast without an empty image',()=>{
  const html=runInNewContext(getter+render+';renderNewsletterSection()',context({kicker:"Pastor's Thought",title:'A word of encouragement for this week.',body:'Existing news\nSecond line',ctaText:'Watch Sermons',ctaHref:'#/watch'}));
@@ -213,4 +213,10 @@ test('Image viewer opens modally, locks scrolling, closes and restores focus and
  events.open();assert(viewer.open);assert.equal(document.body.style.overflow,'hidden');
  events.closeButton();assert(!viewer.open);assert.equal(document.body.style.overflow,'auto');assert(events.focused);
  events.open();events.click({target:viewer});assert(!viewer.open);
+});
+
+test('Media references match encoded local paths, deduplicate uses and distinguish different files',()=>{
+ const helper=source.slice(source.indexOf('function matchingMediaReferences('),source.indexOf('function savedMediaReferences('));const match=runInNewContext(helper+';matchingMediaReferences');
+ const entries=[{path:'./assets/images/family photo.jpg',label:'Home',href:'#/home'},{path:'/assets/images/family%20photo.jpg',label:'Home',href:'#/home'},{path:'/assets/images/family photo.jpg',label:'Newsletter',href:'#/news'},{path:'/uploads/family photo.jpg',label:'Other',href:'#/other'}];
+ const result=match('/assets/images/family%20photo.jpg?cache=1',entries);assert.equal(result.length,2);assert.equal(result[1].label,'Newsletter');assert.equal(match('',entries).length,0);
 });

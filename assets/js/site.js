@@ -1349,7 +1349,7 @@ function renderNewsletterAdminFields() {
       <div class="admin-hero-card__grid"><label>Published by (optional)<input name="author" value="${escapeAttribute(thought.author)}" placeholder="LPC office"></label><label>Date / edition (optional)<input name="date" value="${escapeAttribute(thought.date)}" placeholder="November 2026"></label></div>
       <label>Link text (optional)<input name="ctaText" value="${escapeAttribute(thought.ctaText)}" placeholder="Find out more"></label><label>Link destination (optional)<input name="ctaHref" value="${escapeAttribute(thought.ctaHref)}" placeholder="#/contact or https://..."></label></details>
     </div><aside class="newsletter-studio-preview" aria-label="Newsletter preview"><div class="newsletter-preview-heading"><h2>Reader preview</h2><span>Updates as you type</span></div><div data-newsletter-checklist>${renderNewsletterChecklist(thought)}</div><div data-newsletter-preview>${renderNewsletterDraftPreview(thought)}</div><p class="newsletter-preview-note">Preview of your news content. The home page adapts the layout to the screen.</p></aside></div>
-    <div class="newsletter-publish-bar"><div><strong data-newsletter-dirty>Saved version</strong><p data-newsletter-status role="status" aria-live="polite"></p></div><button class="btn btn--gold" type="submit">Publish newsletter</button></div>
+    <div class="newsletter-publish-bar"><div><strong data-newsletter-dirty>Saved version</strong><p data-newsletter-status role="status" aria-live="polite"></p></div><div class="image-draft-tools"><button class="btn btn--outline" type="button" data-newsletter-review>Review changes</button><button class="btn btn--outline" type="button" data-newsletter-undo>Undo draft</button><button class="btn btn--gold" type="submit">Publish newsletter</button></div></div>
   </form>`;
 }
 
@@ -1362,6 +1362,8 @@ function initNewsletterStudio() {
   const keys = ['kicker','title','body','image','imageAlt','author','date','ctaText','ctaHref'];
   const read = () => {const values = new FormData(form);return Object.fromEntries(keys.map(key=>[key,String(values.get(key)||'').trim() || (['image','imageAlt','date'].includes(key) ? '' : defaultNewsletterConfig[key] || '')]));};
   let saved = JSON.stringify(read());
+  form.querySelector('[data-newsletter-review]').addEventListener('click',event=>openAdminReview('Review newsletter changes','<div class="admin-review-grid"><section><h3>Saved edition</h3>'+renderNewsletterDraftPreview(JSON.parse(saved))+'</section><section><h3>Your draft</h3>'+renderNewsletterDraftPreview(read())+'</section></div>',event.target));
+  form.querySelector('[data-newsletter-undo]').addEventListener('click',()=>{const values=JSON.parse(saved);keys.forEach(key=>{const control=form.elements.namedItem(key);if(control)control.value=values[key]||'';});update();});
   const update = () => {const draft=read();preview.innerHTML=renderNewsletterDraftPreview(draft);dirty.textContent=JSON.stringify(draft)===saved ? 'Saved version' : 'Unpublished changes';if(checklist){const raw=new FormData(form);checklist.innerHTML=renderNewsletterChecklist(Object.fromEntries(keys.map(key=>[key,String(raw.get(key)||'').trim()])));}};
   form.addEventListener('input',update);
   form.addEventListener('change',update);
@@ -3772,12 +3774,38 @@ function mediaPageWindow(items,page,size=12) {
   return {index,pages,start:index*size,items:items.slice(index*size,index*size+size)};
 }
 
+function openAdminReview(title,body,opener) {
+  const dialog=document.createElement('dialog');dialog.className='admin-review-dialog';dialog.setAttribute('aria-labelledby','admin-review-title');
+  dialog.innerHTML='<header><h2 id="admin-review-title">'+escapeHtml(title)+'</h2><button type="button" class="btn btn--outline" autofocus>Close</button></header>'+body;
+  document.body.append(dialog);dialog.querySelector('button').onclick=()=>dialog.close();dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
+  dialog.addEventListener('close',()=>{dialog.remove();if(opener?.isConnected)opener.focus();},{once:true});dialog.showModal();
+}
+function matchingMediaReferences(path,entries) {
+  const normalize=value=>{try{return decodeURI(String(value||'').replace(/^\.\//,'/').split(/[?#]/)[0]);}catch{return String(value||'');}};
+  const target=normalize(path);return entries.filter(entry=>target&&normalize(entry.path)===target).filter((entry,index,all)=>all.findIndex(other=>other.label===entry.label&&other.href===entry.href)===index);
+}
+function savedMediaReferences(path) {
+  const entries=[],add=(value,label,href)=>{if(value)entries.push({path:value,label,href});};
+  const home=getHomeHeroConfig();['poster','video'].forEach(key=>add(home[key],'Home hero · '+key,'#/lpcadmin/hero/home'));
+  Object.keys({...heroImageDefaults,...serverHeroImagesConfig}).forEach(key=>{const hero=getHeroImageConfig(key);['desktopImage','mobileImage','video'].forEach(field=>add(hero[field],heroLabel(key)+' hero · '+field,'#/lpcadmin/hero/'+key));});
+  branchCards.forEach(branch=>['image','logo'].forEach(field=>add(branch[field],branch.name+' · '+field,'#/lpcadmin/branches')));
+  pastors.forEach(person=>add(person.image,person.name+' · profile photo',person.id==='senior-pastor'?'#/pastors':'#/lpcadmin/pastors'));
+  add(getNewsletterConfig().image,'Newsletter image','#/lpcadmin/newsletter');
+  Object.entries(pageImages).forEach(([route,images])=>Object.values(images).forEach(value=>add(value,heroLabel(route.slice(1))+' · page content','#/lpcadmin/page-images')));
+  return matchingMediaReferences(path,entries);
+}
+function renderMediaReferences(path) {
+  const refs=savedMediaReferences(path);
+  return '<section class="media-usage"><h3>Where this media appears</h3>'+(refs.length?'<ul>'+refs.map(ref=>'<li><a href="'+escapeAttribute(ref.href)+'">'+escapeHtml(ref.label)+' ↗</a></li>').join('')+'</ul>':'<p>No references found in saved configuration.</p>')+'<small>Configuration references only. Built-in page uses may also exist; removal protection is checked separately.</small></section>';
+}
+
 function openMediaInspector(manager,type,input,asset,opener) {
   const dialog=document.createElement('dialog');dialog.className='media-inspector';dialog.setAttribute('aria-labelledby','media-inspector-title');
   const media=type==='video'?`<video class="media-inspector-image" src="${escapeAttribute(asset.path)}" controls playsinline preload="metadata" aria-label="${escapeAttribute(asset.name)}"></video>`:`<img class="media-inspector-image" src="${escapeAttribute(asset.path)}" alt="${escapeAttribute(asset.name)}">`;
-  dialog.innerHTML=`<div class="media-inspector-heading"><h2 id="media-inspector-title">${escapeHtml(asset.name)}</h2><button class="btn btn--outline" type="button" data-media-close autofocus>Close</button></div>${media}<div class="media-inspector-details"><p>${asset.source==='upload'?'Uploaded file':'Original website file'} · ${asset.size ? formatAssetSize(asset.size) : 'Size unavailable'}</p><p class="media-inspector-path">${escapeHtml(asset.path)}</p>${type==='video'?'':'<button type="button" class="btn btn--gold" data-media-frame>Edit framing</button>'}<details><summary>Protection &amp; removal</summary><p>Deleting an uploaded file is permanent and may affect pages or backups. Packaged originals remain until a site rebuild.</p><div>${renderAssetProtectionActions(asset)}</div></details></div>`;
+  dialog.innerHTML=`<div class="media-inspector-heading"><h2 id="media-inspector-title">${escapeHtml(asset.name)}</h2><button class="btn btn--outline" type="button" data-media-close autofocus>Close</button></div>${media}<div class="media-inspector-details"><p>${asset.source==='upload'?'Uploaded file':'Original website file'} · ${asset.size ? formatAssetSize(asset.size) : 'Size unavailable'}</p><p class="media-inspector-path">${escapeHtml(asset.path)}</p>${type==='video'?'':'<button type="button" class="btn btn--gold" data-media-frame>Edit framing</button>'}${renderMediaReferences(asset.path)}<details><summary>Protection &amp; removal</summary><p>Deleting an uploaded file is permanent and may affect pages or backups. Packaged originals remain until a site rebuild.</p><div>${renderAssetProtectionActions(asset)}</div></details></div>`;
   const previousOverflow=document.body.style.overflow;document.body.append(dialog);document.body.style.overflow='hidden';dialog.showModal();
   dialog.addEventListener('close',()=>{document.body.style.overflow=previousOverflow;dialog.remove();if(!document.querySelector('dialog[open]')){if(opener?.isConnected)opener.focus();else manager.querySelector('#asset-search')?.focus();}},{once:true});
+  dialog.querySelectorAll('.media-usage a').forEach(link=>link.addEventListener('click',()=>dialog.close()));
   dialog.querySelector('[data-media-close]').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
   dialog.querySelector('[data-media-frame]')?.addEventListener('click',()=>{dialog.close();openImageFraming(asset.path);});
   [['[data-asset-delete]',()=>deleteAssetFile(manager,type,input,asset.path)],['[data-asset-protect]',()=>updateAssetProtection(manager,type,input,asset.path,true)],['[data-asset-unprotect]',()=>updateAssetProtection(manager,type,input,asset.path,false)]].forEach(([selector,action])=>dialog.querySelector(selector)?.addEventListener('click',()=>{dialog.close();action();}));
@@ -3915,7 +3943,7 @@ function renderPageImageAdmin() {
     <form id="page-images-form" class="admin-form"><div class="page-image-desk"><div class="page-image-tabs" role="tablist" aria-label="Choose a page to edit">${pages.map(({page,images,preview},i)=>`<button type="button" role="tab" id="image-tab-${page}" aria-controls="image-panel-${page}" aria-selected="${i===initial}" tabindex="${i===initial?'0':'-1'}" data-image-page="${page}"><span class="page-image-tab-photo">${preview ? `<img src="${escapeAttribute(preview)}" alt="" loading="lazy">` : '<span aria-hidden="true">▧</span>'}</span><span><strong>${escapeHtml(heroLabel(page))}</strong><small>${images.length ? images.length+' '+(images.length===1?'image':'images') : 'Hero only'}</small></span></button>`).join('')}</div>
     <div class="page-image-panels">${pages.map(({page,route,images},i)=>`<section id="image-panel-${page}" role="tabpanel" aria-labelledby="image-tab-${page}" data-image-panel="${page}" ${i!==initial?'hidden':''}><div class="page-image-panel-heading"><div><h2>${escapeHtml(heroLabel(page))}</h2><p>Images within this page</p></div><a href="#/lpcadmin/hero/${page}">Edit hero image / video ↗</a></div><div class="page-image-slot-grid">${images.map(image=>{
       const original=image.getAttribute('src'),current=pageImages[route]?.[original] || original;
-      return `<div class="page-image-slot" data-page="${route}" data-original="${escapeAttribute(original)}"><div class="page-image-preview"><img src="${escapeAttribute(current)}" alt="${escapeAttribute(image.alt)}" loading="lazy"></div><label>${escapeHtml(image.alt || 'Page image')}${renderAssetPickerInput({name:'image',value:current})}</label></div>`;
+      return `<div class="page-image-slot" data-page="${route}" data-original="${escapeAttribute(original)}" data-saved="${escapeAttribute(current)}"><div class="page-image-preview"><img src="${escapeAttribute(current)}" alt="${escapeAttribute(image.alt)}" loading="lazy"></div><label>${escapeHtml(image.alt || 'Page image')}${renderAssetPickerInput({name:'image',value:current})}</label><div class="image-draft-tools"><button type="button" class="btn btn--outline" data-image-compare>Compare images</button><button type="button" class="btn btn--outline" data-image-undo>Undo draft</button></div></div>`;
     }).join('')}</div>${images.length?'':'<div class="page-image-empty"><span aria-hidden="true">▧</span><h3>This page has no additional images.</h3><p>Use the hero editor to change its main image or video.</p></div>'}</section>`).join('')}</div></div>
     <div class="page-image-savebar"><span data-image-dirty role="status">All changes saved</span><button class="btn btn--gold" type="submit">Save page images</button></div><p role="status" id="page-images-status"></p></form></div></section>${renderFooter()}`;
 }
@@ -3934,9 +3962,16 @@ function initPageImageAdmin() {
   initPageImageTabs(form);
   initAssetPicker();
   let editRevision=0;
+  form.addEventListener('click',event=>{
+    const slot=event.target.closest('.page-image-slot');if(!slot)return;
+    const input=slot.querySelector('input');
+    if(event.target.closest('[data-image-undo]')){input.value=slot.dataset.saved;input.dispatchEvent(new Event('input',{bubbles:true}));}
+    if(event.target.closest('[data-image-compare]'))openAdminReview('Compare page images',
+      '<div class="admin-review-grid">'+[['Saved image',slot.dataset.saved],['Draft image',input.value],['Original website image',slot.dataset.original]].map(([label,src])=>'<figure><figcaption>'+escapeHtml(label)+'</figcaption><img src="'+escapeAttribute(src)+'" alt="'+escapeAttribute(label)+'"></figure>').join('')+'</div>',event.target);
+  });
   form.addEventListener("input", (event) => {
     const slot = event.target.closest(".page-image-slot");
-    if (slot) { slot.querySelector("img").src = event.target.value;editRevision++;form.querySelector('[data-image-dirty]').textContent='Unpublished changes'; }
+    if (slot) { slot.querySelector("img").src = event.target.value;editRevision++;form.querySelector('[data-image-dirty]').textContent=[...form.querySelectorAll('.page-image-slot')].some(row=>row.querySelector('input').value.trim()!==row.dataset.saved)?'Unpublished changes':'All changes saved'; }
   });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -3963,6 +3998,7 @@ function initPageImageAdmin() {
       const data = await response.json();
       if (!response.ok) throw Error(data.error || "Save failed");
       pageImages = data;
+      form.querySelectorAll('.page-image-slot').forEach(slot=>{slot.dataset.saved=config[slot.dataset.page][slot.dataset.original];});
       form.querySelector('[data-image-dirty]').textContent=editRevision===submittedRevision?'All changes saved':'Unpublished changes';
       status.textContent = "Page images saved.";
     } catch (error) {
