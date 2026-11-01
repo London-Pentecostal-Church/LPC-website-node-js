@@ -1405,3 +1405,31 @@ button.wp-week-day:focus-visible { outline: 3px solid #087f85; outline-offset: 3
   .vs-app .wp-empty { padding: 18px 14px; }
 }
 @media (prefers-reduced-motion: reduce) { .wp-collapsible[open] > .wp-card-body { animation: none; } }
+
+.vs-app .wp-action-board { margin:20px 0 24px; }
+.vs-app .wp-action-board-heading { display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px; }
+.vs-app .wp-action-board-heading h3 { font-size:15px;margin:0; }
+.vs-app .wp-action-board-heading>span { color:#647687;font-size:12px; }
+.vs-app .wp-action-tiles { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px; }
+.vs-app .wp-action-tile { position:relative;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:14px;text-align:left;min-width:0;padding:18px 30px 18px 18px;border:1px solid #d6e2e8;border-radius:14px;background:#f5f8fa;color:#234358;cursor:pointer;transition:background .16s,border-color .16s; }
+.vs-app .wp-action-count { font-size:32px;line-height:1;font-weight:800;font-variant-numeric:tabular-nums; }
+.vs-app .wp-action-tile>span:nth-child(2) { font-size:14px;font-weight:700;line-height:1.35; }
+.vs-app .wp-action-arrow { position:absolute;right:12px;top:12px;opacity:.55;font-size:14px; }
+.vs-app .wp-action-tile--critical { background:#fff0f0;color:#a01d28;border-color:#efd0d3; }
+.vs-app .wp-action-tile--covered { background:#ecf8f0;color:#20613b;border-color:#cbe6d6; }
+.vs-app .wp-action-tile--local { background:#fff7e6;color:#8b580b;border-color:#ecdfbf; }
+.vs-app .wp-action-tile[aria-pressed="true"] { outline:2px solid currentColor;outline-offset:-3px;box-shadow:0 4px 12px #102b3b0d; }
+.vs-app .wp-action-tile:focus-visible { outline:3px solid #007f89;outline-offset:3px; }
+.vs-app .wp-action-note { font-size:12px;color:#5c7180;margin:10px 0 0; }
+.vs-app .wp-focus-clear { border:1px solid #cfe6da;border-radius:16px;background:#f1faf5;padding:28px;text-align:center; }
+.vs-app .wp-focus-clear>span { display:inline-grid;place-items:center;width:40px;height:40px;background:#d5f0e1;color:#216540;border-radius:50%;font-size:24px; }
+.vs-app .wp-focus-clear h3 { font-size:19px;margin:12px 0 8px; }
+.vs-app .wp-focus-clear p { margin:0;color:#526f63;font-size:14px; }
+@media(max-width:600px) {
+  .vs-app .wp-action-tiles { gap:8px; }
+  .vs-app .wp-action-tile { display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:14px 10px;min-height:104px; }
+  .vs-app .wp-action-count { font-size:28px; }
+  .vs-app .wp-action-tile>span:nth-child(2) { font-size:12px; }
+  .vs-app .wp-action-arrow { right:8px;top:8px;font-size:12px; }
+  .vs-app .wp-action-board-heading>span { font-size:11px; }
+}

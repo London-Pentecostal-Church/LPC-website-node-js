@@ -23,6 +23,7 @@ window.LPCVolunteers = (() => {
     busy = false,
     weekStart = "";
   let clashDraft = null;
+  let plannerFocus = 'all';
   let quickAddDraft = null;
   let accountEmailEnabled = false;
   const branchColours = new Map();
@@ -353,6 +354,19 @@ window.LPCVolunteers = (() => {
         (a.date + a.time + a.branch).localeCompare(b.date + b.time + b.branch),
       );
   }
+  function plannerWorklists(list, view) {
+    const active=list.filter(s=>!s.cancelled);
+    return {
+      all:list,
+      pastor:active.filter(s=>!readiness(s).pastorId),
+      covered:active.filter(s=>!!readiness(s).pastorId),
+      team:view==='choir' ? active.filter(s=>choirTeamGapCount(s)>0) : [],
+    };
+  }
+  function plannerActionBoard(lists, view) {
+    const choices=[['all','All meetings','all'],['pastor','Pastor needed','critical'],view==='pastoral'?['covered','Pastor assigned','covered']:['team','Arrange team locally','local']];
+    return `<section class="wp-action-board" aria-label="Planner action board"><div class="wp-action-board-heading"><h3>This week’s focus</h3><span>Tap a tile to filter</span></div><div class="wp-action-tiles">${choices.map(([key,label,tone])=>`<button type="button" data-vs="planner-focus" data-focus="${key}" aria-pressed="${plannerFocus===key}" aria-controls="wp-focus-agenda" class="wp-action-tile wp-action-tile--${tone}"><span class="wp-action-count">${lists[key].length}</span><span>${label}</span><span class="wp-action-arrow" aria-hidden="true">↗</span></button>`).join('')}</div>${view==='choir'?'<p class="wp-action-note">Pastor assignment is critical. Choir and media gaps can be arranged locally.</p>':''}</section>`;
+  }
   function weekly() {
     if (tab === "pastoral") kind = "ministry";
     if (tab === "choir") kind = "service";
@@ -368,6 +382,10 @@ window.LPCVolunteers = (() => {
         return true;
       });
     } else list = list.filter((s) => s.kind === kind);
+    const focusedPlanner=['pastoral','choir'].includes(tab) && manager();
+    if (focusedPlanner && !['all','pastor',tab==='pastoral'?'covered':'team'].includes(plannerFocus)) plannerFocus='all';
+    const worklists=focusedPlanner ? plannerWorklists(list,tab) : null;
+    const visibleList=worklists ? worklists[plannerFocus] || list : list;
     const titles = {
       "my-week": ["My Week", "Your duties and lineups across all teams."],
       pastoral: [
@@ -386,10 +404,11 @@ window.LPCVolunteers = (() => {
     const [title, description] = titles[tab] || titles["my-week"];
     const filters = `<div class="wp-filters">${field("Branch", `<select data-filter="branch">${options(branches, branch, "All branches")}</select>`)}${field("Language / team", `<select data-filter="team">${options(teams(), team, "All teams")}</select>`)}</div>`;
     return `<div class="wp-section-heading"><div><h2>${title}</h2><p>${description}</p></div>${['pastoral','choir'].includes(tab) && manager() ? btn("Participation & Excel", "participation-report", "", true) : tab === "meetings" && canMeetings() ? btn("+ Add meeting", "meeting") : ""}</div>${weekControls(tab === "my-week" ? '' : filters)}${tab === "my-week" ? personalProfileControl() : ''}
+    ${focusedPlanner ? plannerActionBoard(worklists,tab) : ''}
     ${
       tab === "my-week"
         ? `<div class="wp-personal">${list.length ? list.map((s) => personalMeetingCard(s)).join("") : `<div class="wp-empty"><h3>${state.actor.admin && !personalId() ? "Choose your volunteer profile above" : "No duties assigned this week"}</h3><p>${state.actor.admin && !personalId() ? "Your website admin account is separate from the person on the rota. Choose your name once to see your weekly duties." : "This includes every branch and service team. Use Previous week or Next week to browse other weeks."}</p></div>`}</div>`
-        : weekAgenda(list, title)
+        : `<div id="wp-focus-agenda">${focusedPlanner && plannerFocus!=='all' && !visibleList.length ? `<div class="wp-focus-clear" role="status"><span aria-hidden="true">✓</span><h3>${plannerFocus==='pastor'?'No meetings need a pastor.':plannerFocus==='team'?'No choir or media gaps to arrange.':'No pastors assigned in this selection yet.'}</h3><p>For the selected week, branch and team. Choose All meetings to see the full schedule.</p></div>` : weekAgenda(visibleList, title)}</div>`
     }
     ${tab === "meetings" && isCoordinator() ? `<details class="wp-recurring"><summary>Meeting patterns &amp; special dates</summary><p>Weekly meetings repeat automatically. One-off meetings and daily series stay within their selected dates.</p>${(state.meetings || []).map((m) => `<div class="wp-regular-row"><div><strong>${esc(m.name)}</strong><small>${esc(m.branch)} · ${esc(meetingPatternLabel(m))} · ${esc(m.team)}</small></div><div>${canMeetings() ? btn("Edit meeting", "meeting", `data-id="${m.id}"`, true) + btn("Delete series", "delete-meeting-series", `data-id="${m.id}"`, true) : ""}</div></div>`).join("") || "<p>No regular meetings yet. Add your first meeting above.</p>"}</details>` : ""}${tab === "meetings" ? archivedSeries() : ""}`;
   }
@@ -471,8 +490,11 @@ window.LPCVolunteers = (() => {
     if (tab !== "choir" || s.cancelled) return { label: r.label, className: r.code === "ready" ? "vs-green" : r.code === "pastor-needed" ? "vs-red" : "" };
     return { label: r.pastorId ? 'Pastor in charge: ' + name(r.pastorId) : 'Pastor in charge: Not assigned — action needed', className: r.pastorId ? 'vs-green' : 'vs-red' };
   }
+  function choirTeamGapCount(s) {
+    return s.slots.filter(slot => !["Ministry volunteer", "Branch prayer leader"].includes(slot.role)).filter(slot => !slot.main || !canServe(state.members.find(m => m.id === slot.main), s, slot.role) || state.members.find(m => m.id === slot.main)?.availability?.[s.id] === "unavailable").length;
+  }
   function choirTeamBadge(s) {
-    const gaps = s.slots.filter(slot => !["Ministry volunteer", "Branch prayer leader"].includes(slot.role)).filter(slot => !slot.main || !canServe(state.members.find(m => m.id === slot.main), s, slot.role) || state.members.find(m => m.id === slot.main)?.availability?.[s.id] === "unavailable").length;
+    const gaps = choirTeamGapCount(s);
     return { label: gaps ? gaps + ' choir/media place' + (gaps === 1 ? '' : 's') + ' to arrange' : 'Choir & media assigned', className: gaps ? '' : 'vs-green' };
   }
   function emergencyFields(s, edit) {
@@ -1393,7 +1415,16 @@ window.LPCVolunteers = (() => {
         return chooseCoverDuty();
       }
       if (a === "own-week") { viewedMemberId = null; return render(); }
+      if (a === 'planner-focus') {
+        if (!['pastoral','choir'].includes(tab) || !manager()) return;
+        if (!['all','pastor',tab==='pastoral'?'covered':'team'].includes(b.dataset.focus)) return;
+        plannerFocus=b.dataset.focus;
+        render();
+        root.querySelector(`[data-vs="planner-focus"][data-focus="${plannerFocus}"]`)?.focus({preventScroll:true});
+        return;
+      }
       if (a === "tab") {
+        plannerFocus='all';
         if (b.dataset.tab === "my-week") viewedMemberId = null;
         tab = b.dataset.tab;
         return render();

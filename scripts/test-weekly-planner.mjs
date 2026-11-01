@@ -6,6 +6,28 @@ const demo = JSON.parse(
   readFileSync(new URL("./fixtures/weekly-demo.json", import.meta.url), "utf8"),
 );
 const admin = { id: "admin", name: "Test administrator", admin: true };
+test('Planner action board recalculates filtered worklists and separates critical pastor gaps from local team duties',async()=>{
+  const {runInNewContext}=await import('node:vm');
+  const js=readFileSync(new URL('../assets/js/volunteers.js',import.meta.url),'utf8');
+  const lists=js.slice(js.indexOf('  function plannerWorklists('),js.indexOf('  function weekly()'));
+  const gap=js.slice(js.indexOf('  function choirTeamGapCount('),js.indexOf('  function choirTeamBadge('));
+  const members=[{id:'active',availability:{}},{id:'away',availability:{b:'unavailable'}}];
+  const f=runInNewContext(gap+lists+';({plannerWorklists,plannerActionBoard})',{state:{members},readiness:s=>s.readiness||{},canServe:m=>!!m,plannerFocus:'pastor'});
+  const meetings=[
+    {id:'a',slots:[{role:'Lead singer',main:'active'}],readiness:{pastorId:'',emergencyMemberId:'standby'}},
+    {id:'b',slots:[{role:'Lead singer',main:'away'}],readiness:{pastorId:'pastor'}},
+    {id:'c',slots:[{role:'Branch prayer leader',main:''}],readiness:{pastorId:'pastor'}},
+    {id:'d',cancelled:true,slots:[{role:'Lead singer',main:''}],readiness:{}},
+  ];
+  const choir=f.plannerWorklists(meetings,'choir');
+  assert.deepEqual(Array.from(choir.pastor,s=>s.id),['a']);
+  assert.deepEqual(Array.from(choir.team,s=>s.id),['b']);
+  assert.equal(choir.all.length,4);assert.equal(choir.covered.length,2);
+  const filtered=f.plannerWorklists(meetings.slice(2,3),'choir');
+  assert.equal(filtered.all.length,1);assert.equal(filtered.pastor.length,0);assert.equal(filtered.team.length,0);
+  const pastoral=f.plannerWorklists(meetings,'pastoral');assert.equal(pastoral.team.length,0);
+  const html=f.plannerActionBoard(pastoral,'pastoral');assert(html.includes('Pastor assigned'));assert(!html.includes('Arrange team locally'));assert(html.includes('aria-pressed="true"'));
+});
 function setup(seed = demo) {
   let state = structuredClone(seed);
   const store = {
