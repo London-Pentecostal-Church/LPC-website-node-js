@@ -6,6 +6,13 @@ const demo = JSON.parse(
   readFileSync(new URL("./fixtures/weekly-demo.json", import.meta.url), "utf8"),
 );
 const admin = { id: "admin", name: "Test administrator", admin: true };
+test('Admin dialog sections keep serving roles separate from access and group meeting pattern controls together',async()=>{
+ const {runInNewContext}=await import('node:vm');const js=readFileSync(new URL('../assets/js/volunteers.js',import.meta.url),'utf8');
+ const code=js.slice(js.indexOf('  function dialogSectionKey('),js.indexOf('  function sectionAdminDialog('));const key=runInNewContext(code+';dialogSectionKey');
+ const node=(selector,match='')=>({querySelector:s=>s.split(',').includes(selector)?{}:null,matches:s=>s===match});
+ assert.equal(key(node('[name="manage"]'),'user'),'access');assert.equal(key(node('[name="skills"]'),'user'),'serving');assert.equal(key(node('[name="password"]'),'user'),'profile');
+ assert.equal(key(node('[name="duration"]'),'meeting'),'when');assert.equal(key(node('[name="pastorLeadId"]'),'meeting'),'responsibility');assert.equal(key(node('','[data-meeting-dates]'),'meeting'),'when');
+});
 test('User access groups use scheduling permission rather than serving skills',async()=>{
  const {runInNewContext}=await import('node:vm');const js=readFileSync(new URL('../assets/js/volunteers.js',import.meta.url),'utf8');
  const helper=js.slice(js.indexOf('  function memberMatchesAccess('),js.indexOf('  function memberChoices('));const match=runInNewContext(helper+';memberMatchesAccess');

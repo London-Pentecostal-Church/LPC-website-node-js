@@ -31,6 +31,32 @@ test('Pastoral hierarchy includes every current profile beneath the president an
 });
 const defaults={kicker:'Newsletter',title:'News & updates from LPC',body:'',author:'',date:'',image:'',imageAlt:'',ctaText:'',ctaHref:''};
 const escape=v=>String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
+test('Branch visitor preview escapes draft details and contains no live navigation',()=>{
+ const render=source.slice(source.indexOf('function renderBranchVisitorPreview('),source.indexOf('function initBranchVisitorPreviews('));
+ const html=runInNewContext(render+';renderBranchVisitorPreview(branch)',{branch:{name:'<script>Church</script>',address:'Road\nTown',services:'Sunday 10:00',contact:'Office',color:'#123456'},escapeHtml:escape,escapeAttribute:escape});
+ assert(html.includes('&lt;script>Church'));assert(html.includes('Road<br>Town'));assert(!html.includes('href='));assert(html.includes('unpublished preview'));
+});
+test('Hero save status preserves edits made while a submitted version publishes',()=>{
+ const helpers=source.slice(source.indexOf('function heroDraftSignature('),source.indexOf('function initHeroPreviewDevices('));
+ const fields={image:'original.jpg'},events={},dirty={},bar={classList:{add(){}},insertAdjacentHTML(){},querySelector:()=>dirty};
+ const form={id:'hero-image-editor-form',dataset:{},querySelector:()=>bar,addEventListener:(type,fn)=>events[type]=fn};
+ const f=runInNewContext(helpers+';({initHeroDraftStatus,heroDraftSignature})',{FormData:class{*[Symbol.iterator](){yield*Object.entries(fields)}}});
+ f.initHeroDraftStatus(form);fields.image='submitted.jpg';events.input();assert.equal(dirty.textContent,'Unpublished changes');const snapshot=f.heroDraftSignature(form);
+ fields.image='newer.jpg';events['hero-published']({detail:{snapshot}});assert.equal(dirty.textContent,'Unpublished changes');
+ fields.image='submitted.jpg';events.input();assert.equal(dirty.textContent,'Saved version');
+});
+test('Hero publication stays in the editor and emits the submitted snapshot',async()=>{
+ const init=source.slice(source.indexOf('function initHeroImageEditorAdmin()'),source.indexOf('function setAdminFormStatus('));
+ let submit,event,config;const button={},status={},form={dataset:{heroKey:'about'},querySelector:s=>s.includes('status')?status:button,addEventListener:(_type,fn)=>submit=fn,dispatchEvent:e=>event=e};
+ runInNewContext(init+';initHeroImageEditorAdmin()',{document:{getElementById:()=>form},FormData:class{get(k){return k==='desktopImage'?'original.jpg':''}},heroImageDefaults:{about:{}},heroDraftSignature:()=> 'submitted',focusNumberToPosition:String,scaleNumberToValue:String,normalizeFitMode:String,heroLabel:()=> 'About',saveHeroImagesConfig:async c=>config=c,setAdminFormStatus:(_target,state)=>status.state=state,CustomEvent:class{constructor(type,options){this.type=type;this.detail=options.detail}}});
+ await submit({preventDefault(){}});assert.equal(config.about.desktopImage,'original.jpg');assert.equal(event.type,'hero-published');assert.equal(event.detail.snapshot,'submitted');assert.equal(status.state,'success');assert.equal(button.disabled,false);
+});
+test('Video inspection uses controlled playback without image framing controls',()=>{
+ const inspector=source.slice(source.indexOf('function openMediaInspector('),source.indexOf('async function renderManagedAssets('));
+ const close={addEventListener(){}},dialog={setAttribute(){},showModal(){this.open=true},addEventListener(){},querySelector:s=>s==='[data-media-close]'?close:null};
+ runInNewContext(inspector+';openMediaInspector({},"video",{},asset,{})',{asset:{name:'service.mp4',path:'/service.mp4',size:1024},document:{createElement:()=>dialog,body:{style:{},append(){}}},escapeHtml:escape,escapeAttribute:escape,formatAssetSize:()=> '1 KB',renderAssetProtectionActions:()=>''});
+ assert(dialog.innerHTML.includes('<video'));assert(dialog.innerHTML.includes('controls playsinline'));assert(!dialog.innerHTML.includes('data-media-frame'));assert(dialog.open);
+});
 test('Newsletter checks separate required text and paired links from a suggested image description',()=>{
  const helper=source.slice(source.indexOf('function newsletterReview('),source.indexOf('function renderNewsletterChecklist('));
  const review=runInNewContext(helper+';newsletterReview');

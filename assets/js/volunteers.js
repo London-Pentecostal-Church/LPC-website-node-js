@@ -241,7 +241,30 @@ window.LPCVolunteers = (() => {
       e.preventDefault();
       callback(new FormData(e.target), e.target);
     };
+    if(['Edit user','Add new user'].includes(title)) sectionAdminDialog(dialog,'user');
+    if(['Edit meeting details','Add a church meeting'].includes(title)) sectionAdminDialog(dialog,'meeting');
     dialog.showModal();
+  }
+  function dialogSectionKey(element,type) {
+    if(type==='user') {
+      if(element.querySelector('[name="manage"]'))return 'access';
+      if(element.querySelector('[name="skills"],[name="teams"],[name="branches"]'))return 'serving';
+      return 'profile';
+    }
+    if(element.querySelector('[name="recurrence"],[data-meeting-pattern],[name="duration"]') || element.matches('[data-meeting-dates]'))return 'when';
+    if(element.querySelector('[name="pastorLeadId"],[name="choirLeadId"]') || element.matches('.vs-callout'))return 'responsibility';
+    return 'details';
+  }
+  function sectionAdminDialog(dialog,type) {
+    const body=dialog.querySelector('.vs-dialog-body'),children=[...body.children];
+    const sections=type==='user'?[['profile','Profile & login'],['serving','Serving roles'],['access','Scheduling access']]:[['details','Meeting details'],['when','Dates & time'],['responsibility','Responsibility']];
+    const tabs=document.createElement('div');tabs.className='vs-editor-tabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label',type==='user'?'User editor sections':'Meeting editor sections');
+    const panels=Object.fromEntries(sections.map(([key,label],i)=>{const panel=document.createElement('section');panel.dataset.dialogSection=key;panel.id='vs-editor-panel-'+key;panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby','vs-editor-tab-'+key);panel.hidden=i!==0;
+      tabs.insertAdjacentHTML('beforeend',`<button type="button" role="tab" id="vs-editor-tab-${key}" aria-controls="${panel.id}" aria-selected="${i===0}" tabindex="${i===0?'0':'-1'}" data-editor-section="${key}">${label}</button>`);return [key,panel];}));
+    children.forEach(element=>panels[dialogSectionKey(element,type)].append(element));body.replaceChildren(tabs,...Object.values(panels));
+    const buttons=[...tabs.querySelectorAll('button')],select=key=>{buttons.forEach(button=>{const active=button.dataset.editorSection===key;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;});Object.entries(panels).forEach(([name,panel])=>panel.hidden=name!==key);body.scrollTop=0;};
+    buttons.forEach((button,i)=>{button.addEventListener('click',()=>select(button.dataset.editorSection));button.addEventListener('keydown',event=>{const next=event.key==='ArrowRight'?(i+1)%buttons.length:event.key==='ArrowLeft'?(i+buttons.length-1)%buttons.length:event.key==='Home'?0:event.key==='End'?buttons.length-1:-1;if(next<0)return;event.preventDefault();buttons[next].focus();select(buttons[next].dataset.editorSection);});});
+    dialog.querySelector('form').addEventListener('invalid',event=>{const panel=event.target.closest('[data-dialog-section]');if(panel)select(panel.dataset.dialogSection);},true);
   }
   const checks = (key, values, chosen) =>
     `<div class="vs-chips">${values.map((v) => `<label class="vs-chip"><input type="checkbox" name="${key}" value="${esc(v)}" ${chosen.includes(v) ? "checked" : ""}>${esc(key === "skills" ? roleLabel(v) : key === "manage" ? (v === "ministry" ? "Pastoral admin" : "Choir & media admin") : v)}</label>`).join("")}</div>`;

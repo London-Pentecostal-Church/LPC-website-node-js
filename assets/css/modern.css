@@ -3412,6 +3412,22 @@ dialog.asset-picker--modal:not([open]) { display:none; }
  .newsletter-checklist ul { grid-template-columns:1fr; }
 }
 
+.branch-draft-card { max-width:620px;margin:16px 0;padding:22px;border:1px solid #c7dce4;border-top:5px solid var(--draft-color);border-radius:16px;background:#f5f9fa; }
+.branch-draft-card>p:first-child { font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:#5b7786;margin:0 0 12px; }
+.branch-draft-card h3 { font-size:1.6rem;margin:0 0 18px; }
+.branch-draft-card>div { border-top:1px solid #d3e2e9;padding-top:14px;margin-top:14px; }
+.branch-draft-card>div strong { font-size:.85rem; }
+.branch-draft-card>div p { margin:6px 0 0;color:#496877;line-height:1.6;overflow-wrap:anywhere; }
+[data-branch-visitor-preview][hidden] { display:none!important; }
+.hero-editor-savebar { position:sticky;bottom:12px;z-index:5;background:#fff;border:1px solid #cedfe5;border-radius:14px;padding:14px;box-shadow:0 4px 20px #173b4e1c;align-items:center; }
+.hero-editor-savebar>[data-hero-dirty] { margin-right:auto;font-size:.85rem;color:#3d6375; }
+.hero-editor-savebar [data-form-status],.hero-editor-savebar [data-home-hero-status] { flex-basis:100%;margin:0;font-size:.8rem; }
+.media-tile-photo { position:relative; }
+.media-tile-photo video { display:block;width:100%;height:100%;object-fit:contain;background:#132f40; }
+.media-video-mark { position:absolute;right:10px;bottom:10px;background:#ffffffed;border-radius:50%;width:32px;height:32px;display:grid;place-items:center;color:#183b4d; }
+.media-library-toolbar>label:has([data-media-type]) { flex:1;min-width:140px; }
+@media(max-width:760px) { .hero-editor-savebar { bottom:8px;padding:10px;gap:8px; } .hero-editor-savebar .btn { padding:10px 12px;font-size:.8rem; } .branch-draft-card { padding:18px; } }
+
 .youth-hub { padding-top:40px;padding-bottom:48px; }
 .youth-hub__lead { display:grid;grid-template-columns:1.1fr .9fr;gap:24px; }
 .youth-hub__visual { position:relative;overflow:hidden;border-radius:24px;min-height:480px;background:#092938; }

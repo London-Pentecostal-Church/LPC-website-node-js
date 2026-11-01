@@ -2548,11 +2548,14 @@ function initHomeHeroAdmin() {
       title:
         String(data.get("title") || "").trim() || defaultHomeHeroConfig.title,
     };
+    const snapshot=heroDraftSignature(form),button=form.querySelector('[type="submit"]'),status=form.querySelector('[data-home-hero-status]');button.disabled=true;setAdminFormStatus(status,'saving','Publishing home hero…');
     try {
       await saveHomeHeroConfig(config);
-      refreshAfterAdminSave();
+      form.dispatchEvent(new CustomEvent('hero-published',{detail:{snapshot}}));setAdminFormStatus(status,'success','Home hero published. Keep editing or view the public page.');
     } catch (error) {
-      window.alert(error.message);
+      setAdminFormStatus(status,'error',error.message);
+    } finally {
+      button.disabled=false;
     }
   });
 
@@ -2570,6 +2573,17 @@ function initHomeHeroAdmin() {
   initSiteSettingsAdmin();
 }
 
+function heroDraftSignature(form) {
+  return JSON.stringify([...new FormData(form)].map(([key,value])=>[key,String(value).trim()]));
+}
+function initHeroDraftStatus(form) {
+  if(form.dataset.heroDraftBound)return;form.dataset.heroDraftBound='true';
+  const bar=form.querySelector('.admin-form__actions');bar.classList.add('hero-editor-savebar');bar.insertAdjacentHTML('afterbegin','<strong data-hero-dirty>Saved version</strong>');
+  if(form.id==='home-hero-form')bar.insertAdjacentHTML('beforeend','<p data-home-hero-status role="status"></p>');
+  let saved=heroDraftSignature(form);const update=()=>{bar.querySelector('[data-hero-dirty]').textContent=heroDraftSignature(form)===saved?'Saved version':'Unpublished changes';};
+  form.addEventListener('input',update);form.addEventListener('change',update);form.addEventListener('hero-published',event=>{saved=event.detail.snapshot;update();});
+}
+
 function initHeroPreviewDevices() {
   const workspace=document.querySelector('[data-hero-preview-workspace]');if(!workspace)return;
   const form=document.getElementById('home-hero-form') || document.getElementById('hero-image-editor-form');
@@ -2580,6 +2594,7 @@ function initHeroEditorLivePreview() {
   const device=()=>document.querySelector('[data-hero-preview-workspace]')?.dataset.previewDevice || 'desktop';
   const homeForm = document.getElementById("home-hero-form");
   if (homeForm) {
+    initHeroDraftStatus(homeForm);
     const updateHomePreview = () => {
       const data = new FormData(homeForm);
       const config = {
@@ -2607,6 +2622,7 @@ function initHeroEditorLivePreview() {
 
   const heroForm = document.getElementById("hero-image-editor-form");
   if (heroForm) {
+    initHeroDraftStatus(heroForm);
     const key = heroForm.dataset.heroKey;
     const updateHeroPreview = () => {
       if (!key || !heroImageDefaults[key]) return;
@@ -2899,6 +2915,7 @@ function initHeroImageEditorAdmin() {
     const key = form.dataset.heroKey;
     if (!key || !heroImageDefaults[key]) return;
     const data = new FormData(form);
+    const snapshot=heroDraftSignature(form);
     setAdminFormStatus(status, "saving", "Saving hero...");
     if (submitButton) submitButton.disabled = true;
     try {
@@ -2920,11 +2937,9 @@ function initHeroImageEditorAdmin() {
       setAdminFormStatus(
         status,
         "success",
-        `${heroLabel(key)} hero saved successfully. Returning to admin...`,
+        `${heroLabel(key)} hero published. Keep editing or switch tools.`,
       );
-      window.setTimeout(() => {
-        window.location.hash = "#/lpcadmin";
-      }, 900);
+      form.dispatchEvent(new CustomEvent('hero-published',{detail:{snapshot}}));
     } catch (error) {
       setAdminFormStatus(
         status,
@@ -3738,16 +3753,18 @@ function formatAssetSize(bytes) {
 }
 function renderAssetManager() {
   if (!adminSession.authenticated) return renderAdminLogin();
-  return `<section class="section media-library"><div class="container"><a class="admin-back-link" href="#/lpcadmin">← Admin workspace</a><header><p class="section-label">Your visual library</p><h1>Find the right image.</h1><p>Browse, preview and manage your website photos in one place.</p></header><div id="asset-manager" data-manager="true"><div class="media-library-toolbar"><label>Search images<input type="search" id="asset-search" placeholder="Search by file name"></label><label>Show<select id="asset-filter"><option value="all">All images</option><option value="unused">Unused images</option><option value="upload">Uploaded images</option></select></label><label class="btn btn--gold">Upload image<input type="file" data-asset-upload accept=".jpg,.jpeg,.png,.webp" hidden></label><button type="button" class="btn btn--outline" id="asset-refresh">Refresh</button></div><p id="asset-summary" role="status"></p><div class="asset-picker__content" aria-live="polite"></div></div></div></section>${renderFooter()}`;
+  return `<section class="section media-library"><div class="container"><a class="admin-back-link" href="#/lpcadmin">← Admin workspace</a><header><p class="section-label">Your visual library</p><h1>Find the right media.</h1><p>Browse, preview and manage your website photos and videos in one place.</p></header><div id="asset-manager" data-manager="true"><div class="media-library-toolbar"><label>Search files<input type="search" id="asset-search" placeholder="Search by file name"></label><label>Media type<select data-media-type><option value="image">Images</option><option value="video">Videos</option></select></label><label>Show<select id="asset-filter"><option value="all">All files</option><option value="unused">Unused files</option><option value="upload">Uploaded files</option></select></label><label class="btn btn--gold">Upload file<input type="file" data-asset-upload accept=".jpg,.jpeg,.png,.webp" hidden></label><button type="button" class="btn btn--outline" id="asset-refresh">Refresh</button></div><p id="asset-summary" role="status"></p><div class="asset-picker__content" aria-live="polite"></div></div></div></section>${renderFooter()}`;
 }
 
 function initAssetManager() {
   const manager=document.getElementById('asset-manager');if(!manager)return;
-  const input=document.createElement('input'),refresh=()=>renderManagedAssets(manager,'image',input),reset=()=>{manager.assetPage=0;refresh();};
+  manager.assetType='image';
+  const input=document.createElement('input'),refresh=()=>renderManagedAssets(manager,manager.assetType,input),reset=()=>{manager.assetPage=0;refresh();};
+  manager.querySelector('[data-media-type]').addEventListener('change',event=>{manager.assetType=event.target.value==='video'?'video':'image';manager.querySelector('[data-asset-upload]').accept=manager.assetType==='video'?'.mp4,.webm,.mov,.m4v':'.jpg,.jpeg,.png,.webp';reset();});
   manager.querySelector('#asset-search').addEventListener('input',reset);
   manager.querySelector('#asset-filter').addEventListener('change',reset);
   manager.querySelector('#asset-refresh').addEventListener('click',refresh);
-  manager.querySelector('[data-asset-upload]').addEventListener('change',async event=>{const file=event.target.files?.[0];if(file){manager.assetPage=0;await uploadAssetFile(manager,'image',input,file);}event.target.value='';});refresh();
+  manager.querySelector('[data-asset-upload]').addEventListener('change',async event=>{const file=event.target.files?.[0];if(file){manager.assetPage=0;await uploadAssetFile(manager,manager.assetType,input,file);}event.target.value='';});refresh();
 }
 
 function mediaPageWindow(items,page,size=12) {
@@ -3757,26 +3774,28 @@ function mediaPageWindow(items,page,size=12) {
 
 function openMediaInspector(manager,type,input,asset,opener) {
   const dialog=document.createElement('dialog');dialog.className='media-inspector';dialog.setAttribute('aria-labelledby','media-inspector-title');
-  dialog.innerHTML=`<div class="media-inspector-heading"><h2 id="media-inspector-title">${escapeHtml(asset.name)}</h2><button class="btn btn--outline" type="button" data-media-close autofocus>Close</button></div><img class="media-inspector-image" src="${escapeAttribute(asset.path)}" alt="${escapeAttribute(asset.name)}"><div class="media-inspector-details"><p>${asset.source==='upload'?'Uploaded image':'Original website image'} · ${asset.size ? formatAssetSize(asset.size) : 'Size unavailable'}</p><p class="media-inspector-path">${escapeHtml(asset.path)}</p><button type="button" class="btn btn--gold" data-media-frame>Edit framing</button><details><summary>Protection &amp; removal</summary><p>Deleting an uploaded image is permanent and may affect pages or backups. Packaged originals remain until a site rebuild.</p><div>${renderAssetProtectionActions(asset)}</div></details></div>`;
+  const media=type==='video'?`<video class="media-inspector-image" src="${escapeAttribute(asset.path)}" controls playsinline preload="metadata" aria-label="${escapeAttribute(asset.name)}"></video>`:`<img class="media-inspector-image" src="${escapeAttribute(asset.path)}" alt="${escapeAttribute(asset.name)}">`;
+  dialog.innerHTML=`<div class="media-inspector-heading"><h2 id="media-inspector-title">${escapeHtml(asset.name)}</h2><button class="btn btn--outline" type="button" data-media-close autofocus>Close</button></div>${media}<div class="media-inspector-details"><p>${asset.source==='upload'?'Uploaded file':'Original website file'} · ${asset.size ? formatAssetSize(asset.size) : 'Size unavailable'}</p><p class="media-inspector-path">${escapeHtml(asset.path)}</p>${type==='video'?'':'<button type="button" class="btn btn--gold" data-media-frame>Edit framing</button>'}<details><summary>Protection &amp; removal</summary><p>Deleting an uploaded file is permanent and may affect pages or backups. Packaged originals remain until a site rebuild.</p><div>${renderAssetProtectionActions(asset)}</div></details></div>`;
   const previousOverflow=document.body.style.overflow;document.body.append(dialog);document.body.style.overflow='hidden';dialog.showModal();
   dialog.addEventListener('close',()=>{document.body.style.overflow=previousOverflow;dialog.remove();if(!document.querySelector('dialog[open]')){if(opener?.isConnected)opener.focus();else manager.querySelector('#asset-search')?.focus();}},{once:true});
   dialog.querySelector('[data-media-close]').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
-  dialog.querySelector('[data-media-frame]').addEventListener('click',()=>{dialog.close();openImageFraming(asset.path);});
+  dialog.querySelector('[data-media-frame]')?.addEventListener('click',()=>{dialog.close();openImageFraming(asset.path);});
   [['[data-asset-delete]',()=>deleteAssetFile(manager,type,input,asset.path)],['[data-asset-protect]',()=>updateAssetProtection(manager,type,input,asset.path,true)],['[data-asset-unprotect]',()=>updateAssetProtection(manager,type,input,asset.path,false)]].forEach(([selector,action])=>dialog.querySelector(selector)?.addEventListener('click',()=>{dialog.close();action();}));
 }
 
 async function renderManagedAssets(manager,type,input) {
+  type=manager.assetType || type;
   const content=manager.querySelector('.asset-picker__content'),requestId=(manager.assetRequestId||0)+1;manager.assetRequestId=requestId;
   try {
     const library=await loadAdminAssets();if(manager.assetRequestId!==requestId||!manager.isConnected)return;
-    const all=library.images||[],search=manager.querySelector('#asset-search').value.trim().toLowerCase(),filter=manager.querySelector('#asset-filter').value;
+    const all=(type==='video'?library.videos:library.images)||[],search=manager.querySelector('#asset-search').value.trim().toLowerCase(),filter=manager.querySelector('#asset-filter').value;
     const items=all.filter(a=>a.name.toLowerCase().includes(search)&&(filter!=='unused'||a.deletable)&&(filter!=='upload'||a.source==='upload'));
     const page=mediaPageWindow(items,manager.assetPage);manager.assetPage=page.index;
-    manager.querySelector('#asset-summary').textContent=items.length+' of '+all.length+' images · '+all.filter(a=>a.deletable).length+' unused';
-    content.innerHTML=items.length?`<div class="media-gallery">${page.items.map((a,index)=>`<button type="button" class="media-tile" data-media-index="${index}" aria-label="Inspect ${escapeAttribute(a.name)}"><span class="media-tile-photo"><img loading="lazy" src="${escapeAttribute(a.path)}" alt=""></span><strong>${escapeHtml(a.name)}</strong><small>${a.source==='upload'?'Uploaded':'Website image'}</small></button>`).join('')}</div><div class="media-pagination"><button type="button" class="btn btn--outline" data-media-page="-1" ${page.index===0?'disabled':''}>← Previous</button><span data-media-page-status tabindex="-1">${page.start+1}–${page.start+page.items.length} of ${items.length}</span><button type="button" class="btn btn--outline" data-media-page="1" ${page.index===page.pages-1?'disabled':''}>Next →</button></div>`:'<p class="media-empty">No matching images. Try another name or filter.</p>';
+    manager.querySelector('#asset-summary').textContent=items.length+' of '+all.length+' '+(type==='video'?(all.length===1?'video':'videos'):(all.length===1?'image':'images'))+' · '+all.filter(a=>a.deletable).length+' unused';
+    content.innerHTML=items.length?`<div class="media-gallery">${page.items.map((a,index)=>`<button type="button" class="media-tile" data-media-index="${index}" aria-label="Inspect ${escapeAttribute(a.name)}"><span class="media-tile-photo">${type==='video'?`<video src="${escapeAttribute(a.path)}" muted preload="metadata"></video><span class="media-video-mark" aria-hidden="true">▶</span>`:`<img loading="lazy" src="${escapeAttribute(a.path)}" alt="">`}</span><strong>${escapeHtml(a.name)}</strong><small>${a.source==='upload'?'Uploaded':type==='video'?'Website video':'Website image'}</small></button>`).join('')}</div><div class="media-pagination"><button type="button" class="btn btn--outline" data-media-page="-1" ${page.index===0?'disabled':''}>← Previous</button><span data-media-page-status tabindex="-1">${page.start+1}–${page.start+page.items.length} of ${items.length}</span><button type="button" class="btn btn--outline" data-media-page="1" ${page.index===page.pages-1?'disabled':''}>Next →</button></div>`:'<p class="media-empty">No matching files. Try another name or filter.</p>';
     content.querySelectorAll('[data-media-index]').forEach(button=>button.addEventListener('click',()=>openMediaInspector(manager,type,input,page.items[Number(button.dataset.mediaIndex)],button)));
     content.querySelectorAll('[data-media-page]').forEach(button=>button.addEventListener('click',async()=>{manager.assetPage=page.index+Number(button.dataset.mediaPage);await renderManagedAssets(manager,type,input);content.querySelector('[data-media-page-status]')?.focus();}));
-  } catch(error) {if(manager.assetRequestId===requestId)content.textContent='Could not load images. '+error.message;}
+  } catch(error) {if(manager.assetRequestId===requestId)content.textContent='Could not load media. '+error.message;}
 }
 
 let branchRevision = "";
@@ -3839,6 +3858,16 @@ function refreshBranchReadiness(row) {
   badge.dataset.ready = String(!gaps.length);
 }
 
+function renderBranchVisitorPreview(branch) {
+  const text=value=>escapeHtml(String(value||'').trim()).replace(/\r?\n/g,'<br>');
+  return `<article class="branch-draft-card" style="--draft-color:${escapeAttribute(branch.color || '#173c53')}"><p>Visitor card · unpublished preview</p><h3>${text(branch.churchName || branch.name || 'Your church')}</h3><div><strong>When we meet</strong><p>${text(branch.services) || 'Service times to confirm'}</p></div><div><strong>Where to find us</strong><p>${text(branch.address) || 'Meeting location to confirm'}</p></div>${branch.contact?`<div><strong>Local contact</strong><p>${text(branch.contact)}</p></div>`:''}</article>`;
+}
+function initBranchVisitorPreviews(form) {
+  const update=row=>{const draft=Object.fromEntries(['name','churchName','address','services','contact','color'].map(key=>[key,row.querySelector(`[name="${key}"]`)?.value || '']));row.querySelector('[data-branch-visitor-preview]').innerHTML=renderBranchVisitorPreview(draft);};
+  form.addEventListener('click',event=>{const button=event.target.closest('[data-preview-branch]');if(!button)return;const row=button.closest('[data-branch-slug]'),preview=row.querySelector('[data-branch-visitor-preview]');preview.hidden=!preview.hidden;button.setAttribute('aria-expanded',String(!preview.hidden));button.textContent=preview.hidden?'Preview visitor card':'Hide visitor preview';if(!preview.hidden)update(row);});
+  form.addEventListener('input',event=>{const row=event.target.closest('[data-branch-slug]');if(row && !row.querySelector('[data-branch-visitor-preview]').hidden)update(row);});
+}
+
 function renderBranchFields(slug, branch) {
   const media = getBranchMedia({...branch,slug});
   const b = {...branch,...media,facebookUrl:Object.hasOwn(branch,'facebookUrl') ? branch.facebookUrl : media?.socials.find(item=>item[0]==='Facebook')?.[1] || '',instagramUrl:Object.hasOwn(branch,'instagramUrl') ? branch.instagramUrl : media?.socials.find(item=>item[0]==='Instagram')?.[1] || ''};
@@ -3846,7 +3875,7 @@ function renderBranchFields(slug, branch) {
   const area = (key,label) => `<label>${label}<textarea name="${key}" maxlength="5000" rows="2">${escapeHtml(b[key] || '')}</textarea></label>`;
   const gaps = branchVisitGaps(b);
   return `<details class="branch-editor-card" data-branch-slug="${escapeAttribute(slug)}" ${!b.name ? 'open' : ''} style="--branch-color:${escapeAttribute(b.color || '#1f59cb')}"><summary><span class="branch-editor-icon">${b.logo ? `<img src="${escapeAttribute(b.logo)}" alt="">` : '⌂'}</span><span class="branch-card-identity"><strong data-branch-title>${escapeHtml(b.name || 'New branch')}</strong><small>${escapeHtml(b.churchName || 'Add church details')}</small><span class="branch-readiness" data-branch-readiness data-ready="${!gaps.length}">${gaps.length ? escapeHtml(gaps.join(' + '))+' missing' : 'Visit details ready'}</span></span><span class="branch-editor-chevron">⌄</span></summary>
-    <div class="pastor-editor branch-editor-fields"><div class="branch-essential-grid">${text('name','Branch name',true)}${text('churchName','Church name',true)}${area('address','Address')}${area('services','Service times')}${area('contact','Contact details')}</div>
+    <div class="pastor-editor branch-editor-fields"><div class="branch-essential-grid">${text('name','Branch name',true)}${text('churchName','Church name',true)}${area('address','Address')}${area('services','Service times')}${area('contact','Contact details')}</div><button type="button" class="btn btn--outline" data-preview-branch aria-expanded="false">Preview visitor card</button><div data-branch-visitor-preview hidden></div>
     <details class="branch-extra"><summary>Introduction, photos &amp; branding</summary><div class="branch-extra-fields">${area('summary','Introduction')}${text('subtitle','Label')}<label>Branch colour<span class="admin-colour-control"><input aria-label="Choose branch colour" name="color" type="color" value="${escapeAttribute(b.color || '#1f59cb')}"><output data-colour-value>${escapeHtml(b.color || '#1f59cb')}</output></span></label><label>Logo${renderAssetPickerInput({name:'logo',value:b.logo || ''})}</label><label>Branch photo${renderAssetPickerInput({name:'image',value:b.image || ''})}</label></div></details>
     <details class="branch-extra"><summary>Watch &amp; social media</summary><div class="branch-extra-fields">${text('youtubeUrl','YouTube channel URL')}${text('videoUrl','YouTube video or livestream URL')}${text('facebookUrl','Facebook URL')}${text('instagramUrl','Instagram URL')}<label>Video playback<select name="autoplay"><option value="silent" ${b.autoplay !== 'click' ? 'selected' : ''}>Muted autoplay</option><option value="click" ${b.autoplay === 'click' ? 'selected' : ''}>Play when clicked</option></select></label><p>A specific video link overrides the latest service from your channel.</p><a href="#/watch">View Watch dashboard</a></div></details>
     <div class="branch-card-actions"><a href="#/branches/${encodeURIComponent(slug)}">View church page →</a><button type="button" class="btn btn--outline" data-remove-branch>Remove branch</button></div></div></details>`;
@@ -3947,6 +3976,7 @@ function initBranchAdmin() {
   const form = document.getElementById("branches-form");
   if (!form) return;
   initBranchCompletionQueue(form);
+  initBranchVisitorPreviews(form);
   const tools = document.createElement("div");
   tools.className = "admin-form__actions";
   tools.innerHTML =
